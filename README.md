@@ -13,10 +13,13 @@ A focused, intelligent journaling application designed to help you de-clutter yo
 - **Daily Context**: Tracks your habits alongside your thoughts.
 
 ### 📊 Deep Analytics
-- **Contribution Heatmap**: GitHub-style green square history tracking your consistency over the last year.
+- **Contribution Heatmap**: Customizable GitHub-style history (12-week view on Dashboard, 46-week view on Stats).
 - **Word Cloud**: Visual representation of your most frequent themes.
 - **Time of Day**: See if you are an "Early Bird" or a "Night Owl".
-- **Gamification**: Unlock badges for consistency, word count, and timing.
+
+### ❤️ Feedback Loop
+- **Admin Hearts**: Admins can "Like" entries to provide subtle encouragement.
+- **Visual Indicators**: Users see a red bubble on their calendar and a heart on their entry when feedback is received.
 
 ### 🛠️ Admin & Configuration
 - **User Management**: Admin role can view stats for other users (for coaching/accountability groups).
@@ -56,6 +59,8 @@ A focused, intelligent journaling application designed to help you de-clutter yo
 4.  **Run Development Server:**
     ```bash
     npm run dev
+    # Or to restart cleanly:
+    # npm run restart
     ```
 
 5.  **Open Browser:**
@@ -70,8 +75,10 @@ A focused, intelligent journaling application designed to help you de-clutter yo
 
 ## 🛣️ Roadmap
 
-- [ ] **AWS SES Integration**: For password resets and reminders.
+- [x] **AWS SES Integration**: Email infrastructure for password resets.
+- [x] **Admin Feedback**: Heart/Like system for user entries.
 - [ ] **Data Export**: Download your complete journal history.
+- [ ] **Mobile Polish**: Responsiveness improvements for small screens.
 - [ ] **Advanced Insights**: Sentiment analysis and mood tracking.
 
 ## 📄 License
