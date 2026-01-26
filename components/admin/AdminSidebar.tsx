@@ -24,6 +24,10 @@ export function AdminSidebar() {
         <aside className="w-64 border-r border-white/10 bg-black/20 p-6 flex flex-col">
             <h2 className="text-xl font-bold text-white mb-8">Journal Admin</h2>
             <nav className="flex-1 space-y-2">
+                <Link href="/dashboard" className="block px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors mb-4">
+                    &larr; User Dashboard
+                </Link>
+
                 <Link href="/admin" className={linkClass('/admin')}>
                     Overview
                 </Link>
@@ -56,12 +60,7 @@ export function AdminSidebar() {
                 </Link>
             </nav>
             <div className="pt-4 border-t border-white/10">
-                <Link href="/dashboard" className="block px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">
-                    &larr; User Dashboard
-                </Link>
-                <Link href="/dashboard" className="block px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">
-                    📊 My Stats
-                </Link>
+                {/* Footer Content if needed */}
             </div>
         </aside>
     )
