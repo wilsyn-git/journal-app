@@ -52,7 +52,7 @@ export default async function DashboardPage({ searchParams }: Props) {
     const historyDates = await getJournalHistory(targetUserId);
     const userStats = await getUserStats(targetUserId);
 
-    let allUsers: { id: string, email: string }[] = [];
+    let allUsers: { id: string, email: string, name: string | null }[] = [];
     if (isAdmin) {
         allUsers = await prisma.user.findMany({ select: { id: true, email: true, name: true }, orderBy: { email: 'asc' } });
     }
