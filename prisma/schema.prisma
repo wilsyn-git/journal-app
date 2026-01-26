@@ -1,0 +1,148 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  code      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users     User[]
+  prompts   Prompt[]
+  profiles  Profile[]
+  groups    UserGroup[]
+  promptCategories PromptCategory[]
+}
+
+model PromptCategory {
+  id             String       @id @default(uuid())
+  name           String
+  description    String?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  prompts        Prompt[]
+  rules          ProfileRule[]
+  
+  @@unique([organizationId, name])
+}
+
+model UserGroup {
+  id             String       @id @default(uuid())
+  name           String
+  description    String?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  users          User[]
+  profiles       Profile[]
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String? // Optional name
+  password  String
+  role      String   @default("USER") // 'ADMIN' or 'USER'
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  organizationId String    @default("default-org-id") // Temporary default for migration, clean up later
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  profiles  Profile[]
+  groups    UserGroup[]
+
+  entries   JournalEntry[]
+}
+
+model Prompt {
+  id        String      @id @default(uuid())
+  content   String
+  type      String      @default("TEXT") // 'TEXT', 'RADIO', 'CHECKBOX'
+  options   String?     // JSON string for options if type is RADIO or CHECKBOX
+  isActive  Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  
+  organizationId String  @default("default-org-id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  
+  isGlobal  Boolean     @default(true) 
+  
+  // New Relation
+  categoryId String?
+  category   PromptCategory? @relation(fields: [categoryId], references: [id])
+  
+  // Legacy String (Migration path: will populate categoryId from this, then deprecate)
+  categoryString  String      @default("General") // Renamed to avoid name clash with relation
+
+  entries   JournalEntry[]
+}
+
+model Profile {
+  id             String       @id @default(uuid())
+  name           String
+  description    String?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  users          User[]
+  groups         UserGroup[]
+  rules          ProfileRule[]
+}
+
+model ProfileRule {
+  id        String   @id @default(uuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  // Relation to Category
+  categoryId String?
+  categoryPrompt   PromptCategory? @relation(fields: [categoryId], references: [id])
+
+  // Legacy String
+  categoryString  String?   // Renamed/Deprecated
+
+  minCount  Int      @default(1)
+  maxCount  Int      @default(3)
+  includeAll Boolean @default(false)
+  sortOrder Int      @default(0)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model JournalEntry {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  promptId  String
+  prompt    Prompt   @relation(fields: [promptId], references: [id])
+  answer    String
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, promptId, date]) // Prevent duplicate answers for the same prompt per day? 
+  // Actually, 'date' might be too granular (timestamp). 
+  // For "daily", we might want to store just the YYYY-MM-DD string or normalize the date.
+  // For now, let's keep it simple and maybe just index them. 
+  // If unique constraint is problematic with timestamps, I'll remove it or manage it in app logic.
+}
