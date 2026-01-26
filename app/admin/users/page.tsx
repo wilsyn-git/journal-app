@@ -5,6 +5,7 @@ import Link from "next/link"
 
 import { NewUserForm } from "@/components/admin/NewUserForm"
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog"
+import { DeleteUserDialog } from "@/components/admin/DeleteUserDialog"
 
 export default async function AdminUsersPage() {
     const users = await prisma.user.findMany({
@@ -54,14 +55,25 @@ export default async function AdminUsersPage() {
                                 <td className="px-6 py-4">{new Date(user.createdAt).toLocaleDateString()}</td>
                                 <td className="px-6 py-4">{user._count.entries}</td>
                                 <td className="px-6 py-4 text-right">
-                                    <ChangePasswordDialog
-                                        targetUserId={user.id}
-                                        trigger={
-                                            <button className="text-xs text-gray-400 hover:text-white underline decoration-gray-600 hover:decoration-white transition-colors">
-                                                Reset Password
-                                            </button>
-                                        }
-                                    />
+                                    <div className="flex items-center justify-end gap-3">
+                                        <ChangePasswordDialog
+                                            targetUserId={user.id}
+                                            trigger={
+                                                <button className="text-xs text-gray-400 hover:text-white underline decoration-gray-600 hover:decoration-white transition-colors">
+                                                    Reset Password
+                                                </button>
+                                            }
+                                        />
+                                        <DeleteUserDialog
+                                            userId={user.id}
+                                            userName={user.name || user.email}
+                                            trigger={
+                                                <button className="text-xs text-red-400 hover:text-red-300 transition-colors bg-red-500/10 px-2 py-1 rounded">
+                                                    Delete
+                                                </button>
+                                            }
+                                        />
+                                    </div>
                                 </td>
                             </tr>
                         ))}

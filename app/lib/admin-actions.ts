@@ -789,3 +789,39 @@ export async function importPrompts(formData: FormData) {
         return { error: "Failed to import prompts" };
     }
 }
+
+export async function deleteUser(userId: string) {
+    await ensureAdmin();
+    const session = await auth();
+
+    // 1. Prevent Self-Deletion
+    if (session?.user?.id === userId) {
+        return { error: "You cannot delete your own account." }
+    }
+
+    try {
+        await prisma.$transaction(async (tx) => {
+            // 2. Delete dependent data manually if cascade isn't fully relied upon
+            // (Though schema has some relations, it's safer to be explicit for critical user data)
+
+            // Delete Journal Entries
+            await tx.journalEntry.deleteMany({ where: { userId } });
+
+            // Delete Avatars
+            await tx.userAvatar.deleteMany({ where: { userId } });
+
+            // Remove from Groups (Implicit handling via link table, but let's be sure)
+            // Many-to-many is handled by Prisma, no manual disconnect needed usually.
+
+            // 3. Delete User
+            await tx.user.delete({ where: { id: userId } });
+        });
+
+        revalidatePath('/admin/users');
+        return { success: true };
+
+    } catch (e) {
+        console.error("Delete User Failed:", e);
+        return { error: "Failed to delete user. Check logs." };
+    }
+}

@@ -5,6 +5,7 @@ import Link from "next/link"
 import { updateUserProfiles } from "@/app/lib/admin-actions"
 
 import { EditUserForm } from "@/components/admin/EditUserForm"
+import { DeleteUserDialog } from "@/components/admin/DeleteUserDialog"
 
 type Props = {
     params: Promise<{ id: string }>
@@ -78,6 +79,19 @@ export default async function AdminUserDetailPage({ params }: Props) {
                     </div>
                 </form>
             </div>
+
+            {/* Danger Zone */}
+            <div className="mt-8 border border-red-500/10 bg-red-500/5 rounded-xl p-6">
+                <h2 className="text-lg font-bold text-red-400 mb-2">Danger Zone</h2>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-sm text-gray-400">Permanently delete this user and all their data.</p>
+                    </div>
+                    <DeleteUserDialog userId={user.id} userName={user.name || user.email} />
+                </div>
+            </div>
         </div>
     )
 }
+
+
