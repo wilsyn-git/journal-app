@@ -29,7 +29,13 @@ export function PromptEditor({ prompt, categories, categoryId, mode = 'create' }
     }
 
     return (
-        <form action={mode === 'create' ? createPrompt : updatePrompt.bind(null, prompt?.id!)} className="space-y-6 glass-card p-8 rounded-xl border border-white/10">
+        <form action={async (formData) => {
+            if (mode === 'create') {
+                await createPrompt(formData)
+            } else {
+                if (prompt?.id) await updatePrompt(prompt.id, formData)
+            }
+        }} className="space-y-6 glass-card p-8 rounded-xl border border-white/10">
             <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Prompt Question</label>
                 <textarea

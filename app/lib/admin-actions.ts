@@ -574,7 +574,7 @@ export async function updateUserProfiles(userId: string, formData: FormData) {
 
 import bcrypt from 'bcryptjs'
 
-export async function createUser(formData: FormData) {
+export async function createUser(prevState: any, formData: FormData) {
     await ensureAdmin();
     const session = await auth();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
