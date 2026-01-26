@@ -17,7 +17,7 @@ export default async function SettingsPage() {
     // Let's resolve user first to be safe
     let currentUserId = session.user.id
     if (!currentUserId) {
-        const u = await prisma.user.findUnique({ where: { email: session.user.email }, select: { id: true } })
+        const u = await prisma.user.findUnique({ where: { email: session.user.email || "" }, select: { id: true } })
         if (!u) redirect('/')
         currentUserId = u.id
     }
