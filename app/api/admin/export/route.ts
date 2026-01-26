@@ -102,7 +102,7 @@ export async function GET() {
         // We look for the org that matches the admin's organizationId, fallback to the first one
         const primaryOrg = organizations.find(o => o.id === user.organizationId) || organizations[0]
         const orgName = primaryOrg?.siteName || 'JournalSystem'
-        const safeIdentity = orgName.replace(/[^a-zA-Z0-9]/g, '') // Remove spaces and special chars
+        const safeIdentity = orgName.toLowerCase().replace(/[^a-z0-9]/g, '') // Remove spaces and special chars, lowercase
 
         // Format Date: YYYY_MM_DD_HH_MM_SS
         const now = new Date()
@@ -112,7 +112,7 @@ export async function GET() {
         const hh = String(now.getHours()).padStart(2, '0')
         const min = String(now.getMinutes()).padStart(2, '0')
         const ss = String(now.getSeconds()).padStart(2, '0')
-        const timestamp = `${yyyy}_${mm}_${dd}_${hh}_${min}_${ss}`
+        const timestamp = `${yyyy}${mm}${dd}_${hh}${min}${ss}`
 
         const filename = `${safeIdentity}_backup_${timestamp}.json.gz`
 

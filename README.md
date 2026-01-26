@@ -22,8 +22,9 @@ A focused, intelligent journaling application designed to help you de-clutter yo
 - **Visual Indicators**: Users see a red bubble on their calendar and a heart on their entry when feedback is received.
 
 ### 🛡️ Data Sovereignty
-- **Full Backup**: Admins can export the entire system state (including binary assets like images) to a secure `.json.gz` file.
-- **Smart Restore**: Restore functionality with "Merge" (safe) or "Overwrite" modes.
+- **Full Backup (Admin)**: Exports the entire system state (including binary assets) to a secure `.json.gz` file.
+- **Smart Restore (Admin)**: Restore functionality with "Merge" (safe) or "Overwrite" modes.
+- **Personal Export (User)**: Users can download their own journal history as a portable JSON file from the Settings page.
 - **Binary Handling**: Automatically reconstructs avatar and logo files from the backup.
 
 ### 🛠️ Admin & Configuration
