@@ -30,7 +30,9 @@ export default async function DashboardPage({ searchParams }: Props) {
     let currentUserId = session.user?.id
     if (!currentUserId && session.user?.email) {
         const user = await prisma.user.findUnique({ where: { email: session.user.email } })
-        currentUserId = user?.id
+        if (user) {
+            currentUserId = user.id
+        }
     }
     if (!currentUserId) redirect("/login");
 
