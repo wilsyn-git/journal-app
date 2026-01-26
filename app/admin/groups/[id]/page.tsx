@@ -48,7 +48,10 @@ export default async function GroupDetailPage({ params }: Props) {
                     <h2 className="text-xl font-bold text-white mb-4">Assigned Profiles</h2>
                     <p className="text-sm text-gray-400 mb-6">Users in this group will inherit these profiles.</p>
 
-                    <form action={updateGroupProfiles.bind(null, group.id)}>
+                    <form action={async (formData) => {
+                        "use server"
+                        await updateGroupProfiles(group.id, formData)
+                    }}>
                         <div className="space-y-3 mb-6 max-h-[300px] overflow-y-auto custom-scrollbar p-1">
                             {allProfiles.map(profile => {
                                 const isChecked = group.profiles.some(p => p.id === profile.id);
@@ -79,7 +82,10 @@ export default async function GroupDetailPage({ params }: Props) {
                 <div className="glass-card p-6 border border-white/10 rounded-xl h-fit">
                     <h2 className="text-xl font-bold text-white mb-4">Members</h2>
 
-                    <form action={addUserToGroup.bind(null, group.id)} className="flex gap-2 mb-6">
+                    <form action={async (formData) => {
+                        "use server"
+                        await addUserToGroup(group.id, formData)
+                    }} className="flex gap-2 mb-6">
                         <select
                             name="email"
                             required
@@ -113,17 +119,24 @@ export default async function GroupDetailPage({ params }: Props) {
                                         </div>
                                         <div className="text-sm text-white">{user.email}</div>
                                     </div>
-                                    <form action={removeUserFromGroup.bind(null, group.id, user.id)}>
+                                    <form action={async () => {
+                                        "use server"
+                                        await removeUserFromGroup(group.id, user.id)
+                                    }}>
                                         <button className="text-xs text-gray-500 hover:text-red-400 p-1">
                                             Remove
                                         </button>
                                     </form>
+                                    <button className="text-xs text-gray-500 hover:text-red-400 p-1">
+                                        Remove
+                                    </button>
+                                </form>
                                 </div>
-                            ))
+                    ))
                         )}
-                    </div>
                 </div>
             </div>
         </div>
+        </div >
     )
 }
