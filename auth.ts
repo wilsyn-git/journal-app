@@ -47,18 +47,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 session.user.id = token.sub;
             }
             if (session.user && token.role) {
-                // @ts-expect-error - Session type needs extension
                 session.user.role = token.role as string;
-                // @ts-expect-error - Session type needs extension
                 session.user.organizationId = token.organizationId as string;
             }
             return session;
         },
         async jwt({ token, user }) {
             if (user) {
-                // @ts-expect-error - User type extension
                 token.role = user.role;
-                // @ts-expect-error - User type extension
                 token.organizationId = user.organizationId;
             }
             return token;

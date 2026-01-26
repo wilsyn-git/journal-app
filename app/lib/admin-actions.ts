@@ -9,7 +9,6 @@ import { welcomeEmail } from '@/lib/email/templates'
 // Helper to ensure admin
 async function ensureAdmin() {
     const session = await auth()
-    // @ts-expect-error - role type
     if (session?.user?.role !== 'ADMIN') {
         throw new Error("Unauthorized: Admin access required")
     }

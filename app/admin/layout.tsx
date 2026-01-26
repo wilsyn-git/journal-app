@@ -9,7 +9,6 @@ export default async function AdminLayout({
 }) {
     const session = await auth()
 
-    // @ts-expect-error - session.user.role is not strictly typed yet without module augmentation
     if (!session?.user || session.user.role !== 'ADMIN') {
         redirect("/dashboard")
     }
