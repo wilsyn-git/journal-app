@@ -173,7 +173,7 @@ export default async function DashboardPage({ searchParams }: Props) {
             <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                 {isAdmin && (
                     <div className="mb-6 border-b border-white/10 pb-4">
-                        <AdminUserSelector users={allUsers} />
+                        <AdminUserSelector users={allUsers.map(u => ({ ...u, name: u.name || u.email }))} />
                         <div className="grid grid-cols-2 gap-2 px-4 mt-2">
                             <Link href="/admin" className="text-xs text-center p-2 rounded bg-purple-500/20 text-purple-300 hover:bg-purple-500/30">
                                 Admin
