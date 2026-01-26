@@ -16,6 +16,10 @@ model Organization {
   code      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  // Branding
+  siteName  String?  @default("Journal.ai")
+  logoUrl   String?  // Path to uploaded file
 
   users     User[]
   prompts   Prompt[]
@@ -68,6 +72,22 @@ model User {
   groups    UserGroup[]
 
   entries   JournalEntry[]
+  avatars   UserAvatar[]
+  bio       String?
+  resetToken     String?   @unique
+  resetTokenExpiry DateTime?
+}
+
+model UserAvatar {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  url       String?  // Null if file deleted
+  isActive  Boolean  @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Prompt {

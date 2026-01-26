@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react';
 import { authenticate } from '@/app/lib/actions';
+import Link from 'next/link';
 
 export default function LoginPage() {
     const [errorMessage, dispatch, isPending] = useActionState(authenticate, undefined);
@@ -53,8 +54,10 @@ export default function LoginPage() {
                         />
                     </div>
 
-                    <div className="flex items-center justify-between">
-                        {/* Remember Me / Forgot Password can go here later */}
+                    <div className="flex items-center justify-between text-sm">
+                        <Link href="/forgot-password" className="text-primary hover:text-white transition-colors">
+                            Forgot Password?
+                        </Link>
                     </div>
 
                     {errorMessage && (

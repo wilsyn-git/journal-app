@@ -5,6 +5,10 @@ import { prisma } from "@/lib/prisma"
 import { getUserStats } from "@/app/lib/analytics"
 import { AdminUserSelector } from "@/components/AdminUserSelector"
 import Link from "next/link"
+import { ContributionHeatmap } from "@/components/ContributionHeatmap"
+import { TimeOfDayChart } from "@/components/stats/TimeOfDayChart"
+import { WordCloud } from "@/components/stats/WordCloud"
+import { BadgeGrid } from "@/components/stats/BadgeGrid"
 
 type Props = {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -18,7 +22,12 @@ export default async function StatsPage({ searchParams }: Props) {
     const viewUserId = typeof params.viewUserId === 'string' ? params.viewUserId : null;
     const isAdmin = session.user.role === 'ADMIN';
 
-    const currentUserId = session.user.id;
+    let currentUserId = session.user.id;
+    if (!currentUserId && session.user.email) {
+        const user = await prisma.user.findUnique({ where: { email: session.user.email } })
+        currentUserId = user?.id
+    }
+    if (!currentUserId) redirect("/login");
     const targetUserId = (isAdmin && viewUserId) ? viewUserId : currentUserId;
     const isViewingSelf = targetUserId === currentUserId;
 
@@ -35,6 +44,11 @@ export default async function StatsPage({ searchParams }: Props) {
     // Fetch Stats
     const stats = await getUserStats(targetUserId || "");
 
+    // Fetch Branding (Active Org)
+    const org = await prisma.organization.findFirst({
+        orderBy: { users: { _count: 'desc' } }
+    })
+
     // Prepare Admin Select List
     let allUsers: any[] = [];
     if (isAdmin) {
@@ -46,8 +60,9 @@ export default async function StatsPage({ searchParams }: Props) {
             {/* Sidebar (Simplified) */}
             <div className="w-64 border-r border-white/10 hidden md:flex flex-col bg-black/50">
                 <div className="p-6 border-b border-white/10">
-                    <Link href="/dashboard" className="text-xl font-bold tracking-tighter text-white">
-                        Journal<span className="text-primary">.ai</span>
+                    <Link href="/dashboard" className="text-xl font-bold tracking-tighter text-white flex items-center gap-2">
+                        {org?.logoUrl && <img src={org.logoUrl} alt="Logo" className="w-6 h-6 object-contain" />}
+                        <span>{org?.siteName || "Journal.ai"}</span>
                     </Link>
                 </div>
                 <div className="p-4 flex-1">
@@ -82,7 +97,7 @@ export default async function StatsPage({ searchParams }: Props) {
                     </div>
 
                     {/* Big Numbers Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-12">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
                         <div className="glass-card p-6 rounded-xl border border-white/10">
                             <div className="text-3xl font-bold text-white mb-1">{stats.maxStreak}</div>
                             <div className="text-xs text-gray-500 uppercase tracking-widest">Max Streak</div>
@@ -99,6 +114,34 @@ export default async function StatsPage({ searchParams }: Props) {
                             <div className="text-3xl font-bold text-white mb-1">{stats.avgWords}</div>
                             <div className="text-xs text-gray-500 uppercase tracking-widest">Avg Words / Answer</div>
                         </div>
+                    </div>
+
+                    {/* Heatmap */}
+                    <div className="mb-12">
+                        <h2 className="text-xl font-bold text-white mb-4">Consistency Map</h2>
+                        <div className="glass-card p-6 rounded-xl border border-white/10 overflow-x-auto custom-scrollbar min-h-[160px] flex flex-col justify-center">
+                            <ContributionHeatmap data={stats.heatmap} weeksHistory={52} />
+                        </div>
+                    </div>
+
+                    {/* Charts Row */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                        {/* Time of Day */}
+                        <div className="glass-card p-6 rounded-xl border border-white/10">
+                            <h2 className="text-xl font-bold text-white mb-4">When You Journal</h2>
+                            <TimeOfDayChart data={stats.hourCounts} />
+                        </div>
+                        {/* Word Cloud */}
+                        <div className="glass-card p-6 rounded-xl border border-white/10">
+                            <h2 className="text-xl font-bold text-white mb-4">Common Themes</h2>
+                            <WordCloud words={stats.wordCloud} />
+                        </div>
+                    </div>
+
+                    {/* Badges */}
+                    <div className="mb-12">
+                        <h2 className="text-xl font-bold text-white mb-4">Achievements</h2>
+                        <BadgeGrid badges={stats.badges} />
                     </div>
 
                     {/* Task Streaks */}

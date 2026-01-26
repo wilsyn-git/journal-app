@@ -12,7 +12,13 @@ type Props = {
 export function CalendarSidebar({ completedDates }: Props) {
     const searchParams = useSearchParams();
     const activeDateParam = searchParams.get('date');
-    const todayStr = new Date().toISOString().split('T')[0];
+    const viewUserId = searchParams.get('viewUserId');
+
+    const now = new Date();
+    const yearNow = now.getFullYear();
+    const monthNow = String(now.getMonth() + 1).padStart(2, '0');
+    const dayNow = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${yearNow}-${monthNow}-${dayNow}`;
 
     const [viewDate, setViewDate] = useState(new Date());
 
@@ -117,7 +123,7 @@ export function CalendarSidebar({ completedDates }: Props) {
 
             const cellContent = (
                 <Link
-                    href={`/dashboard?date=${dateStr}`}
+                    href={`/dashboard?date=${dateStr}${viewUserId ? `&viewUserId=${viewUserId}` : ''}`}
                     className={`
                         relative w-8 h-8 flex items-center justify-center text-xs font-medium transition-all
                         ${isCompleted ? 'bg-primary/80 ' + roundedClass : 'hover:bg-white/10 rounded-full text-gray-400'}
@@ -169,7 +175,10 @@ export function CalendarSidebar({ completedDates }: Props) {
             </div>
 
             <div className="mt-6 flex justify-center">
-                <Link href="/dashboard" className="text-xs bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-full text-gray-400 hover:text-white transition-colors">
+                <Link
+                    href={`/dashboard?${viewUserId ? `viewUserId=${viewUserId}` : ''}`}
+                    className="text-xs bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-full text-gray-400 hover:text-white transition-colors"
+                >
                     Jump to Today
                 </Link>
             </div>

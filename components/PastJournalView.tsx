@@ -11,7 +11,9 @@ type EntryWithPrompt = {
 }
 
 export function PastJournalView({ entries, date }: { entries: EntryWithPrompt[], date: string }) {
-    const displayDate = new Date(date).toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    // Force parsing as local time by appending time component, or Parse integers. 
+    // new Date("YYYY-MM-DD") is UTC. new Date("YYYY-MM-DDT00:00:00") is Local.
+    const displayDate = new Date(`${date}T00:00:00`).toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
     return (
         <div className="animate-[fade-in_0.5s_ease-out]">

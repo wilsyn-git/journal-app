@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { TimezoneSync } from "@/components/TimezoneSync";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -12,29 +13,53 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Journal.ai | De-clutter your mind",
-  description: "A focused journaling application for daily reflection and personal growth.",
-  openGraph: {
-    title: "Journal.ai",
-    description: "Capture your thoughts, find clarity, and track your personal growth.",
-    siteName: "Journal.ai",
-    locale: "en_US",
-    type: "website",
-  }
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const org = await prisma.organization.findFirst({
+    orderBy: { users: { _count: 'desc' } }
+  })
 
-export default function RootLayout({
+  const siteName = org?.siteName || "Journal.ai";
+  const title = `${siteName} | De-clutter your mind`;
+
+  return {
+    title,
+    description: "A focused journaling application for daily reflection and personal growth.",
+    openGraph: {
+      title: siteName,
+      description: "Capture your thoughts, find clarity, and track your personal growth.",
+      siteName: siteName,
+      locale: "en_US",
+      type: "website",
+    },
+    icons: org?.logoUrl ? [{ rel: "icon", url: org.logoUrl }] : undefined
+  }
+}
+
+import { prisma } from "@/lib/prisma"
+import { BrandingProvider } from "@/components/BrandingProvider"
+import { ToastProvider } from "@/components/providers/ToastProvider"
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Fetch branding (prioritize active org)
+  const org = await prisma.organization.findFirst({
+    orderBy: { users: { _count: 'desc' } }
+  })
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <TimezoneSync />
+        <ToastProvider>
+          <BrandingProvider siteName={org?.siteName} logoUrl={org?.logoUrl}>
+            {children}
+          </BrandingProvider>
+        </ToastProvider>
       </body>
     </html>
   );

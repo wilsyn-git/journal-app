@@ -1,9 +1,11 @@
 
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
-import { togglePrompt, deletePrompt } from "@/app/lib/admin-actions"
+import { togglePrompt, deletePrompt, deletePromptCategory } from "@/app/lib/admin-actions"
 import { auth } from "@/auth"
 import { NewCategoryForm } from "@/components/admin/NewCategoryForm"
+import { PromptImporter } from "@/components/admin/PromptImporter"
+import { DeleteCategoryButton } from "@/components/admin/DeleteCategoryButton"
 
 type Props = {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -40,7 +42,10 @@ export default async function AdminPromptsPage({ searchParams }: Props) {
             <div className="w-1/3 flex flex-col glass-card border border-white/10 rounded-xl overflow-hidden relative">
                 <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
                     <h2 className="text-lg font-bold text-white">Categories</h2>
-                    <NewCategoryForm />
+                    <div className="flex items-center gap-2">
+                        <PromptImporter />
+                        <NewCategoryForm />
+                    </div>
                 </div>
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
                     {categories.map(cat => (
@@ -48,12 +53,15 @@ export default async function AdminPromptsPage({ searchParams }: Props) {
                             key={cat.id}
                             href={`/admin/prompts?cat=${cat.id}`}
                             className={`
-                                block p-3 rounded-lg transition-colors flex justify-between items-center
+                                block p-3 rounded-lg transition-colors flex justify-between items-center group
                                 ${selectedCategoryId === cat.id ? 'bg-primary/20 border border-primary/30' : 'hover:bg-white/5 border border-transparent'}
                             `}
                         >
-                            <span className="text-sm font-medium text-white">{cat.name}</span>
-                            <span className="text-xs text-gray-500 bg-black/20 px-2 py-0.5 rounded-full">{cat._count.prompts}</span>
+                            <span className="text-sm font-medium text-white group-hover:text-blue-200 transition-colors">{cat.name}</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-500 bg-black/20 px-2 py-0.5 rounded-full">{cat._count.prompts}</span>
+                                <DeleteCategoryButton categoryId={cat.id} categoryName={cat.name} />
+                            </div>
                         </Link>
                     ))}
                     {categories.length === 0 && (

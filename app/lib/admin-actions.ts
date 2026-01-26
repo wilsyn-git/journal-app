@@ -3,6 +3,8 @@
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { sendEmail } from '@/lib/email'
+import { welcomeEmail } from '@/lib/email/templates'
 
 // Helper to ensure admin
 async function ensureAdmin() {
@@ -375,11 +377,31 @@ export async function createPromptCategory(formData: FormData) {
 export async function deletePromptCategory(id: string) {
     await ensureAdmin();
     try {
-        await prisma.promptCategory.delete({ where: { id } });
-        // Optional: delete associated prompts? Schema constraint check needed.
+        const [prompts, rules, cat] = await prisma.$transaction([
+            // 1. Delete Prompts
+            prisma.prompt.deleteMany({ where: { categoryId: id } }),
+
+            // 2. Delete Rules
+            prisma.profileRule.deleteMany({ where: { categoryId: id } }),
+
+            // 3. Delete Category
+            prisma.promptCategory.delete({ where: { id } })
+        ]);
+
         revalidatePath('/admin/prompts');
+        revalidatePath('/dashboard');
+
+        return {
+            success: true,
+            details: {
+                promptsDeleted: prompts.count,
+                rulesDeleted: rules.count,
+                categoryName: cat.name
+            }
+        }
     } catch (e) {
-        // console.error(e)
+        console.error("Delete Category Error:", e)
+        return { error: 'Failed to delete category' }
     }
 }
 
@@ -586,6 +608,20 @@ export async function createUser(formData: FormData) {
             }
         });
 
+        // Send Welcome Email
+        try {
+            const emailContent = welcomeEmail(name || email)
+            await sendEmail({
+                to: email,
+                subject: emailContent.subject,
+                html: emailContent.html,
+                text: emailContent.text
+            })
+        } catch (error) {
+            console.error("Failed to send welcome email:", error)
+            // Don't fail the user creation
+        }
+
         revalidatePath('/admin/users');
         return { success: true }
     } catch (e) {
@@ -614,5 +650,143 @@ export async function updateUser(userId: string, prevState: any, formData: FormD
         return { success: true };
     } catch (e) {
         return { error: 'Failed to update user' };
+    }
+}
+
+export async function importPrompts(formData: FormData) {
+    await ensureAdmin();
+    const session = await auth();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const organizationId = (session?.user as any)?.organizationId as string;
+
+    const file = formData.get('file') as File | null;
+    if (!file) return { error: "No file provided" };
+
+    let data: Record<string, string[]>;
+    try {
+        const text = await file.text();
+        data = JSON.parse(text);
+    } catch (e) {
+        return { error: "Invalid JSON file" };
+    }
+
+    // Validation
+    if (typeof data !== 'object' || Array.isArray(data)) {
+        return { error: "Invalid format. Expected object mapping Categories to Arrays of Prompts." };
+    }
+
+    // Initialize Stats
+    const stats = {
+        detectedCategories: Object.keys(data).length,
+        detectedPrompts: 0,
+        createdCategories: 0,
+        skippedCategories: 0,
+        createdPrompts: 0,
+        skippedPrompts: 0
+    };
+
+    // Count total detected prompts first
+    for (const prompts of Object.values(data)) {
+        if (Array.isArray(prompts)) stats.detectedPrompts += prompts.length;
+    }
+
+    try {
+        // --- 1. Pre-fetch Existing Data for Normalization ---
+        const existingCategories = await prisma.promptCategory.findMany({
+            where: { organizationId },
+            select: { id: true, name: true }
+        });
+
+        // Map: lowercase name -> id
+        const categoryMap = new Map<string, string>();
+        existingCategories.forEach(c => categoryMap.set(c.name.toLowerCase(), c.id));
+
+        // Note: For prompts, we can't easily pre-fetch ALL if there are thousands, but assuming reasonable scale.
+        // Let's optimize by fetching relevant categories only? 
+        // Or simpler: Fetch all prompts for this org? 
+        // If we have 200 prompts, fetching all is fine. If 10,000, maybe not.
+        // Let's stick to fetching prompts *per category* inside the loop to be safer on memory, 
+        // OR fetch all light-weight signatures (content + categoryId).
+        // Given we are importing into categories, let's just check dynamically or per-category key.
+        // Actually, fetching all prompts (id, content, categoryId) is usually < 1MB JSON for < 5000 prompts.
+
+        const allPrompts = await prisma.prompt.findMany({
+            where: { organizationId },
+            select: { id: true, content: true, categoryId: true }
+        });
+
+        // Map: `${categoryId}:${lowercase_content}` -> id
+        const promptMap = new Map<string, string>();
+        allPrompts.forEach(p => {
+            // We scope uniqueness by Category + Content
+            if (p.categoryId) {
+                const key = `${p.categoryId}:${p.content.trim().toLowerCase()}`;
+                promptMap.set(key, p.id);
+            }
+        });
+
+
+        // --- 2. Process Data ---
+        for (const [categoryNameRaw, prompts] of Object.entries(data)) {
+            if (!Array.isArray(prompts)) continue;
+
+            const categoryNameClean = categoryNameRaw.trim();
+            const categoryKey = categoryNameClean.toLowerCase();
+
+            // Find or Create Category
+            let categoryId = categoryMap.get(categoryKey);
+
+            if (categoryId) {
+                stats.skippedCategories++;
+            } else {
+                const newCat = await prisma.promptCategory.create({
+                    data: { name: categoryNameClean, organizationId }
+                });
+                categoryId = newCat.id;
+                // Update map for subsequent lookups (though JSON shouldn't have dupe keys)
+                categoryMap.set(categoryKey, categoryId);
+                stats.createdCategories++;
+            }
+
+            // Process Prompts
+            for (const promptContentRaw of prompts) {
+                if (typeof promptContentRaw !== 'string') continue;
+
+                const promptContentClean = promptContentRaw.trim();
+                const promptKey = `${categoryId}:${promptContentClean.toLowerCase()}`;
+
+                if (promptMap.has(promptKey)) {
+                    stats.skippedPrompts++;
+                } else {
+                    const newPrompt = await prisma.prompt.create({
+                        data: {
+                            content: promptContentClean,
+                            type: 'TEXT',
+                            organizationId,
+                            categoryId,
+                            categoryString: categoryNameClean, // Legacy
+                            isGlobal: false,
+                            isActive: true
+                        }
+                    });
+                    // Update map
+                    promptMap.set(promptKey, newPrompt.id);
+                    stats.createdPrompts++;
+                }
+            }
+        }
+
+        revalidatePath('/admin/prompts');
+        revalidatePath('/dashboard');
+
+        return {
+            success: true,
+            message: "Import Complete",
+            details: stats
+        };
+
+    } catch (e) {
+        console.error(e);
+        return { error: "Failed to import prompts" };
     }
 }

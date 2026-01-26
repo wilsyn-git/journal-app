@@ -11,6 +11,8 @@ import { CalendarSidebar } from "@/components/CalendarSidebar"
 import { StreakBadge } from "@/components/StreakBadge"
 import { getUserStats } from "@/app/lib/analytics"
 import { AdminUserSelector } from "@/components/AdminUserSelector"
+import { getUserTimezone, getTodayForUser } from "@/lib/timezone"
+import { ContributionHeatmap } from "@/components/ContributionHeatmap"
 
 type Props = {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -57,10 +59,18 @@ export default async function DashboardPage({ searchParams }: Props) {
     const profileIds = await getEffectiveProfileIds(targetUserId);
     const hasConfiguration = profileIds.length > 0;
 
-    const dateParam = typeof params.date === 'string' ? params.date : null;
-    const today = new Date().toISOString().split('T')[0];
-    const isPast = dateParam && dateParam !== today;
+    const timezone = await getUserTimezone()
+    const today = getTodayForUser(timezone)
 
+    // Ensure we fetch the user's specific organization branding
+    const userWithOrg = await prisma.user.findUnique({
+        where: { id: currentUserId },
+        select: { organization: true }
+    })
+    const brandingOrg = userWithOrg?.organization
+
+    const dateParam = typeof params.date === 'string' ? params.date : null;
+    const isPast = dateParam && dateParam !== today;
     const targetDate = isPast ? dateParam! : today;
 
     // Fetch active prompts for the target date to ensure correct display order
@@ -130,15 +140,31 @@ export default async function DashboardPage({ searchParams }: Props) {
     // Fetch fresh user data for sidebar
     const currentUser = await prisma.user.findUnique({
         where: { id: currentUserId },
-        select: { name: true, email: true }
+        select: {
+            name: true,
+            email: true,
+            groups: { select: { name: true } },
+            avatars: { where: { isActive: true }, take: 1, select: { url: true } }
+        }
     });
+
+    const userLabel = isAdmin
+        ? 'Admin'
+        : (currentUser?.groups?.[0]?.name || 'No Group');
+
+    const avatarUrl = currentUser?.avatars?.[0]?.url;
 
     // Sidebar Content (Server Rendered Part)
     const SidebarContent = (
         <>
-            <div className="p-6 border-b border-white/10">
-                <Link href="/dashboard" className="text-xl font-bold tracking-tighter text-white">
-                    Journal<span className="text-primary">.ai</span>
+            <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                <Link href="/dashboard" className="text-xl font-bold tracking-tighter text-white flex items-center gap-2">
+                    {brandingOrg?.logoUrl && <img src={brandingOrg.logoUrl} alt="Logo" className="w-6 h-6 object-contain" />}
+                    <span>{brandingOrg?.siteName || "Journal.ai"}</span>
+                </Link>
+                <Link href="/settings" className="text-gray-400 hover:text-white transition-colors">
+                    <span className="sr-only">Settings</span>
+                    ⚙️
                 </Link>
             </div>
 
@@ -158,10 +184,14 @@ export default async function DashboardPage({ searchParams }: Props) {
                 )}
 
                 {isViewingSelf && (
-                    <div className="mb-6 px-2">
+                    <div className="mb-6 px-2 space-y-2">
                         <Link href="/dashboard" className="flex items-center gap-3 px-3 py-2 rounded-lg text-white hover:bg-white/5 transition-colors">
                             <span className="text-lg">✏️</span>
                             <span className="font-medium">Write Today</span>
+                        </Link>
+                        <Link href="/stats" className="flex items-center gap-3 px-3 py-2 rounded-lg text-white hover:bg-white/5 transition-colors">
+                            <span className="text-lg">📊</span>
+                            <span className="font-medium">My Stats</span>
                         </Link>
                     </div>
                 )}
@@ -170,17 +200,23 @@ export default async function DashboardPage({ searchParams }: Props) {
             </div>
 
             <div className="p-4 border-t border-white/10 bg-black/20">
-                <div className="flex items-center gap-4 justify-between">
+                <Link href="/settings" className="flex items-center gap-4 justify-between group cursor-pointer">
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-xs font-bold text-white">
-                            {(currentUser?.name?.[0] || currentUser?.email?.[0] || '?').toUpperCase()}
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-xs font-bold text-white overflow-hidden border border-white/10">
+                            {avatarUrl ? (
+                                <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                            ) : (
+                                (currentUser?.name?.[0] || currentUser?.email?.[0] || '?').toUpperCase()
+                            )}
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-xs font-medium text-white max-w-[100px] truncate">{currentUser?.name || currentUser?.email?.split('@')[0]}</span>
-                            <span className="text-[10px] text-gray-400">{isAdmin ? 'Admin' : 'Basic Plan'}</span>
+                            <span className="text-xs font-medium text-white max-w-[100px] truncate group-hover:text-primary transition-colors">
+                                {currentUser?.name || currentUser?.email?.split('@')[0]}
+                            </span>
+                            <span className="text-[10px] text-gray-400">{userLabel}</span>
                         </div>
                     </div>
-                </div>
+                </Link>
                 <form action={async () => {
                     "use server"
                     await signOut({ redirectTo: "/" })
@@ -196,11 +232,18 @@ export default async function DashboardPage({ searchParams }: Props) {
     return (
         <DashboardShell sidebar={SidebarContent} streak={userStats.streak}>
             {/* Desktop Header / Stats Bar */}
-            <div className="hidden md:flex justify-between items-center p-6 px-10 border-b border-white/5">
-                <div className="text-sm text-gray-400">
-                    {isViewingSelf ? 'Your Journal' : `Viewing: ${targetUserEmail}`}
+            <div className="hidden md:flex flex-col p-6 px-10 border-b border-white/5 gap-4">
+                <div className="flex justify-between items-center">
+                    <div className="text-sm text-gray-400">
+                        {isViewingSelf ? 'Your Journal' : `Viewing: ${targetUserEmail}`}
+                    </div>
+                    <StreakBadge streak={userStats.streak} />
                 </div>
-                <StreakBadge streak={userStats.streak} />
+
+                {/* Heatmap Section */}
+                <div className="w-full">
+                    <ContributionHeatmap data={userStats.heatmap} />
+                </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 md:p-10 custom-scrollbar">

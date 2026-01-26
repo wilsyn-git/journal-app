@@ -1,20 +1,22 @@
-
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
 async function main() {
-    console.log("Deleting all journal entries...");
-    await prisma.journalEntry.deleteMany({});
-    console.log("Deleted all journal entries.");
+    console.log('🗑️  Clearing Journal Entries (Stats will reset)...')
+
+    // Delete all journal entries
+    const { count } = await prisma.journalEntry.deleteMany({})
+
+    console.log(`✅ Deleted ${count} journal entries.`)
+    console.log('   Users, Prompts, and Profiles remain untouched.')
 }
 
 main()
-    .then(async () => {
-        await prisma.$disconnect()
-    })
-    .catch(async (e) => {
+    .catch((e) => {
         console.error(e)
-        await prisma.$disconnect()
         process.exit(1)
+    })
+    .finally(async () => {
+        await prisma.$disconnect()
     })

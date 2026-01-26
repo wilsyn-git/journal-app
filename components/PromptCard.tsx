@@ -52,7 +52,7 @@ export function PromptCard({ prompt, value = "", onChange, disabled }: PromptCar
 
     if (isText) {
         return (
-            <div className="glass-card p-6 rounded-xl border border-white/10 mb-6 group hover:border-white/20 transition-all duration-300">
+            <div className="glass-card p-4 rounded-xl border border-white/10 mb-6 group hover:border-white/20 transition-all duration-300">
                 <h3 className="text-lg font-medium text-white mb-4">{prompt.content}</h3>
                 <textarea
                     name={`prompt_${prompt.id}`}

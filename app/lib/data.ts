@@ -115,19 +115,19 @@ export async function getActivePrompts(
                 }
 
                 // Fetch pool of prompts for this category
+                const categoryConditions: any[] = [];
+                if (rule.categoryString) categoryConditions.push({ categoryString: rule.categoryString });
+                if (rule.categoryId) categoryConditions.push({ categoryId: rule.categoryId });
+
+                // If no target is defined, skip this rule (or handle as error)
+                if (categoryConditions.length === 0) continue;
+
+                // Fetch pool of prompts for this category
                 const pool = await prisma.prompt.findMany({
                     where: {
                         organizationId,
                         isActive: true,
-                        OR: [
-                            { categoryString: rule.categoryString || undefined },
-                            // If rule has a relation, check that too
-                            ...(rule.categoryId ? [{ categoryId: rule.categoryId }] : [])
-                        ],
-                        // If both are present, we might get broader results? 
-                        // Let's refine: A rule usually targets EITHER a string OR a category ID now.
-                        // But wait, the rule itself migth be "migrated" to have both or one.
-
+                        OR: categoryConditions,
                         isGlobal: false,
                         id: { notIn: Array.from(selectedPromptsMap.keys()) }
                     }
@@ -176,7 +176,7 @@ export async function getJournalHistory(userId: string) {
 
     const dates = new Set<string>();
     entries.forEach(e => {
-        dates.add(new Date(e.createdAt).toISOString().split('T')[0]);
+        dates.add(new Date(e.createdAt).toLocaleDateString('en-CA'));
     });
 
     return Array.from(dates);

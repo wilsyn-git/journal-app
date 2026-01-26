@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 
 type UserOption = {
     id: string;
@@ -12,35 +12,44 @@ type UserOption = {
 export function AdminUserSelector({ users }: { users: UserOption[] }) {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const currentViewIds = searchParams.get('viewUserId') || '';
+    const pathname = usePathname();
 
     const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const userId = e.target.value;
-        const params = new URLSearchParams(searchParams);
-        if (userId) {
-            params.set('viewUserId', userId);
+        const val = e.target.value;
+        const newParams = new URLSearchParams(searchParams.toString());
+        if (val) {
+            newParams.set('viewUserId', val);
         } else {
-            params.delete('viewUserId');
+            newParams.delete('viewUserId');
         }
-        router.push(`?${params.toString()}`);
+        router.push(`${pathname}?${newParams.toString()}`);
     }
 
+    // Identify current user (Myself) if viewUserId is missing
+    const currentSelection = searchParams.get('viewUserId') || '';
+
     return (
-        <div className="mb-4 px-4">
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+        <div className="px-2">
+            <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2 block px-1">
                 Inspect User
             </label>
             <select
-                value={currentViewIds}
+                value={currentSelection}
                 onChange={handleChange}
-                className="w-full bg-white/5 border border-white/10 rounded-lg text-sm text-gray-300 p-2 focus:ring-2 focus:ring-primary/50 outline-none [&>option]:bg-gray-900"
+                className="w-full bg-white/5 border border-white/10 rounded-lg text-xs text-white p-2 focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer"
             >
-                <option value="">(Myself)</option>
-                {users.map(u => (
-                    <option key={u.id} value={u.id}>
-                        {u.name ? `${u.name} (${u.email})` : u.email}
-                    </option>
-                ))}
+                <option value="">Myself (Admin)</option>
+                {users
+                    .filter(u => u.email !== 'admin@example.com') // Hide the explicit Admin user entry to avoid redundancy
+                    // Filter out the admin user themselves if they appear in the list to avoid duplication
+                    // assuming we can indentify them? Actually, cleaner to just let them appear or 
+                    // rename the default option.
+                    // Let's just list everyone.
+                    .map(u => (
+                        <option key={u.id} value={u.id}>
+                            {u.name ? `${u.name} (${u.email})` : u.email}
+                        </option>
+                    ))}
             </select>
         </div>
     )

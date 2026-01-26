@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { StreakBadge } from './StreakBadge'
+import { useBranding } from './BrandingProvider'
 
 type Props = {
     sidebar: React.ReactNode
@@ -12,6 +13,7 @@ type Props = {
 
 export function DashboardShell({ sidebar, children, streak }: Props) {
     const [isSidebarOpen, setSidebarOpen] = useState(false)
+    const { siteName, logoUrl } = useBranding()
 
     return (
         <div className="flex w-full h-screen bg-background text-foreground overflow-hidden">
@@ -53,7 +55,10 @@ export function DashboardShell({ sidebar, children, streak }: Props) {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                             </svg>
                         </button>
-                        <Link href="/dashboard" className="text-lg font-bold text-white">Journal</Link>
+                        <Link href="/dashboard" className="text-lg font-bold text-white flex items-center gap-2">
+                            {logoUrl && <img src={logoUrl} alt="Logo" className="w-6 h-6 object-contain" />}
+                            <span>{siteName}</span>
+                        </Link>
                     </div>
 
                     <div className="flex items-center gap-3">

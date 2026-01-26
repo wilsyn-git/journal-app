@@ -19,8 +19,12 @@ export async function DailyJournalForm() {
     const userProfileIds = await getEffectiveProfileIds(currentUserId);
     const prompts = await getActivePrompts(currentUserId, organizationId, userProfileIds);
 
-    // Fetch existing answers for today
-    const todayStr = new Date().toISOString().split('T')[0];
+    // Fetch existing answers for today (Server Local Time)
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
     let initialAnswers: Record<string, string> = {};
 
     if (currentUserId) {

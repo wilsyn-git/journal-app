@@ -1,6 +1,12 @@
 import Link from "next/link";
+import { prisma } from "@/lib/prisma"
 
-export default function Home() {
+export default async function Home() {
+  // Fetch the primary organization (the one with the most users, or simply the most recently active one)
+  const org = await prisma.organization.findFirst({
+    orderBy: { users: { _count: 'desc' } }
+  })
+
   return (
     <div className="min-h-screen relative overflow-hidden bg-background text-foreground selection:bg-primary/30">
       {/* Background Gradients */}
@@ -13,8 +19,12 @@ export default function Home() {
 
         {/* Navigation / Header */}
         <header className="absolute top-0 w-full p-6 flex justify-between items-center max-w-7xl mx-auto">
-          <div className="text-xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
-            Journal<span className="text-primary">.ai</span>
+          <div className="flex items-center gap-3">
+            {/* Logo would go here if we had one specific logic for it, or just text */}
+            {org?.logoUrl && <img src={org.logoUrl} alt="Logo" className="w-8 h-8 object-contain" />}
+            <div className="text-xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
+              {org?.siteName || "Journal.ai"}
+            </div>
           </div>
           <nav>
             <Link
@@ -97,7 +107,7 @@ export default function Home() {
 
         {/* Footer */}
         <footer className="absolute bottom-4 text-center text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} Journal.ai. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} {org?.siteName || "Journal.ai"}. All rights reserved.</p>
         </footer>
       </main>
     </div>

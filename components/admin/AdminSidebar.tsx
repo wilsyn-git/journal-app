@@ -45,6 +45,12 @@ export function AdminSidebar() {
                 <Link href="/admin/prompts" className={linkClass('/admin/prompts')}>
                     Prompts
                 </Link>
+
+                <div className="h-px bg-white/10 my-2" />
+
+                <Link href="/admin/branding" className={linkClass('/admin/branding')}>
+                    Branding
+                </Link>
             </nav>
             <div className="pt-4 border-t border-white/10">
                 <Link href="/dashboard" className="block px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">

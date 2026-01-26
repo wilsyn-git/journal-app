@@ -4,6 +4,7 @@ import { auth } from "@/auth"
 import Link from "next/link"
 
 import { NewUserForm } from "@/components/admin/NewUserForm"
+import { ChangePasswordDialog } from "@/components/ChangePasswordDialog"
 
 export default async function AdminUsersPage() {
     const users = await prisma.user.findMany({
@@ -52,6 +53,16 @@ export default async function AdminUsersPage() {
                                 </td>
                                 <td className="px-6 py-4">{new Date(user.createdAt).toLocaleDateString()}</td>
                                 <td className="px-6 py-4">{user._count.entries}</td>
+                                <td className="px-6 py-4 text-right">
+                                    <ChangePasswordDialog
+                                        targetUserId={user.id}
+                                        trigger={
+                                            <button className="text-xs text-gray-400 hover:text-white underline decoration-gray-600 hover:decoration-white transition-colors">
+                                                Reset Password
+                                            </button>
+                                        }
+                                    />
+                                </td>
                             </tr>
                         ))}
                     </tbody>
