@@ -21,8 +21,14 @@ A focused, intelligent journaling application designed to help you de-clutter yo
 - **Admin Hearts**: Admins can "Like" entries to provide subtle encouragement.
 - **Visual Indicators**: Users see a red bubble on their calendar and a heart on their entry when feedback is received.
 
+### 🛡️ Data Sovereignty
+- **Full Backup**: Admins can export the entire system state (including binary assets like images) to a secure `.json.gz` file.
+- **Smart Restore**: Restore functionality with "Merge" (safe) or "Overwrite" modes.
+- **Binary Handling**: Automatically reconstructs avatar and logo files from the backup.
+
 ### 🛠️ Admin & Configuration
 - **User Management**: Admin role can view stats for other users (for coaching/accountability groups).
+- **Branding**: Customize the Site Name and Logo via the Admin Panel.
 - **Prompt Rules**: Assign specific prompts to specific User Groups (e.g., "Athletes" get different questions than "Artists").
 - **Profile Customization**: Users can upload avatars and manage their bio.
 
@@ -77,7 +83,8 @@ A focused, intelligent journaling application designed to help you de-clutter yo
 
 - [x] **AWS SES Integration**: Email infrastructure for password resets.
 - [x] **Admin Feedback**: Heart/Like system for user entries.
-- [ ] **Data Export**: Download your complete journal history.
+- [x] **Data Export & Restore**: Full system backup and recovery.
+- [x] **Branding**: Custom site identity.
 - [ ] **Mobile Polish**: Responsiveness improvements for small screens.
 - [ ] **Advanced Insights**: Sentiment analysis and mood tracking.
 
