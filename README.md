@@ -28,7 +28,7 @@ A focused, intelligent journaling application designed to help you de-clutter yo
 - **Binary Handling**: Automatically reconstructs avatar and logo files from the backup.
 
 ### 🛠️ Admin & Configuration
-- **User Management**: Admin role can view stats for other users (for coaching/accountability groups).
+- **User Management**: Admin role can view stats for other users and perform **Safe Deletion** (transactional removal of users with mandatory data backup).
 - **Branding**: Customize the Site Name and Logo via the Admin Panel.
 - **Prompt Rules**: Assign specific prompts to specific User Groups (e.g., "Athletes" get different questions than "Artists").
 - **Profile Customization**: Users can upload avatars and manage their bio.
