@@ -127,16 +127,12 @@ export default async function GroupDetailPage({ params }: Props) {
                                             Remove
                                         </button>
                                     </form>
-                                    <button className="text-xs text-gray-500 hover:text-red-400 p-1">
-                                        Remove
-                                    </button>
-                                </form>
                                 </div>
-                    ))
+                            ))
                         )}
+                    </div>
                 </div>
             </div>
         </div>
-        </div >
     )
 }
