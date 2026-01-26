@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
 type Props = {
-    completedDates: string[] // YYYY-MM-DD
+    completedDates: { date: string, hasLike: boolean }[] // YYYY-MM-DD + Status
 }
 
 export function CalendarSidebar({ completedDates }: Props) {
@@ -22,7 +22,8 @@ export function CalendarSidebar({ completedDates }: Props) {
 
     const [viewDate, setViewDate] = useState(new Date());
 
-    const completedSet = new Set(completedDates);
+    const completedMap = new Map<string, boolean>(); // date -> hasLike
+    completedDates.forEach(d => completedMap.set(d.date, d.hasLike));
 
     const year = viewDate.getFullYear();
     const month = viewDate.getMonth(); // 0-indexed
@@ -43,8 +44,6 @@ export function CalendarSidebar({ completedDates }: Props) {
     // Helper to format date YYYY-MM-DD
     const formatDate = (day: number) => {
         const d = new Date(year, month, day);
-        // Handle timezone/local issues simply by using the constructed Y/M/D values string directly
-        // to avoid UTC shifts
         const y = d.getFullYear();
         const m = String(d.getMonth() + 1).padStart(2, '0');
         const dayStr = String(d.getDate()).padStart(2, '0');
@@ -53,13 +52,13 @@ export function CalendarSidebar({ completedDates }: Props) {
 
     // Check streak length ending at specific date
     const getStreakLength = (dateStr: string) => {
-        if (!completedSet.has(dateStr)) return 0;
+        if (!completedMap.has(dateStr)) return 0;
         let streak = 1;
         const current = new Date(dateStr);
         while (true) {
             current.setDate(current.getDate() - 1);
             const prevStr = current.toISOString().split('T')[0];
-            if (completedSet.has(prevStr)) {
+            if (completedMap.has(prevStr)) {
                 streak++;
             } else {
                 break;
@@ -78,28 +77,18 @@ export function CalendarSidebar({ completedDates }: Props) {
         // Days
         for (let d = 1; d <= daysInMonth; d++) {
             const dateStr = formatDate(d);
-            const isCompleted = completedSet.has(dateStr);
+            const isCompleted = completedMap.has(dateStr);
+            const isLiked = completedMap.get(dateStr);
             const isActive = activeDateParam === dateStr;
             const isToday = dateStr === todayStr;
 
             // Visual Logic for connecting bubbles
-            // We need to check neighbors (d-1 and d+1)
-            // But strict visual merging usually only happens within the row (week).
-            // So we check if prev/next day is in the same week row?
-            // Actually, simplified: check if neighbors are completed.
-
-            // Check Previous Day
-            const prevDate = new Date(year, month, d - 1);
-            const prevStr = formatDate(d - 1); // Note: this handles 0 -> prev month day logic if we used Date object, but formatDate(0) needs care. 
-            // Simpler: Just check if (d>1 and completedSet.has(prevStr)) AND (current index % 7 !== 0)
-
-            // Current index in the grid (0-indexed)
             const index = startDay + (d - 1);
             const isStartOfWeek = index % 7 === 0;
             const isEndOfWeek = index % 7 === 6;
 
-            const prevCompleted = d > 1 && completedSet.has(formatDate(d - 1));
-            const nextCompleted = d < daysInMonth && completedSet.has(formatDate(d + 1));
+            const prevCompleted = d > 1 && completedMap.has(formatDate(d - 1));
+            const nextCompleted = d < daysInMonth && completedMap.has(formatDate(d + 1));
 
             // Determine border radius class
             let roundedClass = 'rounded-full'; // Default isolated
@@ -113,20 +102,19 @@ export function CalendarSidebar({ completedDates }: Props) {
                 else if (connectRight) roundedClass = 'rounded-l-full rounded-r-none'; // Start
             }
 
-            // Streak Flame
+            // Streak Flame (Simpler check to avoid infinite loop overhead usually, but 30 days is fine)
             const streak = getStreakLength(dateStr);
             const showFlame = isCompleted && streak >= 7;
-
-            // Highlight color
-            // If active view: White border? 
-            // If completed: Primary color
 
             const cellContent = (
                 <Link
                     href={`/dashboard?date=${dateStr}${viewUserId ? `&viewUserId=${viewUserId}` : ''}`}
                     className={`
                         relative w-8 h-8 flex items-center justify-center text-xs font-medium transition-all
-                        ${isCompleted ? 'bg-primary/80 ' + roundedClass : 'hover:bg-white/10 rounded-full text-gray-400'}
+                        ${isCompleted
+                            ? (isLiked ? 'bg-rose-600 ' : 'bg-primary/80 ') + roundedClass
+                            : 'hover:bg-white/10 rounded-full text-gray-400'
+                        }
                         ${isActive ? 'ring-2 ring-white z-10' : ''}
                         ${isToday && !isCompleted ? 'border border-primary/50 text-white' : ''}
                         ${isCompleted ? 'text-white' : ''}

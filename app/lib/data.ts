@@ -166,20 +166,28 @@ export async function getActivePrompts(
 
 export async function getJournalHistory(userId: string) {
     // Group entries by date (YYYY-MM-DD)
-    // Prisma aggregation isn't perfect for Date truncation in SQLite/Generic.
-    // We'll fetch select fields and process in JS for simplicity/compatibility.
+    // We fetch select fields and process in JS for simplicity/compatibility.
     const entries = await prisma.journalEntry.findMany({
         where: { userId },
-        select: { createdAt: true },
+        select: { createdAt: true, isLiked: true },
         orderBy: { createdAt: 'desc' }
     });
 
-    const dates = new Set<string>();
+    const datesMap = new Map<string, boolean>(); // Date -> hasLike
+
     entries.forEach(e => {
-        dates.add(new Date(e.createdAt).toLocaleDateString('en-CA'));
+        const dateStr = new Date(e.createdAt).toLocaleDateString('en-CA');
+        // If map already has this date, OR if current entry is liked, update it.
+        // We want to know if *any* entry on this date is liked.
+        const currentStatus = datesMap.get(dateStr) || false;
+        datesMap.set(dateStr, currentStatus || e.isLiked);
     });
 
-    return Array.from(dates);
+    // Convert keys to array of objects
+    return Array.from(datesMap.entries()).map(([date, hasLike]) => ({
+        date,
+        hasLike
+    }));
 }
 
 export async function getEntriesByDate(userId: string, dateStr: string) {

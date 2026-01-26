@@ -25,7 +25,12 @@ export function useToast() {
 }
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+    const [mounted, setMounted] = useState(false)
     const [toasts, setToasts] = useState<Toast[]>([])
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
     const addToast = (type: ToastType, message: ReactNode, duration = 5000) => {
         const id = Math.random().toString(36).substring(2, 9)
@@ -46,7 +51,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         <ToastContext.Provider value={{ addToast }}>
             {children}
             {/* Render Toasts */}
-            {typeof window !== 'undefined' && createPortal(
+            {mounted && createPortal(
                 <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none">
                     {toasts.map(toast => (
                         <div

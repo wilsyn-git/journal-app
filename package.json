@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "next lint",
+    "restart": "kill -9 $(lsof -t -i:3000) 2>/dev/null || true && npm run dev"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.975.0",
