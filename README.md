@@ -1,4 +1,4 @@
-# Journal.ai 📓
+# Journaling App 📓
 
 A focused, intelligent journaling application designed to help you de-clutter your mind and track your personal growth through daily reflection.
 
@@ -35,7 +35,7 @@ A focused, intelligent journaling application designed to help you de-clutter yo
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/yourusername/journal-app.git
+    git clone https://github.com/wilsyn-git/journal-app.git
     cd journal-app
     ```
 
