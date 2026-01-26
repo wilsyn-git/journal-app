@@ -33,18 +33,44 @@ async function main() {
     });
 
     // Create Default Prompts linked to Org
-    // Create Default Prompts linked to Org
+    // 1. Create Categories first
+    const categories = ['General', 'Tasks', 'Anxiety'];
+    const categoryMap: Record<string, string> = {};
+
+    for (const catName of categories) {
+        const c = await prisma.promptCategory.upsert({
+            where: {
+                organizationId_name: {
+                    organizationId: org.id,
+                    name: catName
+                }
+            },
+            update: {},
+            create: {
+                name: catName,
+                organizationId: org.id
+            }
+        });
+        categoryMap[catName] = c.id;
+    }
+
+    // 2. Create Default Prompts linked to Org & Category
     const prompts = [
-        { content: "What are you grateful for today?", type: "TEXT", isGlobal: true, category: "General" },
-        { content: "How are you feeling?", type: "RADIO", options: JSON.stringify(["Happy", "Sad", "Anxious", "Neutral"]), isGlobal: true, category: "General" },
-        { content: "Did you complete your habits?", type: "CHECKBOX", options: JSON.stringify(["Workout", "Read", "Meditate"]), isGlobal: true, category: "Tasks" }
+        { content: "What are you grateful for today?", type: "TEXT", isGlobal: true, categoryName: "General" },
+        { content: "How are you feeling?", type: "RADIO", options: JSON.stringify(["Happy", "Sad", "Anxious", "Neutral"]), isGlobal: true, categoryName: "General" },
+        { content: "Did you complete your habits?", type: "CHECKBOX", options: JSON.stringify(["Workout", "Read", "Meditate"]), isGlobal: true, categoryName: "Tasks" }
     ]
 
     for (const p of prompts) {
+        // Separate categoryName from the rest of the object
+        const { categoryName, ...promptData } = p;
+
         await prisma.prompt.create({
             data: {
-                ...p,
-                organizationId: org.id
+                ...promptData,
+                organizationId: org.id,
+                categoryId: categoryMap[categoryName], // Link Relation
+                categoryString: categoryName // Legacy String
             }
         })
     }
@@ -59,15 +85,14 @@ async function main() {
     })
 
     // Create Targeted Prompt (Category: Anxiety)
-    // Note: isGlobal: false means it won't be picked up by general logic unless via Rule or if we change logic. 
-    // Actually, simply having category "Anxiety" is enough if the rule picks from "Anxiety".
     await prisma.prompt.create({
         data: {
             content: "What is triggering your anxiety right now?",
             type: "TEXT",
             organizationId: org.id,
             isGlobal: false,
-            category: "Anxiety"
+            categoryId: categoryMap['Anxiety'],
+            categoryString: 'Anxiety'
         }
     })
 
@@ -75,13 +100,14 @@ async function main() {
     await prisma.profileRule.create({
         data: {
             profileId: anxietyProfile.id,
-            category: "Anxiety",
+            categoryId: categoryMap['Anxiety'], // Link Relation
+            // categoryString is deprecated but we can set it if needed (schema says optional)
             minCount: 1,
             maxCount: 2
         }
     })
 
-    console.log({ admin, org });
+    console.log("Seeding completed successfully.");
 }
 
 main()
