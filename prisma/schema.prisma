@@ -76,6 +76,7 @@ model User {
   bio       String?
   resetToken     String?   @unique
   resetTokenExpiry DateTime?
+  lastLogin      DateTime?
 }
 
 model UserAvatar {

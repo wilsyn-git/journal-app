@@ -33,6 +33,7 @@ export default async function AdminUsersPage() {
                             <th className="px-6 py-4 text-white">User</th>
                             <th className="px-6 py-4 text-white">Role</th>
                             <th className="px-6 py-4 text-white">Joined</th>
+                            <th className="px-6 py-4 text-white">Last Login</th>
                             <th className="px-6 py-4 text-white">Entries</th>
                         </tr>
                     </thead>
@@ -53,6 +54,9 @@ export default async function AdminUsersPage() {
                                     </span>
                                 </td>
                                 <td className="px-6 py-4">{new Date(user.createdAt).toLocaleDateString()}</td>
+                                <td className="px-6 py-4 text-gray-400">
+                                    {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : '—'}
+                                </td>
                                 <td className="px-6 py-4">{user._count.entries}</td>
                                 <td className="px-6 py-4 text-right">
                                     <div className="flex items-center justify-end gap-3">

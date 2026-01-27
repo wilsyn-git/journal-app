@@ -42,6 +42,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }),
     ],
     callbacks: {
+        async signIn({ user }) {
+            if (user.id) {
+                try {
+                    await prisma.user.update({
+                        where: { id: user.id },
+                        data: { lastLogin: new Date() }
+                    })
+                } catch (e) {
+                    console.error("Failed to update lastLogin", e)
+                }
+            }
+            return true
+        },
         async session({ session, token }) {
             if (session.user && token.sub) {
                 session.user.id = token.sub;
