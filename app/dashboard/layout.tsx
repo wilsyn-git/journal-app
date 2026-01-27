@@ -1,7 +1,6 @@
 // Minimal layout that primarily handles background and sizing
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
-import { ActivityTracker } from "@/components/ActivityTracker"
 
 
 export default async function DashboardLayout({
@@ -22,7 +21,6 @@ export default async function DashboardLayout({
 
             {/* Children contains the Sidebar+Main content from page.tsx */}
             {children}
-            <ActivityTracker />
         </div>
     )
 }

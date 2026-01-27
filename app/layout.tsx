@@ -38,6 +38,7 @@ export async function generateMetadata(): Promise<Metadata> {
 import { prisma } from "@/lib/prisma"
 import { BrandingProvider } from "@/components/BrandingProvider"
 import { ToastProvider } from "@/components/providers/ToastProvider"
+import { ActivityTracker } from "@/components/ActivityTracker"
 
 export default async function RootLayout({
   children,
@@ -58,6 +59,7 @@ export default async function RootLayout({
         <ToastProvider>
           <BrandingProvider siteName={org?.siteName} logoUrl={org?.logoUrl}>
             {children}
+            <ActivityTracker />
           </BrandingProvider>
         </ToastProvider>
       </body>
