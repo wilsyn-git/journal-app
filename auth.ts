@@ -20,6 +20,9 @@ async function getUser(email: string) {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
     ...authConfig,
+    session: {
+        maxAge: 7 * 24 * 60 * 60, // 7 Days
+    },
     providers: [
         Credentials({
             async authorize(credentials) {
@@ -42,19 +45,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }),
     ],
     callbacks: {
-        async signIn({ user }) {
-            if (user.id) {
-                try {
-                    await prisma.user.update({
-                        where: { id: user.id },
-                        data: { lastLogin: new Date() }
-                    })
-                } catch (e) {
-                    console.error("Failed to update lastLogin", e)
-                }
-            }
-            return true
-        },
         async session({ session, token }) {
             if (session.user && token.sub) {
                 session.user.id = token.sub;

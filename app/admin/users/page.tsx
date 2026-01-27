@@ -33,7 +33,7 @@ export default async function AdminUsersPage() {
                             <th className="px-6 py-4 text-white">User</th>
                             <th className="px-6 py-4 text-white">Role</th>
                             <th className="px-6 py-4 text-white">Joined</th>
-                            <th className="px-6 py-4 text-white">Last Login</th>
+                            <th className="px-6 py-4 text-white">Last Active</th>
                             <th className="px-6 py-4 text-white">Entries</th>
                         </tr>
                     </thead>
