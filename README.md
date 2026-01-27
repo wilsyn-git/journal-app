@@ -2,8 +2,8 @@
 
 A focused, intelligent journaling application designed to help you de-clutter your mind and track your personal growth through daily reflection.
 
-![Journal Dashboard](/public/dashboard-preview.png)
-*(Note: You may want to add a screenshot here)*
+![Journal Dashboard](public/dashboard-preview.jpg)
+
 
 ## ✨ Key Features
 
