@@ -82,12 +82,10 @@ A focused, intelligent journaling application designed to help you de-clutter yo
 
 ## 🛣️ Roadmap
 
-- [x] **AWS SES Integration**: Email infrastructure for password resets.
-- [x] **Admin Feedback**: Heart/Like system for user entries.
-- [x] **Data Export & Restore**: Full system backup and recovery.
-- [x] **Branding**: Custom site identity.
 - [ ] **Mobile Polish**: Responsiveness improvements for small screens.
 - [ ] **Advanced Insights**: Sentiment analysis and mood tracking.
+- [ ] **AWS SES Integration**: Email infrastructure for password resets.
+
 
 ## 📄 License
 
