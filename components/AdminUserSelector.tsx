@@ -9,7 +9,7 @@ type UserOption = {
     name: string | null;
 }
 
-export function AdminUserSelector({ users }: { users: UserOption[] }) {
+export function AdminUserSelector({ users, currentUserId }: { users: UserOption[], currentUserId?: string }) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
@@ -40,11 +40,7 @@ export function AdminUserSelector({ users }: { users: UserOption[] }) {
             >
                 <option value="">Myself (Admin)</option>
                 {users
-                    .filter(u => u.email !== 'admin@example.com') // Hide the explicit Admin user entry to avoid redundancy
-                    // Filter out the admin user themselves if they appear in the list to avoid duplication
-                    // assuming we can indentify them? Actually, cleaner to just let them appear or 
-                    // rename the default option.
-                    // Let's just list everyone.
+                    .filter(u => u.id !== currentUserId) // Hide current user (handled by 'Myself')
                     .map(u => (
                         <option key={u.id} value={u.id}>
                             {u.name ? `${u.name} (${u.email})` : u.email}
