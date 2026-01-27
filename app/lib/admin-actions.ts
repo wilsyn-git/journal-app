@@ -661,7 +661,7 @@ export async function importPrompts(formData: FormData) {
     const file = formData.get('file') as File | null;
     if (!file) return { error: "No file provided" };
 
-    let data: Record<string, string[]>;
+    let data: any;
     try {
         const text = await file.text();
         data = JSON.parse(text);
@@ -669,25 +669,15 @@ export async function importPrompts(formData: FormData) {
         return { error: "Invalid JSON file" };
     }
 
-    // Validation
-    if (typeof data !== 'object' || Array.isArray(data)) {
-        return { error: "Invalid format. Expected object mapping Categories to Arrays of Prompts." };
-    }
-
     // Initialize Stats
     const stats = {
-        detectedCategories: Object.keys(data).length,
+        detectedCategories: 0,
         detectedPrompts: 0,
         createdCategories: 0,
         skippedCategories: 0,
         createdPrompts: 0,
         skippedPrompts: 0
     };
-
-    // Count total detected prompts first
-    for (const prompts of Object.values(data)) {
-        if (Array.isArray(prompts)) stats.detectedPrompts += prompts.length;
-    }
 
     try {
         // --- 1. Pre-fetch Existing Data for Normalization ---
@@ -700,15 +690,6 @@ export async function importPrompts(formData: FormData) {
         const categoryMap = new Map<string, string>();
         existingCategories.forEach(c => categoryMap.set(c.name.toLowerCase(), c.id));
 
-        // Note: For prompts, we can't easily pre-fetch ALL if there are thousands, but assuming reasonable scale.
-        // Let's optimize by fetching relevant categories only? 
-        // Or simpler: Fetch all prompts for this org? 
-        // If we have 200 prompts, fetching all is fine. If 10,000, maybe not.
-        // Let's stick to fetching prompts *per category* inside the loop to be safer on memory, 
-        // OR fetch all light-weight signatures (content + categoryId).
-        // Given we are importing into categories, let's just check dynamically or per-category key.
-        // Actually, fetching all prompts (id, content, categoryId) is usually < 1MB JSON for < 5000 prompts.
-
         const allPrompts = await prisma.prompt.findMany({
             where: { organizationId },
             select: { id: true, content: true, categoryId: true }
@@ -717,62 +698,89 @@ export async function importPrompts(formData: FormData) {
         // Map: `${categoryId}:${lowercase_content}` -> id
         const promptMap = new Map<string, string>();
         allPrompts.forEach(p => {
-            // We scope uniqueness by Category + Content
             if (p.categoryId) {
                 const key = `${p.categoryId}:${p.content.trim().toLowerCase()}`;
                 promptMap.set(key, p.id);
             }
         });
 
-
         // --- 2. Process Data ---
-        for (const [categoryNameRaw, prompts] of Object.entries(data)) {
-            if (!Array.isArray(prompts)) continue;
 
-            const categoryNameClean = categoryNameRaw.trim();
+        // Helper to process a single prompt
+        const processPrompt = async (categoryName: string, promptText: string, type: string = 'TEXT', options: string[] | null = null) => {
+            if (!categoryName || !promptText) return;
+
+            const categoryNameClean = categoryName.trim();
             const categoryKey = categoryNameClean.toLowerCase();
 
             // Find or Create Category
             let categoryId = categoryMap.get(categoryKey);
 
             if (categoryId) {
-                stats.skippedCategories++;
+                // We don't increment skippedCategories here because we might hit the same category multiple times
+                // We'll calculate distinct categories at the end if needed, or just track creations
             } else {
                 const newCat = await prisma.promptCategory.create({
                     data: { name: categoryNameClean, organizationId }
                 });
                 categoryId = newCat.id;
-                // Update map for subsequent lookups (though JSON shouldn't have dupe keys)
                 categoryMap.set(categoryKey, categoryId);
                 stats.createdCategories++;
             }
 
-            // Process Prompts
-            for (const promptContentRaw of prompts) {
-                if (typeof promptContentRaw !== 'string') continue;
+            const promptContentClean = promptText.trim();
+            const promptKey = `${categoryId}:${promptContentClean.toLowerCase()}`;
 
-                const promptContentClean = promptContentRaw.trim();
-                const promptKey = `${categoryId}:${promptContentClean.toLowerCase()}`;
+            if (promptMap.has(promptKey)) {
+                stats.skippedPrompts++;
+            } else {
+                await prisma.prompt.create({
+                    data: {
+                        content: promptContentClean,
+                        type: type.toUpperCase(), // Ensure uppercase enum-like string
+                        options: options ? JSON.stringify(options) : null,
+                        organizationId,
+                        categoryId,
+                        categoryString: categoryNameClean, // Legacy
+                        isGlobal: false,
+                        isActive: true
+                    }
+                });
+                promptMap.set(promptKey, "created");
+                stats.createdPrompts++;
+            }
+        };
 
-                if (promptMap.has(promptKey)) {
-                    stats.skippedPrompts++;
-                } else {
-                    const newPrompt = await prisma.prompt.create({
-                        data: {
-                            content: promptContentClean,
-                            type: 'TEXT',
-                            organizationId,
-                            categoryId,
-                            categoryString: categoryNameClean, // Legacy
-                            isGlobal: false,
-                            isActive: true
-                        }
-                    });
-                    // Update map
-                    promptMap.set(promptKey, newPrompt.id);
-                    stats.createdPrompts++;
+        if (Array.isArray(data)) {
+            // New Format: Array of { category, text, type, options }
+            stats.detectedPrompts = data.length;
+            const uniqueCategories = new Set(data.map((item: any) => item.category));
+            stats.detectedCategories = uniqueCategories.size;
+
+            for (const item of data) {
+                if (typeof item === 'object' && item.category && item.text) {
+                    await processPrompt(item.category, item.text, item.type, item.options);
                 }
             }
+
+        } else if (typeof data === 'object') {
+            // Legacy Format: { "Category": ["Prompt 1", "Prompt 2"] }
+            stats.detectedCategories = Object.keys(data).length;
+            for (const prompts of Object.values(data)) {
+                if (Array.isArray(prompts)) stats.detectedPrompts += prompts.length;
+            }
+
+            for (const [categoryName, prompts] of Object.entries(data)) {
+                if (Array.isArray(prompts)) {
+                    for (const promptText of prompts) {
+                        if (typeof promptText === 'string') {
+                            await processPrompt(categoryName, promptText);
+                        }
+                    }
+                }
+            }
+        } else {
+            return { error: "Invalid format. Expected Array or Object." };
         }
 
         revalidatePath('/admin/prompts');
@@ -780,13 +788,12 @@ export async function importPrompts(formData: FormData) {
 
         return {
             success: true,
-            message: "Import Complete",
-            details: stats
+            message: `Import Complete. Created ${stats.createdCategories} Categories and ${stats.createdPrompts} Prompts. Skipped ${stats.skippedPrompts} duplicates.`
         };
 
     } catch (e) {
-        console.error(e);
-        return { error: "Failed to import prompts" };
+        console.error("Import Prompts Error:", e);
+        return { error: "Server error during import" };
     }
 }
 
