@@ -43,6 +43,8 @@ A focused, intelligent journaling application designed to help you de-clutter yo
 
 ## 🚀 Getting Started
 
+> **New to the platform?** Check out our detailed [Getting Started Guide](GETTING_STARTED.md) for a walkthrough of the "Company Journal" setup scenario!
+
 1.  **Clone the repository:**
     ```bash
     git clone https://github.com/wilsyn-git/journal-app.git
