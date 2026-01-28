@@ -11,6 +11,8 @@ A focused, intelligent journaling application designed to help you de-clutter yo
 - **Dynamic Prompts**: Admin-configurable questions that can be Text, Checkboxes, or Radio buttons.
 - **Timezone Aware**: "Today" is calculated based on *your* local time, ensuring your streaks are accurate no matter where you travel.
 - **Daily Context**: Tracks your habits alongside your thoughts.
+- **Slider Prompts**: New "Range" input type for tracking quantitative data (Mood, Energy, etc.) with trend visualization.
+- **Prompt Reordering**: Drag-and-drop interface to control exactly in which order prompts appear in your journal.
 
 ### 📊 Deep Analytics
 - **Contribution Heatmap**: Customizable GitHub-style history (12-week view on Dashboard, 46-week view on Stats).
@@ -86,7 +88,9 @@ A focused, intelligent journaling application designed to help you de-clutter yo
 
 - [ ] **Mobile Polish**: Responsiveness improvements for small screens.
 - [ ] **Advanced Insights**: Sentiment analysis and mood tracking.
-- [ ] **AWS SES Integration**: Email infrastructure for password resets.
+- [ ] **Mobile Polish**: Responsiveness improvements for small screens.
+- [ ] **Advanced Insights**: Sentiment analysis and mood tracking.
+- [x] **AWS SES Integration**: Email infrastructure for password resets.
 
 
 ## 📄 License
