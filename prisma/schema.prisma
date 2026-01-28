@@ -112,6 +112,8 @@ model Prompt {
   // Legacy String (Migration path: will populate categoryId from this, then deprecate)
   categoryString  String      @default("General") // Renamed to avoid name clash with relation
 
+  sortOrder Int      @default(0)
+
   entries   JournalEntry[]
 }
 

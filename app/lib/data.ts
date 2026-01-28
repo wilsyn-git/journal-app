@@ -74,7 +74,7 @@ export async function getActivePrompts(
                 isActive: true,
                 isGlobal: true
             },
-            orderBy: { createdAt: 'asc' }
+            orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }]
         });
 
         const selectedPromptsMap = new Map<string, any>();
@@ -130,7 +130,8 @@ export async function getActivePrompts(
                         OR: categoryConditions,
                         isGlobal: false,
                         id: { notIn: Array.from(selectedPromptsMap.keys()) }
-                    }
+                    },
+                    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }]
                 });
 
                 if (rule.includeAll) {

@@ -6,6 +6,7 @@ import { auth } from "@/auth"
 import { NewCategoryForm } from "@/components/admin/NewCategoryForm"
 import { PromptImporter } from "@/components/admin/PromptImporter"
 import { DeleteCategoryButton } from "@/components/admin/DeleteCategoryButton"
+import { ReorderPromptsButton } from "@/components/admin/ReorderPromptsButton"
 
 type Props = {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -32,7 +33,10 @@ export default async function AdminPromptsPage({ searchParams }: Props) {
                 organizationId: orgId,
                 categoryId: selectedCategoryId
             },
-            orderBy: { createdAt: 'desc' }
+            orderBy: [
+                { sortOrder: 'asc' },
+                { createdAt: 'desc' }
+            ]
         });
     }
 
@@ -79,12 +83,19 @@ export default async function AdminPromptsPage({ searchParams }: Props) {
                             : 'Select a Category'}
                     </h2>
                     {selectedCategoryId && (
-                        <Link
-                            href={`/admin/prompts/new?cat=${selectedCategoryId}`}
-                            className="text-xs bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primary/90 transition-colors"
-                        >
-                            + Add Prompt
-                        </Link>
+                        <div className="flex items-center gap-2">
+                            <ReorderPromptsButton
+                                categoryId={selectedCategoryId}
+                                categoryName={categories.find(c => c.id === selectedCategoryId)?.name || 'Category'}
+                                prompts={prompts}
+                            />
+                            <Link
+                                href={`/admin/prompts/new?cat=${selectedCategoryId}`}
+                                className="text-xs bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primary/90 transition-colors"
+                            >
+                                + Add Prompt
+                            </Link>
+                        </div>
                     )}
                 </div>
 

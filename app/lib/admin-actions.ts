@@ -841,3 +841,22 @@ export async function deleteUser(userId: string) {
         return { error: "Failed to delete user. Check logs." };
     }
 }
+
+export async function reorderPrompts(items: { id: string; sortOrder: number }[]) {
+    await ensureAdmin();
+    try {
+        await prisma.$transaction(
+            items.map((item) =>
+                prisma.prompt.update({
+                    where: { id: item.id },
+                    data: { sortOrder: item.sortOrder },
+                })
+            )
+        );
+        revalidatePath('/admin/prompts');
+        return { success: true };
+    } catch (error) {
+        console.error("Reorder failed:", error);
+        return { error: "Failed to reorder prompts" };
+    }
+}
