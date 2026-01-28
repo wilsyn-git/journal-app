@@ -33,8 +33,8 @@ export function PromptImporter() {
             // But we need to store details in state if we want to render them complexly.
             // For now, let's format the message string nicely if details exist.
 
-            if (result.details) {
-                const d = result.details
+            if ((result as any).details) {
+                const d = (result as any).details
                 // Determine if strict JSON-serializable object needs casting or if we can use it.
                 // admin-actions is server code, so it returns plain JSON.
                 setMessage(
@@ -80,8 +80,8 @@ export function PromptImporter() {
             {/* Status Popover */}
             {(status === 'error' || status === 'success') && (
                 <div className={`absolute top-full right-0 mt-2 p-4 rounded-xl shadow-2xl z-50 w-64 backdrop-blur-md border animate-in fade-in zoom-in-95 ${status === 'error'
-                        ? 'bg-red-950/90 text-red-200 border-red-500/30'
-                        : 'bg-green-950/90 text-green-200 border-green-500/30'
+                    ? 'bg-red-950/90 text-red-200 border-red-500/30'
+                    : 'bg-green-950/90 text-green-200 border-green-500/30'
                     }`}>
                     <div className="flex justify-between items-start mb-2">
                         <h4 className="font-bold flex items-center gap-2">
