@@ -548,9 +548,11 @@ export async function togglePrompt(id: string, currentState: boolean) {
 export async function deletePrompt(id: string) {
     await ensureAdmin()
     try {
-        await prisma.prompt.delete({
-            where: { id }
-        })
+        await prisma.$transaction([
+            prisma.journalEntry.deleteMany({ where: { promptId: id } }),
+            prisma.prompt.delete({ where: { id } })
+        ]);
+
         revalidatePath('/admin/prompts')
         revalidatePath('/dashboard')
         return { success: true }
