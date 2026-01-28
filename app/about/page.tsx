@@ -15,12 +15,12 @@ export default function AboutPage() {
                 </Link>
 
                 <h1 className="text-4xl md:text-5xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">
-                    About Journal.ai
+                    About myJournal
                 </h1>
 
                 <div className="prose prose-invert prose-lg text-gray-300">
                     <p>
-                        In a world full of noise, <strong>Journal.ai</strong> is your quiet corner.
+                        In a world full of noise, <strong>myJournal</strong> is your quiet corner.
                     </p>
                     <p>
                         Self-reflection shouldn't feel like a chore. It shouldn't be about writing pages of text that you never read again. It should be focused, actionable, and revealing.

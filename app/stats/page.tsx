@@ -64,7 +64,7 @@ export default async function StatsPage({ searchParams }: Props) {
                 <div className="p-6 border-b border-white/10">
                     <Link href="/dashboard" className="text-xl font-bold tracking-tighter text-white flex items-center gap-2">
                         {org?.logoUrl && <img src={org.logoUrl} alt="Logo" className="w-6 h-6 object-contain" />}
-                        <span>{org?.siteName || "Journal.ai"}</span>
+                        <span>{org?.siteName || "myJournal"}</span>
                     </Link>
                 </div>
                 <div className="p-4 flex-1">

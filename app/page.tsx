@@ -23,7 +23,7 @@ export default async function Home() {
             {/* Logo would go here if we had one specific logic for it, or just text */}
             {org?.logoUrl && <img src={org.logoUrl} alt="Logo" className="w-8 h-8 object-contain" />}
             <div className="text-xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
-              {org?.siteName || "Journal.ai"}
+              {org?.siteName || "myJournal"}
             </div>
           </div>
           <nav>
@@ -107,7 +107,7 @@ export default async function Home() {
 
         {/* Footer */}
         <footer className="absolute bottom-4 text-center text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} {org?.siteName || "Journal.ai"}. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} {org?.siteName || "myJournal"}. All rights reserved.</p>
         </footer>
       </main>
     </div>

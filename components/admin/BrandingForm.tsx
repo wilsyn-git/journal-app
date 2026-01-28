@@ -51,7 +51,7 @@ export function BrandingForm({ currentName, currentLogo }: Props) {
                             className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
                             placeholder="e.g. Acme Journal"
                         />
-                        <p className="text-xs text-gray-500 mt-1">This will replace &quot;Journal.ai&quot; anywhere it appears as text.</p>
+                        <p className="text-xs text-gray-500 mt-1">This will replace &quot;myJournal&quot; anywhere it appears as text.</p>
                     </div>
                 </div>
             </div>

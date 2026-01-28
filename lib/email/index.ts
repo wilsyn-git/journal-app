@@ -20,7 +20,7 @@ const hasCredentials =
     Boolean(process.env.AWS_SECRET_ACCESS_KEY);
 
 const sesClient = hasCredentials ? new SESClient(SES_CONFIG) : null;
-const FROM_EMAIL = process.env.EMAIL_FROM || "noreply@journal.ai";
+const FROM_EMAIL = process.env.EMAIL_FROM || "noreply@myjournal.com";
 
 export async function sendEmail({ to, subject, html, text }: SendEmailParams) {
     if (sesClient && hasCredentials) {

@@ -25,12 +25,12 @@ export default async function AdminBrandingPage() {
             <div className="flex justify-between items-center mb-8">
                 <div>
                     <h1 className="text-3xl font-bold text-white">Branding & Customization</h1>
-                    <p className="text-gray-400 mt-1">Make Journal.ai your own.</p>
+                    <p className="text-gray-400 mt-1">Make myJournal your own.</p>
                 </div>
             </div>
 
             <BrandingForm
-                currentName={org.siteName || "Journal.ai"}
+                currentName={org.siteName || "myJournal"}
                 currentLogo={org.logoUrl}
             />
         </div>

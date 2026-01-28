@@ -13,7 +13,7 @@ Once you have the application running (via `pm2 start` or `npm run start`), the 
 
 Log in as the Admin and navigate to **Branding** in the sidebar.
 
-*   **Site Name**: Change "Journal.ai" to **"Company Journal"**.
+*   **Site Name**: Change "myJournal" to **"Company Journal"**.
 *   **Logo**: Upload your company logo. This replaces the default icon in the top-left and on the login screen.
 
 > **Why?** Custom branding helps users feel like they are in a trusted, internal space rather than a generic tool.

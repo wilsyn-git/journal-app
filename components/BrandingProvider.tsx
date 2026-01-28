@@ -8,7 +8,7 @@ type BrandingContextType = {
 }
 
 const BrandingContext = createContext<BrandingContextType>({
-    siteName: 'Journal.ai',
+    siteName: 'myJournal',
     logoUrl: null
 })
 
@@ -17,7 +17,7 @@ export function useBranding() {
 }
 
 export function BrandingProvider({
-    siteName = 'Journal.ai',
+    siteName = 'myJournal',
     logoUrl = null,
     children
 }: {
@@ -26,7 +26,7 @@ export function BrandingProvider({
     children: React.ReactNode
 }) {
     return (
-        <BrandingContext.Provider value={{ siteName: siteName || 'Journal.ai', logoUrl }}>
+        <BrandingContext.Provider value={{ siteName: siteName || 'myJournal', logoUrl }}>
             {children}
         </BrandingContext.Provider>
     )

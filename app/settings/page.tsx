@@ -50,7 +50,7 @@ export default async function SettingsPage() {
             <div className="w-64 border-r border-white/10 bg-black/20 flex flex-col p-4">
                 <Link href="/dashboard" className="text-xl font-bold tracking-tighter text-white mb-8 flex items-center gap-2">
                     {org?.logoUrl && <img src={org.logoUrl} alt="Logo" className="w-6 h-6 object-contain" />}
-                    <span>{org?.siteName || "Journal.ai"}</span>
+                    <span>{org?.siteName || "myJournal"}</span>
                 </Link>
                 <Link href="/dashboard" className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
                     <span>←</span> Back to Dashboard

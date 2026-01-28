@@ -162,7 +162,7 @@ export default async function DashboardPage({ searchParams }: Props) {
             <div className="p-6 border-b border-white/10 flex items-center justify-between">
                 <Link href="/dashboard" className="text-xl font-bold tracking-tighter text-white flex items-center gap-2">
                     {brandingOrg?.logoUrl && <img src={brandingOrg.logoUrl} alt="Logo" className="w-6 h-6 object-contain" />}
-                    <span>{brandingOrg?.siteName || "Journal.ai"}</span>
+                    <span>{brandingOrg?.siteName || "myJournal"}</span>
                 </Link>
                 <Link href="/settings" className="text-gray-400 hover:text-white transition-colors">
                     <span className="sr-only">Settings</span>

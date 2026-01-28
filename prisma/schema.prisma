@@ -18,7 +18,7 @@ model Organization {
   updatedAt DateTime @updatedAt
   
   // Branding
-  siteName  String?  @default("Journal.ai")
+  siteName  String?  @default("myJournal")
   logoUrl   String?  // Path to uploaded file
 
   users     User[]

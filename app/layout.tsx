@@ -18,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
     orderBy: { users: { _count: 'desc' } }
   })
 
-  const siteName = org?.siteName || "Journal.ai";
+  const siteName = org?.siteName || "myJournal";
   const title = `${siteName} | De-clutter your mind`;
 
   return {
