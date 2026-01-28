@@ -66,9 +66,55 @@ export function PromptCard({ prompt, value = "", onChange, disabled }: PromptCar
         );
     }
 
-    // Horizontal layout for Radio / Checkbox
+    // Horizontal layout for Radio / Checkbox / Range
     // Fallback options if none provided
     const displayOptions = options.length > 0 ? options : ['Yes', 'No'];
+
+    if (prompt.type === 'RANGE') {
+        const minLabel = options.length >= 2 ? options[0] : 'Low';
+        const maxLabel = options.length >= 2 ? options[1] : 'High';
+
+        // "Ghost State" Logic:
+        // If value is empty string, we treat it as null/uninteracted.
+        // We visually show it at 50% opacity.
+        // Once interacted, we set it to the value (defaulting start to 50 if clicked).
+        const hasInteracted = value !== "";
+        const numericValue = hasInteracted ? parseInt(value) : 50;
+
+        const handleRangeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            handleChange(e.target.value);
+        };
+
+        return (
+            <div className="glass-card p-4 rounded-xl border border-white/10 mb-3 group hover:border-white/20 transition-all duration-300 flex flex-col gap-4">
+                <div className="flex justify-between items-center">
+                    <h3 className="text-base font-medium text-white">{prompt.content}</h3>
+                    {hasInteracted && <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-0.5 rounded animate-in fade-in">{value}</span>}
+                </div>
+
+                <div className="relative pt-2 pb-1">
+                    <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={numericValue}
+                        onChange={handleRangeChange}
+                        disabled={disabled}
+                        className={`
+                            w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50
+                            slider-thumb
+                            ${!hasInteracted ? 'opacity-50 grayscale hover:opacity-80 hover:grayscale-0' : 'opacity-100'}
+                            transition-all duration-300
+                        `}
+                    />
+                    <div className="flex justify-between mt-2 text-xs text-gray-400 font-medium uppercase tracking-wider">
+                        <span>{minLabel}</span>
+                        <span>{maxLabel}</span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="glass-card p-4 rounded-xl border border-white/10 mb-3 group hover:border-white/20 transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-start gap-6">

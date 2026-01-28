@@ -9,6 +9,7 @@ import { ContributionHeatmap } from "@/components/ContributionHeatmap"
 import { TimeOfDayChart } from "@/components/stats/TimeOfDayChart"
 import { WordCloud } from "@/components/stats/WordCloud"
 import { BadgeGrid } from "@/components/stats/BadgeGrid"
+import { TrendChart } from "@/components/stats/TrendChart"
 
 type Props = {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -139,6 +140,20 @@ export default async function StatsPage({ searchParams }: Props) {
                             <WordCloud words={stats.wordCloud} />
                         </div>
                     </div>
+
+                    {/* Trends (Slider Prompts) */}
+                    {stats.trendStats && stats.trendStats.length > 0 && (
+                        <div className="mb-12">
+                            <h2 className="text-2xl font-bold text-white mb-6">Trends Over Time</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {stats.trendStats.map((trend: any) => (
+                                    <div key={trend.id} className="glass-card p-6 rounded-xl border border-white/10">
+                                        <TrendChart data={trend.data} name={trend.name} />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Badges */}
                     <div className="mb-12">

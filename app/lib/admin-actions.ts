@@ -420,7 +420,11 @@ export async function createPrompt(formData: FormData) {
     const categoryString = formData.get('categoryString') as string;
 
     let options = null;
-    if ((type === 'RADIO' || type === 'CHECKBOX')) {
+    if (type === 'RANGE') {
+        // Range options are sent as JSON string ["Min", "Max"] from client
+        options = optionsRaw;
+        if (!options) options = JSON.stringify(["Low", "High"]);
+    } else if ((type === 'RADIO' || type === 'CHECKBOX')) {
         if (optionsRaw) {
             const arr = optionsRaw.split(',').map(s => s.trim()).filter(Boolean);
             options = JSON.stringify(arr);
@@ -484,7 +488,10 @@ export async function updatePrompt(id: string, formData: FormData) {
     const categoryId = formData.get('categoryId') as string;
 
     let options = null;
-    if ((type === 'RADIO' || type === 'CHECKBOX')) {
+    if (type === 'RANGE') {
+        options = optionsRaw;
+        if (!options) options = JSON.stringify(["Low", "High"]);
+    } else if ((type === 'RADIO' || type === 'CHECKBOX')) {
         if (optionsRaw) {
             const arr = optionsRaw.split(',').map(s => s.trim()).filter(Boolean);
             options = JSON.stringify(arr);

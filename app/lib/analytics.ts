@@ -214,13 +214,50 @@ export async function getUserStats(userId: string) {
     ];
 
     // Task Stats (Daily Habits)
-    const taskMap = new Map<string, { prompt: string, days: Set<string> }>();
+    const taskMap = new Map<string, { prompt: string, type: string, days: Set<string> }>();
+    const rangeMap = new Map<string, { prompt: string, dateValues: Map<string, number[]> }>();
+
     entries.forEach(e => {
+        // Habits (Checkboxes / Radio)
         if (['Checkboxes', 'Radio', 'CHECKBOX', 'RADIO'].includes(e.prompt.type)) {
             if (!taskMap.has(e.prompt.id)) {
-                taskMap.set(e.prompt.id, { prompt: e.prompt.content, days: new Set() });
+                taskMap.set(e.prompt.id, { prompt: e.prompt.content, type: e.prompt.type, days: new Set() });
             }
             taskMap.get(e.prompt.id)!.days.add(new Date(e.createdAt).toLocaleDateString('en-CA', { timeZone: timezone }));
+        }
+
+        // Trends (Range / Slider)
+        if (e.prompt.type === 'RANGE') {
+            if (!rangeMap.has(e.prompt.id)) {
+                rangeMap.set(e.prompt.id, { prompt: e.prompt.content, dateValues: new Map() });
+            }
+
+            const dayStr = new Date(e.createdAt).toLocaleDateString('en-CA', { timeZone: timezone });
+            const mapEntry = rangeMap.get(e.prompt.id)!;
+            if (!mapEntry.dateValues.has(dayStr)) {
+                mapEntry.dateValues.set(dayStr, []);
+            }
+
+            // Soft Adapter: Parse the value
+            let val = 0;
+            const answer = e.answer.trim().toLowerCase();
+
+            if (!isNaN(parseInt(answer))) {
+                val = parseInt(answer);
+            } else if (answer === 'yes' || answer === 'true') {
+                val = 100;
+            } else if (answer === 'no' || answer === 'false') {
+                val = 0;
+            } else {
+                // Unknown text value, skip or default to 50? 
+                // Let's skip invalid data points to not skew average
+                return;
+            }
+
+            // Clamp 0-100 just in case
+            val = Math.max(0, Math.min(100, val));
+
+            mapEntry.dateValues.get(dayStr)!.push(val);
         }
     });
 
@@ -237,6 +274,27 @@ export async function getUserStats(userId: string) {
         });
     }
 
+    // Process Range Stats
+    const trendStats: { id: string, name: string, data: { date: string, value: number }[] }[] = [];
+
+    for (const [id, data] of rangeMap.entries()) {
+        const seriesData: { date: string, value: number }[] = [];
+        // Sort dates chronologically
+        const sortedDates = Array.from(data.dateValues.keys()).sort();
+
+        sortedDates.forEach(date => {
+            const values = data.dateValues.get(date)!;
+            const avg = Math.round(values.reduce((a, b) => a + b, 0) / values.length);
+            seriesData.push({ date, value: avg });
+        });
+
+        trendStats.push({
+            id,
+            name: data.prompt,
+            data: seriesData
+        });
+    }
+
     return {
         streak: current, // Legacy
         currentStreak: current,
@@ -245,6 +303,7 @@ export async function getUserStats(userId: string) {
         daysCompleted: uniqueDays.size,
         avgWords,
         taskStats,
+        trendStats, // New Range Data
         // New Data
         heatmap,     // { "2024-01-01": 5 }
         hourCounts,  // [0, 0, 5, ...] 24 items
