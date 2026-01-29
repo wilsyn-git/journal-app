@@ -92,7 +92,7 @@ export function PromptEditor({ prompt, categories, categoryId, mode = 'create' }
                         <option value="TEXT">Text Answer</option>
                         <option value="RADIO">Radio Choices</option>
                         <option value="CHECKBOX">Checkboxes</option>
-                        <option value="RANGE">Slider (0-100)</option>
+                        <option value="RANGE">Slider</option>
                     </select>
                 </div>
 
@@ -116,7 +116,7 @@ export function PromptEditor({ prompt, categories, categoryId, mode = 'create' }
                                 className="w-1/2 bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary/50 outline-none"
                             />
                         </div>
-                        <p className="text-xs text-gray-500">Labels for the 0 and 100 ends of the slider.</p>
+                        <p className="text-xs text-gray-500">Labels for the low and high ends of the slider.</p>
                         {mode === 'edit' && <p className="text-xs text-amber-500">Warning: Changing labels does not update historical data.</p>}
                     </div>
                 ) : (

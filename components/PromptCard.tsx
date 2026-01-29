@@ -89,7 +89,7 @@ export function PromptCard({ prompt, value = "", onChange, disabled }: PromptCar
             <div className="glass-card p-4 rounded-xl border border-white/10 mb-3 group hover:border-white/20 transition-all duration-300 flex flex-col gap-4">
                 <div className="flex justify-between items-center">
                     <h3 className="text-base font-medium text-white">{prompt.content}</h3>
-                    {hasInteracted && <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-0.5 rounded animate-in fade-in">{value}</span>}
+                    {hasInteracted && <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-0.5 rounded animate-in fade-in hidden">{value}</span>}
                 </div>
 
                 <div className="relative pt-2 pb-1">
