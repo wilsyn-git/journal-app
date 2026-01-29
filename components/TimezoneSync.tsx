@@ -1,27 +1,29 @@
 'use client'
 
 import { useEffect } from "react"
-// import { setCookie } from "cookies-next" // Unused
+import { useRouter } from "next/navigation"
 
 export function TimezoneSync() {
+    const router = useRouter()
+
     useEffect(() => {
         // Detect browser timezone
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
-        // Check if cookie exists or differs? 
-        // For simplicity, just overwrite it on mount. 
-        // The middleware/server will pick it up on next request.
-        // We set it for 365 days.
+        // Check if cookie exists and matches
+        const cookieMatch = document.cookie.split('; ').find(row => row.startsWith('user-timezone='))
+        const currentCookieValue = cookieMatch ? cookieMatch.split('=')[1] : null
 
-        // We use a small vanilla JS function or just document.cookie if we don't want a dep.
-        // But cookies-next is popular. Wait, do we have cookies-next?
-        // Let's use vanilla document.cookie to avoid adding dependencies if possible, 
-        // OR assume we can add it.
-        // Given the environment, vanilla is safer to avoid install steps if not needed.
+        if (currentCookieValue !== timezone) {
+            // Set cookie
+            document.cookie = `user-timezone=${timezone}; path=/; max-age=31536000; SameSite=Lax`
 
-        document.cookie = `user-timezone=${timezone}; path=/; max-age=31536000; SameSite=Lax`
+            // Refresh to ensure server renders with correct timezone
+            console.log('Timezone mismatch or missing. Refreshing...')
+            router.refresh()
+        }
 
-    }, [])
+    }, [router])
 
     return null
 }
