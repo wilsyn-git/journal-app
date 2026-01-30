@@ -1,6 +1,6 @@
 import { cookies } from "next/headers"
 
-export const DEFAULT_TIMEZONE = "UTC"
+export const DEFAULT_TIMEZONE = "America/New_York"
 
 export async function getUserTimezone() {
     const cookieStore = await cookies()
