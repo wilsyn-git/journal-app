@@ -45,35 +45,29 @@ export default async function GroupDetailPage({ params }: Props) {
             <div className="grid gap-8 md:grid-cols-2">
                 {/* Profiles Management */}
                 <div className="glass-card p-6 border border-white/10 rounded-xl">
-                    <h2 className="text-xl font-bold text-white mb-4">Assigned Profiles</h2>
-                    <p className="text-sm text-gray-400 mb-6">Users in this group will inherit these profiles.</p>
+                    <h2 className="text-xl font-bold text-white mb-4">Assigned Profile</h2>
+                    <p className="text-sm text-gray-400 mb-6">Select the single profile that users in this group will inherit.</p>
 
                     <form action={async (formData) => {
                         "use server"
                         await updateGroupProfiles(group.id, formData)
                     }}>
-                        <div className="space-y-3 mb-6 max-h-[300px] overflow-y-auto custom-scrollbar p-1">
-                            {allProfiles.map(profile => {
-                                const isChecked = group.profiles.some(p => p.id === profile.id);
-                                return (
-                                    <label key={profile.id} className="flex items-center gap-3 p-3 bg-white/5 rounded-lg border border-white/5 cursor-pointer hover:bg-white/10">
-                                        <input
-                                            type="checkbox"
-                                            name="profiles"
-                                            value={profile.id}
-                                            defaultChecked={isChecked}
-                                            className="w-5 h-5 accent-primary"
-                                        />
-                                        <div>
-                                            <div className="font-medium text-white">{profile.name}</div>
-                                            <div className="text-xs text-gray-400">{profile.description}</div>
-                                        </div>
-                                    </label>
-                                )
-                            })}
+                        <div className="mb-6">
+                            <select
+                                name="profileId"
+                                defaultValue={group.profiles[0]?.id || ""}
+                                className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary/50 outline-none appearance-none cursor-pointer"
+                            >
+                                <option value="">No Profile (Members get only Global Prompts)</option>
+                                {allProfiles.map(profile => (
+                                    <option key={profile.id} value={profile.id}>
+                                        {profile.name}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                         <button className="w-full bg-primary text-white py-2 rounded-lg font-bold hover:bg-primary/90 transition-colors">
-                            Update Assigned Profiles
+                            Update Assigned Profile
                         </button>
                     </form>
                 </div>
