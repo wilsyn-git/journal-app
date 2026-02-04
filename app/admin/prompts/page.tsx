@@ -41,9 +41,9 @@ export default async function AdminPromptsPage({ searchParams }: Props) {
     }
 
     return (
-        <div className="flex h-[calc(100vh-100px)] gap-6">
+        <div className="flex flex-col md:flex-row h-auto md:h-[calc(100vh-100px)] gap-6">
             {/* Left Pane: Categories */}
-            <div className="w-1/3 flex flex-col glass-card border border-white/10 rounded-xl overflow-hidden relative">
+            <div className="w-full md:w-1/3 flex flex-col glass-card border border-white/10 rounded-xl overflow-hidden relative min-h-[300px] md:min-h-0">
                 <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
                     <h2 className="text-lg font-bold text-white">Categories</h2>
                     <div className="flex items-center gap-2">
@@ -75,7 +75,7 @@ export default async function AdminPromptsPage({ searchParams }: Props) {
             </div>
 
             {/* Right Pane: Prompts */}
-            <div className="flex-1 flex flex-col glass-card border border-white/10 rounded-xl overflow-hidden">
+            <div className="w-full md:flex-1 flex flex-col glass-card border border-white/10 rounded-xl overflow-hidden min-h-[500px] md:min-h-0">
                 <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
                     <h2 className="text-lg font-bold text-white">
                         {selectedCategoryId

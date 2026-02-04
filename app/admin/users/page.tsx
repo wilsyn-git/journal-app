@@ -26,7 +26,7 @@ export default async function AdminUsersPage() {
 
             <NewUserForm />
 
-            <div className="glass-card overflow-hidden rounded-xl border border-white/10">
+            <div className="glass-card overflow-hidden rounded-xl border border-white/10 overflow-x-auto">
                 <table className="w-full text-left text-sm text-gray-400">
                     <thead className="bg-white/5 uppercase font-medium text-xs">
                         <tr>
