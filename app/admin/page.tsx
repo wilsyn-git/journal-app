@@ -53,10 +53,12 @@ export default async function AdminPage() {
         })
     ])
 
-    // Calculate Response Rate: (Recent Entries) / (Active Users * 7)
-    // This gives an average entries per active user per day
-    const responseRate = activeUsers > 0
-        ? Math.round((recentEntries / (activeUsers * 7)) * 100)
+    // Calculate Response Rate: (Recent Entries) / (Active Users * Active Prompts * 7)
+    // This approximates the % of meaningful opportunities taken
+    // We prevent division by zero if no prompts or users exist
+    const denominator = activeUsers * activePrompts * 7
+    const responseRate = denominator > 0
+        ? Math.round((recentEntries / denominator) * 100)
         : 0
 
     return (
