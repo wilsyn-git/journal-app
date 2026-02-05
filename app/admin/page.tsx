@@ -15,6 +15,7 @@ export default async function AdminPage() {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
     // Parallelize queries for performance
+    // Parallelize queries for performance
     const [
         totalUsers,
         activeUsers,
@@ -24,23 +25,35 @@ export default async function AdminPage() {
     ] = await Promise.all([
         // Total Users in Org
         prisma.user.count({
-            where: { organizationId }
+            where: {
+                organizationId,
+                excludeFromStats: false
+            }
         }),
         // Active Users (Last 7 Days)
         prisma.user.count({
             where: {
                 organizationId,
-                lastLogin: { gte: sevenDaysAgo }
+                lastLogin: { gte: sevenDaysAgo },
+                excludeFromStats: false
             }
         }),
         // Total Entries in Org
         prisma.journalEntry.count({
-            where: { user: { organizationId } }
+            where: {
+                user: {
+                    organizationId,
+                    excludeFromStats: false
+                }
+            }
         }),
         // Recent Entries (Last 7 Days)
         prisma.journalEntry.count({
             where: {
-                user: { organizationId },
+                user: {
+                    organizationId,
+                    excludeFromStats: false
+                },
                 createdAt: { gte: sevenDaysAgo }
             }
         }),

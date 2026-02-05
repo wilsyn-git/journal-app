@@ -3,7 +3,7 @@
 import { updateUser } from "@/app/lib/admin-actions"
 import { useActionState } from "react"
 
-export function EditUserForm({ user }: { user: { id: string, name: string | null, email: string } }) {
+export function EditUserForm({ user }: { user: { id: string, name: string | null, email: string, excludeFromStats: boolean } }) {
     const [state, action, isPending] = useActionState(updateUser.bind(null, user.id), undefined);
 
     return (
@@ -28,6 +28,17 @@ export function EditUserForm({ user }: { user: { id: string, name: string | null
                         defaultValue={user.email}
                         className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary/50 outline-none"
                     />
+                </div>
+                <div className="md:col-span-2">
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                        <input
+                            name="excludeFromStats"
+                            type="checkbox"
+                            defaultChecked={user.excludeFromStats}
+                            className="w-4 h-4 rounded border-white/10 bg-black/20 text-primary focus:ring-primary/50"
+                        />
+                        <span className="text-sm text-gray-300 group-hover:text-white transition-colors">Exclude from Statistics (e.g. Test User)</span>
+                    </label>
                 </div>
             </div>
 

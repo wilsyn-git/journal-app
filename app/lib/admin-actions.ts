@@ -685,16 +685,22 @@ export async function updateUser(userId: string, prevState: any, formData: FormD
 
     const email = formData.get('email') as string;
     const name = formData.get('name') as string;
+    const excludeFromStats = formData.get('excludeFromStats') === 'on';
 
     if (!email) return { error: 'Email is required' };
 
     try {
         await prisma.user.update({
             where: { id: userId },
-            data: { email, name }
+            data: {
+                email,
+                name,
+                excludeFromStats
+            }
         });
         revalidatePath(`/admin/users/${userId}`);
         revalidatePath('/admin/users');
+        revalidatePath('/admin'); // Update dashboard stats too
         return { success: true };
     } catch (e) {
         return { error: 'Failed to update user' };
