@@ -66,13 +66,104 @@ export default async function AdminPage() {
         })
     ])
 
-    // Calculate Response Rate: (Recent Entries) / (Active Users * Active Prompts * 7)
-    // This approximates the % of meaningful opportunities taken
-    // We prevent division by zero if no prompts or users exist
-    const denominator = activeUsers * activePrompts * 7
-    const responseRate = denominator > 0
-        ? Math.round((recentEntries / denominator) * 100)
-        : 0
+    // --- Weighted Response Rate Logic ---
+
+    // 1. Get Global Prompt Count (Everyone sees these)
+    const globalPromptCount = await prisma.prompt.count({
+        where: { organizationId, isActive: true, isGlobal: true }
+    });
+
+    // 2. Get Counts per Category (for 'includeAll' rules)
+    const promptsByCategory = await prisma.prompt.groupBy({
+        by: ['categoryId'],
+        where: { organizationId, isActive: true, isGlobal: false },
+        _count: { id: true }
+    });
+    const categoryCountMap = new Map<string, number>();
+    promptsByCategory.forEach(p => {
+        if (p.categoryId) categoryCountMap.set(p.categoryId, p._count.id);
+    });
+
+    // 3. Get All Profiles and their Rules to build "Potential Map"
+    const allProfiles = await prisma.profile.findMany({
+        where: { organizationId },
+        include: { rules: true }
+    });
+
+    const profilePotentialMap = new Map<string, number>();
+
+    allProfiles.forEach(profile => {
+        let count = 0;
+        profile.rules.forEach(rule => {
+            if (rule.includeAll) {
+                // Add all active prompts in this category
+                if (rule.categoryId) {
+                    count += categoryCountMap.get(rule.categoryId) || 0;
+                }
+                // Legacy support: if categoryString is used but no ID, we might miss it
+                // ideally we rely on ID now.
+            } else {
+                // Add min(maxCount, available) or just maxCount
+                // For simpler calc, we assume maxCount is the target opportunity
+                count += rule.maxCount;
+            }
+        });
+        profilePotentialMap.set(profile.id, count);
+    });
+
+    // 4. Get Users + Entries to calc actual opportunities
+    // We strictly need "Active Days" (days they submitted at least 1 entry)
+    // 4. Get Users + Entries to calc actual opportunities
+    const activeStatsUsers = await prisma.user.findMany({
+        where: {
+            organizationId,
+            excludeFromStats: false
+        },
+        include: {
+            profiles: { select: { id: true } },
+            groups: {
+                include: {
+                    profiles: { select: { id: true } }
+                }
+            },
+            entries: {
+                where: { createdAt: { gte: sevenDaysAgo } },
+                select: { createdAt: true }
+            }
+        }
+    });
+
+    let totalWeightedOpportunity = 0;
+    let totalWeightedAnswers = 0;
+
+    activeStatsUsers.forEach(user => {
+        // Collect effective profile IDs
+        const effectiveProfileIds = new Set<string>();
+        user.profiles.forEach(p => effectiveProfileIds.add(p.id));
+        user.groups.forEach(g => g.profiles.forEach(p => effectiveProfileIds.add(p.id)));
+
+        // Calc Daily Potential for this user
+        let dailyPotential = globalPromptCount;
+        effectiveProfileIds.forEach(pid => {
+            dailyPotential += profilePotentialMap.get(pid) || 0;
+        });
+
+        // Determine Active Days (Unique Dates in UTC/Local approximation)
+        const activeDaysSet = new Set<string>();
+        user.entries.forEach(e => {
+            activeDaysSet.add(e.createdAt.toISOString().split('T')[0]);
+        });
+        const activeDays = activeDaysSet.size;
+
+        if (activeDays > 0) {
+            totalWeightedOpportunity += (activeDays * dailyPotential);
+            totalWeightedAnswers += user.entries.length;
+        }
+    });
+
+    const responseRate = totalWeightedOpportunity > 0
+        ? Math.round((totalWeightedAnswers / totalWeightedOpportunity) * 100)
+        : 0;
 
     return (
         <div>
