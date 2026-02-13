@@ -68,7 +68,11 @@ const STOP_WORDS = new Set([
     'their', 'what', 'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me', 'when', 'make', 'can', 'like', 'time', 'no',
     'just', 'him', 'know', 'take', 'people', 'into', 'year', 'your', 'good', 'some', 'could', 'them', 'see', 'other', 'than', 'then',
     'now', 'look', 'only', 'come', 'its', 'over', 'think', 'also', 'back', 'after', 'use', 'two', 'how', 'our', 'work', 'first', 'well',
-    'way', 'even', 'new', 'want', 'because', 'any', 'these', 'give', 'day', 'most', 'us', 'is', 'are', 'was', 'were', 'had', 'has', 'am'
+    'way', 'even', 'new', 'want', 'because', 'any', 'these', 'give', 'day', 'most', 'us', 'is', 'are', 'was', 'were', 'had', 'has', 'am',
+    // Common contractions
+    "don't", "can't", "won't", "it's", "i'm", "you're", "he's", "she's", "we're", "they're",
+    "didn't", "wouldn't", "couldn't", "shouldn't", "isn't", "aren't", "wasn't", "weren't",
+    "haven't", "hasn't", "hadn't", "doesn't", "that's", "there's", "let's"
 ]);
 
 export async function getUserStats(userId: string) {
@@ -131,8 +135,8 @@ export async function getUserStats(userId: string) {
 
         // Word Cloud (Text only) + Heatmap Stats
         if (e.prompt.type === 'TEXT') {
-            // Split by any non-word character sequence
-            const words = e.answer.toLowerCase().split(/[\W_]+/);
+            // Split by any non-word character sequence, but allow apostrophes for contractions
+            const words = e.answer.toLowerCase().split(/[^a-z0-9']+/);
             const validWords = words.filter(w => w.length > 0);
 
             // Update Daily Stats
