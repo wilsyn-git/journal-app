@@ -135,8 +135,9 @@ export async function getUserStats(userId: string) {
 
         // Word Cloud (Text only) + Heatmap Stats
         if (e.prompt.type === 'TEXT') {
-            // Split by any non-word character sequence, but allow apostrophes for contractions
-            const words = e.answer.toLowerCase().split(/[^a-z0-9']+/);
+            // Normalize smart quotes to standard apostrophes, then split by non-word chars (keeping apostrophes)
+            const normalizedAnswer = e.answer.toLowerCase().replace(/[\u2018\u2019]/g, "'");
+            const words = normalizedAnswer.split(/[^a-z0-9']+/);
             const validWords = words.filter(w => w.length > 0);
 
             // Update Daily Stats
