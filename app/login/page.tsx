@@ -68,6 +68,7 @@ export default function LoginPage() {
 
                     <button
                         className="w-full py-3.5 rounded-xl bg-primary font-semibold text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_30px_rgba(139,92,246,0.5)] hover:bg-primary/90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={isPending}
                         aria-disabled={isPending}
                     >
                         {isPending ? 'Signing in...' : 'Sign in'}
