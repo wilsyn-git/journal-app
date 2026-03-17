@@ -112,13 +112,56 @@ export async function getActivePrompts(
         const seed = cyrb128(seedStr);
         const random = mulberry32(seed);
 
+        // Collect all category targets upfront
+        const allCategoryStrings: string[] = [];
+        const allCategoryIds: string[] = [];
+
         for (const profile of profiles) {
             for (const rule of profile.rules) {
-                // Determine count for this rule (random between min and max)
-                // We advance the RNG to ensure stability per rule order? 
-                // Better: mix rule ID into seed or just use next random. 
-                // Since profile ordering from DB might be stable by ID, we should sort them first to be safe.
+                if (rule.categoryString) allCategoryStrings.push(rule.categoryString);
+                if (rule.categoryId) allCategoryIds.push(rule.categoryId);
+            }
+        }
 
+        // Single query for ALL candidate non-global prompts
+        const allCandidatePrompts = allCategoryStrings.length > 0 || allCategoryIds.length > 0
+            ? await prisma.prompt.findMany({
+                where: {
+                    organizationId,
+                    isActive: true,
+                    isGlobal: false,
+                    OR: [
+                        ...(allCategoryStrings.length > 0
+                            ? [{ categoryString: { in: allCategoryStrings } }]
+                            : []),
+                        ...(allCategoryIds.length > 0
+                            ? [{ categoryId: { in: allCategoryIds } }]
+                            : []),
+                    ],
+                },
+                orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }]
+            })
+            : [];
+
+        // Index by category for fast lookup
+        const promptsByCategoryString = new Map<string, typeof allCandidatePrompts>();
+        const promptsByCategoryId = new Map<string, typeof allCandidatePrompts>();
+
+        allCandidatePrompts.forEach(p => {
+            if (p.categoryString) {
+                const list = promptsByCategoryString.get(p.categoryString) || [];
+                list.push(p);
+                promptsByCategoryString.set(p.categoryString, list);
+            }
+            if (p.categoryId) {
+                const list = promptsByCategoryId.get(p.categoryId) || [];
+                list.push(p);
+                promptsByCategoryId.set(p.categoryId, list);
+            }
+        });
+
+        for (const profile of profiles) {
+            for (const rule of profile.rules) {
                 let count = 0;
                 if (!rule.includeAll) {
                     const range = rule.maxCount - rule.minCount + 1;
@@ -126,38 +169,28 @@ export async function getActivePrompts(
                     if (count <= 0) continue;
                 }
 
-                // Fetch pool of prompts for this category
-                const categoryConditions: any[] = [];
-                if (rule.categoryString) categoryConditions.push({ categoryString: rule.categoryString });
-                if (rule.categoryId) categoryConditions.push({ categoryId: rule.categoryId });
+                // Build pool from pre-fetched data, excluding already-selected prompts
+                let pool: typeof allCandidatePrompts = [];
 
-                // If no target is defined, skip this rule (or handle as error)
-                if (categoryConditions.length === 0) continue;
+                if (rule.categoryString) {
+                    pool = [...(promptsByCategoryString.get(rule.categoryString) || [])];
+                } else if (rule.categoryId) {
+                    pool = [...(promptsByCategoryId.get(rule.categoryId) || [])];
+                } else {
+                    continue;
+                }
 
-                // Fetch pool of prompts for this category
-                const pool = await prisma.prompt.findMany({
-                    where: {
-                        organizationId,
-                        isActive: true,
-                        OR: categoryConditions,
-                        isGlobal: false,
-                        id: { notIn: Array.from(selectedPromptsMap.keys()) }
-                    },
-                    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }]
-                });
+                // Exclude already selected
+                pool = pool.filter(p => !selectedPromptsMap.has(p.id));
 
                 if (rule.includeAll) {
-                    // Take everything
                     pool.forEach(p => selectedPromptsMap.set(p.id, p));
                 } else {
-                    // Shuffle pool deterministically
-                    // Fisher-Yates with our custom random
+                    // Fisher-Yates shuffle with deterministic random
                     for (let i = pool.length - 1; i > 0; i--) {
                         const j = Math.floor(random() * (i + 1));
                         [pool[i], pool[j]] = [pool[j], pool[i]];
                     }
-
-                    // Pick first N
                     const picked = pool.slice(0, count);
                     picked.forEach(p => selectedPromptsMap.set(p.id, p));
                 }
