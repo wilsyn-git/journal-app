@@ -29,7 +29,10 @@ export async function generateMetadata(): Promise<Metadata> {
       locale: "en_US",
       type: "website",
     },
-    icons: org?.logoUrl ? [{ rel: "icon", url: org.logoUrl }] : undefined
+    icons: {
+        icon: org?.logoUrl || '/icon-192.png',
+        apple: '/apple-touch-icon.png',
+    },
   }
 }
 
