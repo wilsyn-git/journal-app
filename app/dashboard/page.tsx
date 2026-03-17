@@ -149,7 +149,14 @@ export default async function DashboardPage({ searchParams }: Props) {
             ContentComponent = <div className="text-muted-foreground p-10">User has not journaled today.</div>
         }
     } else {
-        ContentComponent = <DailyJournalForm />
+        // Fetch today's existing answers to pre-fill the form
+        const todayEntries = await getEntriesByDate(targetUserId, today);
+        const initialAnswers = todayEntries.reduce((acc, entry) => {
+            acc[entry.promptId] = entry.answer;
+            return acc;
+        }, {} as Record<string, string>);
+
+        ContentComponent = <DailyJournalForm prompts={activePrompts} initialAnswers={initialAnswers} />
     }
 
     const userLabel = isAdmin
