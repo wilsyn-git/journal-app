@@ -18,6 +18,7 @@ type Props = {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
+import Image from "next/image"
 import { DashboardShell } from "@/components/DashboardShell"
 
 // ... imports remain same ...
@@ -161,7 +162,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         <>
             <div className="p-6 border-b border-white/10 flex items-center justify-between">
                 <Link href="/dashboard" className="text-xl font-bold tracking-tighter text-white flex items-center gap-2">
-                    {brandingOrg?.logoUrl && <img src={brandingOrg.logoUrl} alt="Logo" className="w-6 h-6 object-contain" />}
+                    {brandingOrg?.logoUrl && <Image src={brandingOrg.logoUrl} alt="Logo" width={24} height={24} className="object-contain" />}
                     <span>{brandingOrg?.siteName || "myJournal"}</span>
                 </Link>
                 <Link href="/settings" className="text-gray-400 hover:text-white transition-colors">
@@ -209,7 +210,7 @@ export default async function DashboardPage({ searchParams }: Props) {
                     <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-xs font-bold text-white overflow-hidden border border-white/10">
                             {avatarUrl ? (
-                                <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                                <Image src={avatarUrl} alt="Avatar" width={32} height={32} className="w-full h-full object-cover" />
                             ) : (
                                 (currentUser?.name?.[0] || currentUser?.email?.[0] || '?').toUpperCase()
                             )}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { StreakBadge } from './StreakBadge'
 import { useBranding } from './BrandingProvider'
 
@@ -57,7 +58,7 @@ export function DashboardShell({ sidebar, children, streak }: Props) {
                             </svg>
                         </button>
                         <Link href="/dashboard" className="text-lg font-bold text-white flex items-center gap-2">
-                            {logoUrl && <img src={logoUrl} alt="Logo" className="w-6 h-6 object-contain" />}
+                            {logoUrl && <Image src={logoUrl} alt="Logo" width={24} height={24} className="object-contain" />}
                             <span>{siteName}</span>
                         </Link>
                     </div>

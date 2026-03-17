@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getActiveOrganization } from "@/app/lib/data"
 
 export default async function Home() {
@@ -18,7 +19,7 @@ export default async function Home() {
         <header className="absolute top-0 w-full p-6 flex justify-between items-center max-w-7xl mx-auto">
           <div className="flex items-center gap-3">
             {/* Logo would go here if we had one specific logic for it, or just text */}
-            {org?.logoUrl && <img src={org.logoUrl} alt="Logo" className="w-8 h-8 object-contain" />}
+            {org?.logoUrl && <Image src={org.logoUrl} alt="Logo" width={32} height={32} className="object-contain" />}
             <div className="text-xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
               {org?.siteName || "myJournal"}
             </div>
