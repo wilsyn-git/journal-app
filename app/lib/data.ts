@@ -1,5 +1,17 @@
 
+import { cache } from "react"
 import { prisma } from "@/lib/prisma"
+
+/**
+ * Returns the "active" organization (the one with the most users).
+ * Wrapped in React's cache() so it deduplicates within a single
+ * server-render request — layout, page, and metadata all share one query.
+ */
+export const getActiveOrganization = cache(async () => {
+    return prisma.organization.findFirst({
+        orderBy: { users: { _count: 'desc' } }
+    })
+})
 
 // Simple seeded random generator (Linear Congruential Generator)
 function mulberry32(a: number) {

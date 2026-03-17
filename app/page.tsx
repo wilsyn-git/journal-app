@@ -1,11 +1,8 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma"
+import { getActiveOrganization } from "@/app/lib/data"
 
 export default async function Home() {
-  // Fetch the primary organization (the one with the most users, or simply the most recently active one)
-  const org = await prisma.organization.findFirst({
-    orderBy: { users: { _count: 'desc' } }
-  })
+  const org = await getActiveOrganization()
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-background text-foreground selection:bg-primary/30">

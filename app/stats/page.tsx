@@ -3,6 +3,7 @@ import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { getUserStats } from "@/app/lib/analytics"
+import { getActiveOrganization } from "@/app/lib/data"
 import { AdminUserSelector } from "@/components/AdminUserSelector"
 import Link from "next/link"
 import { ContributionHeatmap } from "@/components/ContributionHeatmap"
@@ -48,9 +49,7 @@ export default async function StatsPage({ searchParams }: Props) {
     const stats = await getUserStats(targetUserId || "");
 
     // Fetch Branding (Active Org)
-    const org = await prisma.organization.findFirst({
-        orderBy: { users: { _count: 'desc' } }
-    })
+    const org = await getActiveOrganization()
 
     // Prepare Admin Select List
     let allUsers: any[] = [];
