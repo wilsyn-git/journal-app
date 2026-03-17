@@ -1,40 +1,13 @@
 
-import { getActivePrompts, getEffectiveProfileIds, getEntriesByDate } from "@/app/lib/data"
-import { auth } from "@/auth"
-import { prisma } from "@/lib/prisma"
 import { JournalEditor } from "./JournalEditor"
+import { Prompt } from "@prisma/client"
 
-export async function DailyJournalForm() {
-    const session = await auth();
-    const currentUserId = session?.user?.id || '';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let organizationId = (session?.user as any)?.organizationId as string;
+type Props = {
+    prompts: Prompt[]
+    initialAnswers: Record<string, string>
+}
 
-    // Fallback: Resolve Org ID if session is missing it
-    if (session?.user?.email && !organizationId) {
-        const user = await prisma.user.findUnique({ where: { email: session.user.email } })
-        if (user) organizationId = user.organizationId;
-    }
-
-    const userProfileIds = await getEffectiveProfileIds(currentUserId);
-    const prompts = await getActivePrompts(currentUserId, organizationId, userProfileIds);
-
-    // Fetch existing answers for today (Server Local Time)
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const todayStr = `${year}-${month}-${day}`;
-    let initialAnswers: Record<string, string> = {};
-
-    if (currentUserId) {
-        const existingEntries = await getEntriesByDate(currentUserId, todayStr);
-        initialAnswers = existingEntries.reduce((acc, entry) => {
-            acc[entry.promptId] = entry.answer;
-            return acc;
-        }, {} as Record<string, string>);
-    }
-
+export function DailyJournalForm({ prompts, initialAnswers }: Props) {
     return (
         <JournalEditor prompts={prompts} initialAnswers={initialAnswers} />
     )
