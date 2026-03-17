@@ -34,7 +34,7 @@ export function DashboardShell({ sidebar, children, streak }: Props) {
             >
                 {/* Mobile Close Button (Optional, implies clicking outside works, but good to have) */}
                 <div className="md:hidden absolute top-4 right-4 z-50">
-                    <button onClick={() => setSidebarOpen(false)} className="text-gray-400 hover:text-white">
+                    <button onClick={() => setSidebarOpen(false)} className="text-gray-400 hover:text-white" aria-label="Close sidebar">
                         ✕
                     </button>
                 </div>
@@ -50,6 +50,7 @@ export function DashboardShell({ sidebar, children, streak }: Props) {
                         <button
                             onClick={() => setSidebarOpen(true)}
                             className="p-1 -ml-2 text-gray-300 hover:text-white"
+                            aria-label="Open menu"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
