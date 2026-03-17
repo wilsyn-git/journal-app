@@ -50,42 +50,54 @@ export default async function DashboardPage({ searchParams }: Props) {
         targetUserEmail = u?.email || 'Unknown User';
     }
 
-    const historyDates = await getJournalHistory(targetUserId);
-    const userStats = await getUserStats(targetUserId);
+    // Parallel Group: All queries that only need targetUserId, currentUserId, or isAdmin
+    const [
+        historyDates,
+        userStats,
+        profileIds,
+        allUsers,
+        timezone,
+        userWithOrg,
+        targetUserOrg,
+        currentUser
+    ] = await Promise.all([
+        getJournalHistory(targetUserId),
+        getUserStats(targetUserId),
+        getEffectiveProfileIds(targetUserId),
+        isAdmin
+            ? prisma.user.findMany({ select: { id: true, email: true, name: true }, orderBy: { email: 'asc' } })
+            : Promise.resolve([] as { id: string, email: string, name: string | null }[]),
+        getUserTimezone(),
+        prisma.user.findUnique({
+            where: { id: currentUserId },
+            select: { organization: true }
+        }),
+        prisma.user.findUnique({
+            where: { id: targetUserId },
+            select: { organizationId: true }
+        }),
+        prisma.user.findUnique({
+            where: { id: currentUserId },
+            select: {
+                name: true,
+                email: true,
+                groups: { select: { name: true } },
+                avatars: { where: { isActive: true }, take: 1, select: { url: true } }
+            }
+        })
+    ]);
 
-    let allUsers: { id: string, email: string, name: string | null }[] = [];
-    if (isAdmin) {
-        allUsers = await prisma.user.findMany({ select: { id: true, email: true, name: true }, orderBy: { email: 'asc' } });
-    }
-
-    // Check effective profiles to determine if user has ANY configuration
-    const profileIds = await getEffectiveProfileIds(targetUserId);
+    const brandingOrg = userWithOrg?.organization;
     const hasConfiguration = profileIds.length > 0;
-
-    const timezone = await getUserTimezone()
-    const today = getTodayForUser(timezone)
-
-    // Ensure we fetch the user's specific organization branding
-    const userWithOrg = await prisma.user.findUnique({
-        where: { id: currentUserId },
-        select: { organization: true }
-    })
-    const brandingOrg = userWithOrg?.organization
-
+    const today = getTodayForUser(timezone);
     const dateParam = typeof params.date === 'string' ? params.date : null;
     const isPast = dateParam && dateParam !== today;
     const targetDate = isPast ? dateParam! : today;
 
-    // Fetch active prompts for the target date to ensure correct display order
-    // (This ensures consistency with how they were generated)
-    // We need the orgId for this.
-    const targetUserOrg = await prisma.user.findUnique({ where: { id: targetUserId }, select: { organizationId: true } });
-    const targetProfileIds = await getEffectiveProfileIds(targetUserId);
-
     const activePrompts = await getActivePrompts(
         targetUserId,
-        targetUserOrg?.organizationId || session?.user?.organizationId || '', // Fallback to current session org if unsure
-        targetProfileIds,
+        targetUserOrg?.organizationId || session?.user?.organizationId || '',
+        profileIds,
         targetDate
     );
 
@@ -139,17 +151,6 @@ export default async function DashboardPage({ searchParams }: Props) {
     } else {
         ContentComponent = <DailyJournalForm />
     }
-
-    // Fetch fresh user data for sidebar
-    const currentUser = await prisma.user.findUnique({
-        where: { id: currentUserId },
-        select: {
-            name: true,
-            email: true,
-            groups: { select: { name: true } },
-            avatars: { where: { isActive: true }, take: 1, select: { url: true } }
-        }
-    });
 
     const userLabel = isAdmin
         ? 'Admin'
