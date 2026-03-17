@@ -14,9 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const org = await prisma.organization.findFirst({
-    orderBy: { users: { _count: 'desc' } }
-  })
+  const org = await getActiveOrganization()
 
   const siteName = org?.siteName || "myJournal";
   const title = `${siteName} | De-clutter your mind`;
@@ -35,7 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-import { prisma } from "@/lib/prisma"
+import { getActiveOrganization } from "@/app/lib/data"
 import { BrandingProvider } from "@/components/BrandingProvider"
 import { ToastProvider } from "@/components/providers/ToastProvider"
 import { ActivityTracker } from "@/components/ActivityTracker"
@@ -46,9 +44,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   // Fetch branding (prioritize active org)
-  const org = await prisma.organization.findFirst({
-    orderBy: { users: { _count: 'desc' } }
-  })
+  const org = await getActiveOrganization()
 
   return (
     <html lang="en">
