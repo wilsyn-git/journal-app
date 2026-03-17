@@ -6,6 +6,7 @@ import { getUserStats } from "@/app/lib/analytics"
 import { getActiveOrganization } from "@/app/lib/data"
 import { AdminUserSelector } from "@/components/AdminUserSelector"
 import Link from "next/link"
+import Image from "next/image"
 import { ContributionHeatmap } from "@/components/ContributionHeatmap"
 import { TimeOfDayChart } from "@/components/stats/TimeOfDayChart"
 import { WordCloud } from "@/components/stats/WordCloud"
@@ -63,7 +64,7 @@ export default async function StatsPage({ searchParams }: Props) {
             <div className="w-64 border-r border-white/10 hidden md:flex flex-col bg-black/50">
                 <div className="p-6 border-b border-white/10">
                     <Link href="/dashboard" className="text-xl font-bold tracking-tighter text-white flex items-center gap-2">
-                        {org?.logoUrl && <img src={org.logoUrl} alt="Logo" className="w-6 h-6 object-contain" />}
+                        {org?.logoUrl && <Image src={org.logoUrl} alt="Logo" width={24} height={24} className="object-contain" />}
                         <span>{org?.siteName || "myJournal"}</span>
                     </Link>
                 </div>
