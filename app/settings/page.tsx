@@ -39,8 +39,18 @@ export default async function SettingsPage() {
 
     return (
         <div className="flex h-screen bg-[#09090b] text-white font-sans overflow-hidden">
+            {/* Mobile Header */}
+            <div className="md:hidden fixed top-0 left-0 right-0 z-20 border-b border-white/10 bg-black/90 backdrop-blur-md px-4 py-3 flex items-center gap-3">
+                <Link href="/dashboard" className="text-gray-400 hover:text-white transition-colors">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                </Link>
+                <span className="text-lg font-semibold text-white">Settings</span>
+            </div>
+
             {/* Simple Sidebar/Nav Back */}
-            <div className="w-64 border-r border-white/10 bg-black/20 flex flex-col p-4">
+            <div className="w-64 border-r border-white/10 bg-black/20 hidden md:flex flex-col p-4">
                 <div className="mb-8">
                     <SidebarHeader logoUrl={org?.logoUrl} siteName={org?.siteName} />
                 </div>
@@ -49,7 +59,7 @@ export default async function SettingsPage() {
                 </Link>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-8">
+            <div className="flex-1 overflow-y-auto p-8 pt-16 md:pt-8">
                 <div className="max-w-2xl mx-auto">
                     <h1 className="text-3xl font-bold mb-8">Settings</h1>
 

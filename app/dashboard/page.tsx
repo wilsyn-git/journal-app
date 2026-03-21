@@ -146,7 +146,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         if (entries.length > 0 || isPast) {
             ContentComponent = <PastJournalView entries={entries as any} date={targetDate} isAdmin={isAdmin} />
         } else {
-            ContentComponent = <div className="text-muted-foreground p-10">User has not journaled today.</div>
+            ContentComponent = <div className="text-muted-foreground p-10">No journal entry yet for today. Head over to the journal page to get started.</div>
         }
     } else {
         // Fetch today's existing answers to pre-fill the form

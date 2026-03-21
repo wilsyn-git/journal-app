@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { updateBranding } from "@/app/actions/admin"
 import Image from "next/image"
+import { useToast } from "@/components/providers/ToastProvider"
 
 type Props = {
     currentName: string
@@ -12,6 +13,7 @@ type Props = {
 export function BrandingForm({ currentName, currentLogo }: Props) {
     const [isSaving, setIsSaving] = useState(false)
     const [previewUrl, setPreviewUrl] = useState<string | null>(currentLogo)
+    const { addToast } = useToast()
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -28,10 +30,10 @@ export function BrandingForm({ currentName, currentLogo }: Props) {
         const res = await updateBranding(formData)
 
         if (res?.error) {
-            alert(res.error)
+            addToast('error', res.error)
         } else {
-            // Ideally use a toast here
-            window.location.reload() // Reload to see changes? Or just revalidate.
+            addToast('success', 'Branding updated successfully')
+            window.location.reload()
         }
         setIsSaving(false)
     }

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import * as Dialog from '@radix-ui/react-dialog'
 import { deleteUser } from '@/app/actions/users'
+import { useToast } from '@/components/providers/ToastProvider'
 
 type Props = {
     userId: string
@@ -17,15 +18,17 @@ export function DeleteUserDialog({ userId, userName, trigger }: Props) {
     const [isConfirmed, setIsConfirmed] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
     const router = useRouter()
+    const { addToast } = useToast()
 
     const handleDelete = async () => {
         setIsDeleting(true)
         const result = await deleteUser(userId)
 
         if (result?.error) {
-            alert(result.error)
+            addToast('error', result.error)
             setIsDeleting(false)
         } else {
+            addToast('success', 'User deleted successfully')
             setIsOpen(false)
             router.push('/admin/users')
         }

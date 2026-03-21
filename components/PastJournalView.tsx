@@ -32,6 +32,7 @@ export function PastJournalView({ entries, date, isAdmin = false }: Props) {
                 {entries.length === 0 ? (
                     <div className="text-center py-12 text-muted-foreground">
                         <p>No entries found for this day.</p>
+                        <p className="text-sm mt-2">Try navigating to today to fill out your journal, or browse other dates using the calendar.</p>
                     </div>
                 ) : (
                     entries.map(entry => (

@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { updateProfile } from "../actions/settings"
+import { useToast } from '@/components/providers/ToastProvider'
 
 type Props = {
     userId: string
@@ -16,13 +17,14 @@ export function ProfileForm({ userId, activeAvatar, initialName, initialEmail, i
     const [isPending, setIsPending] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const formRef = useRef<HTMLFormElement>(null)
+    const { addToast } = useToast()
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (!file) return
 
         if (!file.type.startsWith('image/')) {
-            alert('Please select an image file')
+            addToast('error', 'Please select an image file')
             return
         }
 
@@ -50,7 +52,7 @@ export function ProfileForm({ userId, activeAvatar, initialName, initialEmail, i
             // Use `formData.append` in the submit handler.
         } catch (err) {
             console.error(err)
-            alert('Failed to process image')
+            addToast('error', 'Failed to process image')
         }
     }
 
@@ -124,10 +126,10 @@ export function ProfileForm({ userId, activeAvatar, initialName, initialEmail, i
 
         try {
             await updateProfile(userId, formData)
-            // Success feedback?
+            addToast('success', 'Profile updated successfully')
         } catch (err) {
             console.error(err)
-            alert('Update failed')
+            addToast('error', 'Update failed')
         } finally {
             setIsPending(false)
         }

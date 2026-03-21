@@ -54,6 +54,16 @@ export default async function StatsPage({ searchParams }: Props) {
 
     return (
         <div className="flex min-h-screen bg-black text-white">
+            {/* Mobile Header */}
+            <div className="md:hidden fixed top-0 left-0 right-0 z-20 border-b border-white/10 bg-black/90 backdrop-blur-md px-4 py-3 flex items-center gap-3">
+                <Link href="/dashboard" className="text-gray-400 hover:text-white transition-colors">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                </Link>
+                <span className="text-lg font-semibold text-white">Stats</span>
+            </div>
+
             {/* Sidebar (Simplified) */}
             <div className="w-64 border-r border-white/10 hidden md:flex flex-col bg-black/50">
                 <div className="p-6 border-b border-white/10">
@@ -73,7 +83,7 @@ export default async function StatsPage({ searchParams }: Props) {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-8 pt-16 md:pt-8">
                 <div className="max-w-4xl mx-auto">
                     <div className="flex justify-between items-end mb-8">
                         <div>
@@ -176,8 +186,8 @@ export default async function StatsPage({ searchParams }: Props) {
                             ))}
                         </div>
                     ) : (
-                        <div className="text-gray-500 italic p-8 glass-card rounded-xl border border-white/10">
-                            No daily habits (checkbox/radio prompts) tracked yet.
+                        <div className="text-muted-foreground italic p-8 glass-card rounded-xl border border-white/10">
+                            No daily habits tracked yet. Complete journal entries with checkbox or radio prompts to see habit tracking here.
                         </div>
                     )}
 

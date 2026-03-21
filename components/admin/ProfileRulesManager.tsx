@@ -156,7 +156,7 @@ export function ProfileRulesManager({
             {/* List */}
             <div className="space-y-3">
                 {initialRules.length === 0 && !isAdding && (
-                    <p className="text-gray-500 text-sm text-center py-4">No rules defined.</p>
+                    <p className="text-muted-foreground text-sm text-center py-4">No rules defined. Add rules to control which prompt categories are assigned to users with this profile.</p>
                 )}
 
                 {initialRules.map(rule => {

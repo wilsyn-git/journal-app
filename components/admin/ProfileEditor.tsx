@@ -2,18 +2,26 @@
 
 import { useState } from 'react'
 import { updateProfile } from '@/app/actions/profiles'
+import { useToast } from '@/components/providers/ToastProvider'
 
 export function ProfileEditor({ profile }: { profile: { id: string, name: string, description: string | null } }) {
     const [isEditing, setIsEditing] = useState(false)
     const [name, setName] = useState(profile.name)
     const [description, setDescription] = useState(profile.description || '')
+    const { addToast } = useToast()
 
     const handleSave = async () => {
         const formData = new FormData();
         formData.append('name', name);
         formData.append('description', description);
-        await updateProfile(profile.id, formData);
-        setIsEditing(false);
+        try {
+            await updateProfile(profile.id, formData);
+            addToast('success', 'Profile saved successfully');
+            setIsEditing(false);
+        } catch (err) {
+            console.error(err);
+            addToast('error', 'Failed to save profile');
+        }
     }
 
     if (!isEditing) {

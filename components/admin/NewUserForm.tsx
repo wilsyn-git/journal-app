@@ -2,13 +2,16 @@
 
 import { useActionState, useEffect, useState } from "react"
 import { createUser } from "@/app/actions/users"
+import { useToast } from "@/components/providers/ToastProvider"
 
 export function NewUserForm() {
     const [isOpen, setIsOpen] = useState(false);
     const [state, action, isPending] = useActionState(createUser, undefined);
+    const { addToast } = useToast();
 
     useEffect(() => {
         if (state?.success) {
+            addToast('success', 'User created successfully');
             setIsOpen(false);
         }
     }, [state]);
