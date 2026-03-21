@@ -12,11 +12,11 @@ async function ensureAdmin() {
     if (session?.user?.role !== 'ADMIN') {
         throw new Error("Unauthorized: Admin access required")
     }
+    return session!
 }
 
 export async function createProfile(formData: FormData) {
-    await ensureAdmin();
-    const session = await auth();
+    const session = await ensureAdmin();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const organizationId = (session?.user as any)?.organizationId as string;
 
@@ -60,8 +60,7 @@ export async function deleteProfile(id: string) {
 }
 
 export async function addProfileRule(profileId: string, formData: FormData) {
-    await ensureAdmin();
-    const session = await auth();
+    const session = await ensureAdmin();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const organizationId = (session?.user as any)?.organizationId as string;
 
@@ -124,8 +123,7 @@ export async function addProfileRule(profileId: string, formData: FormData) {
 }
 
 export async function updateProfileRule(ruleId: string, profileId: string, formData: FormData) {
-    await ensureAdmin();
-    const session = await auth();
+    const session = await ensureAdmin();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const organizationId = (session?.user as any)?.organizationId as string;
 
@@ -254,8 +252,7 @@ export async function moveProfileRule(ruleId: string, profileId: string, directi
 
 // Enhanced createGroup to handle initial profile and users
 export async function createGroup(formData: FormData) {
-    await ensureAdmin();
-    const session = await auth();
+    const session = await ensureAdmin();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const organizationId = (session?.user as any)?.organizationId as string;
 
@@ -391,8 +388,7 @@ export async function removeUserFromGroup(groupId: string, userId: string) {
 // --- PROMPT CATEGORIES ---
 
 export async function createPromptCategory(formData: FormData) {
-    await ensureAdmin();
-    const session = await auth();
+    const session = await ensureAdmin();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const organizationId = (session?.user as any)?.organizationId as string;
     const name = formData.get('name') as string;
@@ -446,8 +442,7 @@ export async function deletePromptCategory(id: string) {
 
 
 export async function createPrompt(formData: FormData) {
-    await ensureAdmin();
-    const session = await auth();
+    const session = await ensureAdmin();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const organizationId = (session?.user as any)?.organizationId as string;
 
@@ -514,8 +509,7 @@ export async function createPrompt(formData: FormData) {
 }
 
 export async function updatePrompt(id: string, formData: FormData) {
-    await ensureAdmin();
-    const session = await auth();
+    const session = await ensureAdmin();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const organizationId = (session?.user as any)?.organizationId as string;
 
@@ -624,8 +618,7 @@ export async function updateUserProfiles(userId: string, formData: FormData) {
 import bcrypt from 'bcryptjs'
 
 export async function createUser(prevState: any, formData: FormData) {
-    await ensureAdmin();
-    const session = await auth();
+    const session = await ensureAdmin();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const organizationId = (session?.user as any)?.organizationId as string;
 
@@ -708,8 +701,7 @@ export async function updateUser(userId: string, prevState: any, formData: FormD
 }
 
 export async function importPrompts(formData: FormData) {
-    await ensureAdmin();
-    const session = await auth();
+    const session = await ensureAdmin();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const organizationId = (session?.user as any)?.organizationId as string;
 
@@ -853,8 +845,7 @@ export async function importPrompts(formData: FormData) {
 }
 
 export async function deleteUser(userId: string) {
-    await ensureAdmin();
-    const session = await auth();
+    const session = await ensureAdmin();
 
     // 1. Prevent Self-Deletion
     if (session?.user?.id === userId) {

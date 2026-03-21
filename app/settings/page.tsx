@@ -23,16 +23,10 @@ export default async function SettingsPage() {
         currentUserId = u.id
     }
 
-    const userWithOrg = await prisma.user.findUnique({
-        where: { id: currentUserId },
-        include: { organization: true }
-    })
-    const org = userWithOrg?.organization
-
-    // 2. Fetch User Data
     const user = await prisma.user.findUnique({
         where: { id: currentUserId },
         include: {
+            organization: true,
             avatars: {
                 where: { isActive: true },
                 take: 1
@@ -42,6 +36,7 @@ export default async function SettingsPage() {
     })
 
     if (!user) redirect('/')
+    const org = user.organization
 
     const activeAvatar = user.avatars[0]?.url
 

@@ -73,26 +73,52 @@ export default async function AdminPage() {
 
     // --- Weighted Response Rate Logic ---
 
-    // 1. Get Global Prompt Count (Everyone sees these)
-    const globalPromptCount = await prisma.prompt.count({
-        where: { organizationId, isActive: true, isGlobal: true }
-    });
+    // Parallelize independent queries
+    const [
+        globalPromptCount,
+        promptsByCategory,
+        allProfiles,
+        activeStatsUsers
+    ] = await Promise.all([
+        // 1. Get Global Prompt Count (Everyone sees these)
+        prisma.prompt.count({
+            where: { organizationId, isActive: true, isGlobal: true }
+        }),
+        // 2. Get Counts per Category (for 'includeAll' rules)
+        prisma.prompt.groupBy({
+            by: ['categoryId'],
+            where: { organizationId, isActive: true, isGlobal: false },
+            _count: { id: true }
+        }),
+        // 3. Get All Profiles and their Rules to build "Potential Map"
+        prisma.profile.findMany({
+            where: { organizationId },
+            include: { rules: true }
+        }),
+        // 4. Get Users + Entries to calc actual opportunities
+        prisma.user.findMany({
+            where: {
+                organizationId,
+                excludeFromStats: false
+            },
+            include: {
+                profiles: { select: { id: true } },
+                groups: {
+                    include: {
+                        profiles: { select: { id: true } }
+                    }
+                },
+                entries: {
+                    where: { createdAt: { gte: sevenDaysAgo } },
+                    select: { createdAt: true }
+                }
+            }
+        })
+    ]);
 
-    // 2. Get Counts per Category (for 'includeAll' rules)
-    const promptsByCategory = await prisma.prompt.groupBy({
-        by: ['categoryId'],
-        where: { organizationId, isActive: true, isGlobal: false },
-        _count: { id: true }
-    });
     const categoryCountMap = new Map<string, number>();
     promptsByCategory.forEach(p => {
         if (p.categoryId) categoryCountMap.set(p.categoryId, p._count.id);
-    });
-
-    // 3. Get All Profiles and their Rules to build "Potential Map"
-    const allProfiles = await prisma.profile.findMany({
-        where: { organizationId },
-        include: { rules: true }
     });
 
     const profilePotentialMap = new Map<string, number>();
@@ -114,28 +140,6 @@ export default async function AdminPage() {
             }
         });
         profilePotentialMap.set(profile.id, count);
-    });
-
-    // 4. Get Users + Entries to calc actual opportunities
-    // We strictly need "Active Days" (days they submitted at least 1 entry)
-    // 4. Get Users + Entries to calc actual opportunities
-    const activeStatsUsers = await prisma.user.findMany({
-        where: {
-            organizationId,
-            excludeFromStats: false
-        },
-        include: {
-            profiles: { select: { id: true } },
-            groups: {
-                include: {
-                    profiles: { select: { id: true } }
-                }
-            },
-            entries: {
-                where: { createdAt: { gte: sevenDaysAgo } },
-                select: { createdAt: true }
-            }
-        }
     });
 
     let totalWeightedOpportunity = 0;

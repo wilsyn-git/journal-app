@@ -1,4 +1,5 @@
 
+import { cache } from "react"
 import { prisma } from "@/lib/prisma"
 import { getUserTimezone } from "@/lib/timezone"
 
@@ -75,7 +76,7 @@ const STOP_WORDS = new Set([
     "haven't", "hasn't", "hadn't", "doesn't", "that's", "there's", "let's"
 ]);
 
-export async function getUserStats(userId: string) {
+export const getUserStats = cache(async function getUserStats(userId: string) {
     const entries = await prisma.journalEntry.findMany({
         where: { userId },
         select: {
@@ -315,4 +316,4 @@ export async function getUserStats(userId: string) {
         wordCloud: filteredWords, // [{text: "foo", value: 10}]
         badges
     }
-}
+})

@@ -36,27 +36,20 @@ export default async function StatsPage({ searchParams }: Props) {
     const targetUserId = (isAdmin && viewUserId) ? viewUserId : currentUserId;
     const isViewingSelf = targetUserId === currentUserId;
 
-    // Fetch Target User Info
-    let targetUserEmail = session.user.email;
-    let targetUserName = session.user.name;
+    // Fetch stats, org, target user info, and admin user list in parallel
+    const [stats, org, targetUserInfo, allUsers] = await Promise.all([
+        getUserStats(targetUserId || ""),
+        getActiveOrganization(),
+        !isViewingSelf
+            ? prisma.user.findUnique({ where: { id: targetUserId }, select: { email: true, name: true } })
+            : Promise.resolve(null),
+        isAdmin
+            ? prisma.user.findMany({ select: { id: true, email: true, name: true }, orderBy: { email: 'asc' } })
+            : Promise.resolve([] as any[]),
+    ]);
 
-    if (!isViewingSelf) {
-        const u = await prisma.user.findUnique({ where: { id: targetUserId }, select: { email: true, name: true } });
-        targetUserEmail = u?.email || 'Unknown';
-        targetUserName = u?.name;
-    }
-
-    // Fetch Stats
-    const stats = await getUserStats(targetUserId || "");
-
-    // Fetch Branding (Active Org)
-    const org = await getActiveOrganization()
-
-    // Prepare Admin Select List
-    let allUsers: any[] = [];
-    if (isAdmin) {
-        allUsers = await prisma.user.findMany({ select: { id: true, email: true, name: true }, orderBy: { email: 'asc' } });
-    }
+    const targetUserEmail = !isViewingSelf ? (targetUserInfo?.email || 'Unknown') : session.user.email;
+    const targetUserName = !isViewingSelf ? targetUserInfo?.name : session.user.name;
 
     return (
         <div className="flex min-h-screen bg-black text-white">
