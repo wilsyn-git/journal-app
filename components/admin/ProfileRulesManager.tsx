@@ -182,11 +182,11 @@ export function ProfileRulesManager({
                                     )}
                                 </div>
                             </div>
-                            <div className="flex items-center gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex items-center gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
                                 <div className="flex flex-col gap-0.5 mr-2">
                                     <form action={async () => await moveProfileRule(rule.id, profileId, 'UP')}>
                                         <button
-                                            className="p-1 text-gray-500 hover:text-white hover:bg-white/10 rounded flex items-center justify-center h-4 w-6"
+                                            className="p-1 text-gray-400 hover:text-white hover:bg-white/10 rounded flex items-center justify-center h-4 w-6"
                                             title="Move Up"
                                         >
                                             <span className="text-[10px]">▲</span>
@@ -194,7 +194,7 @@ export function ProfileRulesManager({
                                     </form>
                                     <form action={async () => await moveProfileRule(rule.id, profileId, 'DOWN')}>
                                         <button
-                                            className="p-1 text-gray-500 hover:text-white hover:bg-white/10 rounded flex items-center justify-center h-4 w-6"
+                                            className="p-1 text-gray-400 hover:text-white hover:bg-white/10 rounded flex items-center justify-center h-4 w-6"
                                             title="Move Down"
                                         >
                                             <span className="text-[10px]">▼</span>

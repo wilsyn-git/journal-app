@@ -42,7 +42,7 @@ function SortableItem({ id, content }: { id: string, content: string }) {
 
     return (
         <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="bg-white/5 border border-white/10 p-3 rounded-lg mb-2 flex items-center gap-3 cursor-grab active:cursor-grabbing hover:bg-white/10">
-            <span className="text-gray-500">⋮⋮</span>
+            <span className="text-gray-400">⋮⋮</span>
             <span className="text-white text-sm truncate">{content}</span>
         </div>
     )

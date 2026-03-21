@@ -127,7 +127,7 @@ export function ContributionHeatmap({ data, weeksHistory = 52, showLegend = true
                         </div>
 
                         {/* The Grid */}
-                        <div className="flex gap-[3px]">
+                        <div className="flex gap-[3px]" role="img" aria-label="Journal contribution heatmap">
                             {weeks.map((week, wIdx) => (
                                 <div key={wIdx} className="flex flex-col gap-[3px]">
                                     {week.map((day, dIdx) => (

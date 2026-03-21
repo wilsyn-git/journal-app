@@ -33,7 +33,7 @@ export default async function AdminProfilesPage() {
                                 <h3 className="text-xl font-bold text-white mb-1">{profile.name}</h3>
                             </Link>
                             <p className="text-gray-400 text-sm mb-2">{profile.description}</p>
-                            <div className="flex gap-4 text-xs text-gray-500">
+                            <div className="flex gap-4 text-xs text-gray-400">
                                 <span>{profile._count.rules} Rules</span>
                             </div>
                         </div>
@@ -47,7 +47,7 @@ export default async function AdminProfilesPage() {
                 ))}
 
                 {profiles.length === 0 && (
-                    <div className="text-center py-12 text-gray-500">
+                    <div className="text-center py-12 text-gray-400">
                         No profiles found. Create one to segment your users.
                     </div>
                 )}

@@ -69,13 +69,13 @@ export default async function AdminPromptsPage({ searchParams }: Props) {
                         >
                             <span className="text-sm font-medium text-white group-hover:text-blue-200 transition-colors">{cat.name}</span>
                             <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500 bg-black/20 px-2 py-0.5 rounded-full">{cat._count.prompts}</span>
+                                <span className="text-xs text-gray-400 bg-black/20 px-2 py-0.5 rounded-full">{cat._count.prompts}</span>
                                 <DeleteCategoryButton categoryId={cat.id} categoryName={cat.name} />
                             </div>
                         </Link>
                     ))}
                     {categories.length === 0 && (
-                        <p className="text-gray-500 text-sm p-4 text-center">No categories.</p>
+                        <p className="text-gray-400 text-sm p-4 text-center">No categories.</p>
                     )}
                 </div>
             </div>
@@ -107,7 +107,7 @@ export default async function AdminPromptsPage({ searchParams }: Props) {
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3">
                     {!selectedCategoryId ? (
-                        <div className="h-full flex items-center justify-center text-gray-500">
+                        <div className="h-full flex items-center justify-center text-gray-400">
                             Select a category to view prompts.
                         </div>
                     ) : (
@@ -124,7 +124,7 @@ export default async function AdminPromptsPage({ searchParams }: Props) {
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity self-center">
+                                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity self-center">
                                             <Link
                                                 href={`/admin/prompts/${prompt.id}`}
                                                 className="text-xs bg-white/5 hover:bg-white/10 text-blue-300 hover:text-blue-200 px-3 py-1.5 rounded transition-colors"
@@ -144,7 +144,7 @@ export default async function AdminPromptsPage({ searchParams }: Props) {
                                 </div>
                             ))}
                             {prompts.length === 0 && (
-                                <p className="text-gray-500 text-center py-8">No prompts in this category.</p>
+                                <p className="text-gray-400 text-center py-8">No prompts in this category.</p>
                             )}
                         </>
                     )}

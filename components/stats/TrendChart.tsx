@@ -15,7 +15,7 @@ export function TrendChart({ data, name }: { data: DataPoint[], name: string }) 
 
     if (validData.length < 2) {
         return (
-            <div className="h-64 flex flex-col items-center justify-center text-gray-500 bg-white/5 rounded-xl border border-white/5">
+            <div className="h-64 flex flex-col items-center justify-center text-gray-400 bg-white/5 rounded-xl border border-white/5">
                 <p>Not enough data to show trends.</p>
                 <p className="text-xs mt-1">Log at least 2 entries.</p>
             </div>
@@ -52,7 +52,8 @@ export function TrendChart({ data, name }: { data: DataPoint[], name: string }) 
                 {name}
             </h3>
             <div className="relative w-full aspect-[8/3] group">
-                <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
+                <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible" role="img" aria-label="Trend over time">
+                    <title>Trend over time</title>
                     {/* Grid Lines */}
                     {[0, 25, 50, 75, 100].map(tick => (
                         <g key={tick}>
@@ -68,7 +69,7 @@ export function TrendChart({ data, name }: { data: DataPoint[], name: string }) 
                             <text
                                 x={padding - 10}
                                 y={getY(tick) + 4}
-                                className="text-[10px] fill-gray-500 text-right"
+                                className="text-xs fill-gray-400 text-right"
                                 textAnchor="end"
                             >
                                 {tick}
@@ -137,7 +138,7 @@ export function TrendChart({ data, name }: { data: DataPoint[], name: string }) 
                 </svg>
 
                 {/* X Axis Labels (Simple start/end) */}
-                <div className="flex justify-between px-4 mt-2 text-xs text-gray-500">
+                <div className="flex justify-between px-4 mt-2 text-xs text-gray-400">
                     <span>{validData[0].date}</span>
                     <span>{validData[validData.length - 1].date}</span>
                 </div>

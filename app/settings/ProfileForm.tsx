@@ -206,7 +206,7 @@ export function ProfileForm({ userId, activeAvatar, initialName, initialEmail, i
                         type="text"
                         value={initialEmail}
                         disabled
-                        className="w-full bg-white/5 border border-transparent rounded-lg px-4 py-2 text-gray-500 cursor-not-allowed"
+                        className="w-full bg-white/5 border border-transparent rounded-lg px-4 py-2 text-gray-400 cursor-not-allowed"
                     />
                 </div>
                 <div>

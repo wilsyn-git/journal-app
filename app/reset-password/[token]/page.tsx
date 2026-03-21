@@ -71,7 +71,7 @@ export default function ResetPasswordPage() {
                                 type="password"
                                 required
                                 minLength={6}
-                                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary transition-all"
                                 placeholder="••••••••"
                             />
                         </div>
@@ -86,7 +86,7 @@ export default function ResetPasswordPage() {
                                 type="password"
                                 required
                                 minLength={6}
-                                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary transition-all"
                                 placeholder="••••••••"
                             />
                         </div>

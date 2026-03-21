@@ -30,7 +30,7 @@ export default function LoginPage() {
                             Email
                         </label>
                         <input
-                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
                             id="email"
                             type="email"
                             name="email"
@@ -44,7 +44,7 @@ export default function LoginPage() {
                             Password
                         </label>
                         <input
-                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
                             id="password"
                             type="password"
                             name="password"

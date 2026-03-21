@@ -55,7 +55,7 @@ export function DeleteUserDialog({ userId, userName, trigger }: Props) {
                         {/* Step 1: Download Data */}
                         <div className="p-4 bg-white/5 rounded-lg border border-white/10">
                             <h4 className="text-sm font-bold text-gray-200 mb-2">Step 1: Backup Data</h4>
-                            <p className="text-xs text-gray-500 mb-3">Please download a copy of the user's data before deleting.</p>
+                            <p className="text-xs text-gray-400 mb-3">Please download a copy of the user's data before deleting.</p>
                             <a
                                 href={`/api/admin/export-user?userId=${userId}`}
                                 target="_blank"

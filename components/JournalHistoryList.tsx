@@ -25,7 +25,7 @@ export function JournalHistoryList({ dates }: { dates: string[] }) {
         <div className="space-y-6">
             {Object.keys(groups).map(month => (
                 <div key={month}>
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">{month}</h3>
+                    <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-2">{month}</h3>
                     <div className="space-y-1">
                         {groups[month].map(date => {
                             // Format: "Mon, Jan 21" or simple day number? "21st (Monday)"

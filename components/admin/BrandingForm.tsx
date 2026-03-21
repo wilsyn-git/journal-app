@@ -51,10 +51,10 @@ export function BrandingForm({ currentName, currentLogo }: Props) {
                             type="text"
                             name="siteName"
                             defaultValue={currentName}
-                            className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                            className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary"
                             placeholder="e.g. Acme Journal"
                         />
-                        <p className="text-xs text-gray-500 mt-1">This will replace &quot;myJournal&quot; anywhere it appears as text.</p>
+                        <p className="text-xs text-gray-400 mt-1">This will replace &quot;myJournal&quot; anywhere it appears as text.</p>
                     </div>
                 </div>
             </div>
@@ -77,7 +77,7 @@ export function BrandingForm({ currentName, currentLogo }: Props) {
                                     onChange={handleFileChange}
                                 />
                             </label>
-                            <span className="text-xs text-gray-500">PNG or JPG, max 2MB</span>
+                            <span className="text-xs text-gray-400">PNG or JPG, max 2MB</span>
                         </div>
                     </div>
 

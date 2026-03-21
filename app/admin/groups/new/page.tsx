@@ -31,7 +31,7 @@ export default async function NewGroupPage() {
                             name="name"
                             required
                             placeholder="e.g. Sales Team"
-                            className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary/50 outline-none"
+                            className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary outline-none"
                         />
                     </div>
 
@@ -41,7 +41,7 @@ export default async function NewGroupPage() {
                             name="description"
                             rows={3}
                             placeholder="Optional description of this group..."
-                            className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary/50 outline-none"
+                            className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary outline-none"
                         />
                     </div>
 
@@ -49,14 +49,14 @@ export default async function NewGroupPage() {
                         <label className="block text-sm font-medium text-gray-400 mb-2">Assign Profile</label>
                         <select
                             name="profileId"
-                            className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary/50 outline-none appearance-none cursor-pointer"
+                            className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary outline-none appearance-none cursor-pointer"
                         >
                             <option value="">No Profile (Select later)</option>
                             {profiles.map(p => (
                                 <option key={p.id} value={p.id}>{p.name}</option>
                             ))}
                         </select>
-                        <p className="text-xs text-gray-500 mt-1">Users in this group will inherit this profile.</p>
+                        <p className="text-xs text-gray-400 mt-1">Users in this group will inherit this profile.</p>
                     </div>
 
                     <div>
@@ -73,7 +73,7 @@ export default async function NewGroupPage() {
                                     <span className="text-sm text-gray-300">{user.email}</span>
                                 </label>
                             ))}
-                            {users.length === 0 && <p className="text-gray-500 text-sm p-2">No users found.</p>}
+                            {users.length === 0 && <p className="text-gray-400 text-sm p-2">No users found.</p>}
                         </div>
                     </div>
 

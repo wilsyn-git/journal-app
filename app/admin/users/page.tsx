@@ -51,7 +51,7 @@ export default async function AdminUsersPage() {
                                     <Link href={`/admin/users/${user.id}`} className="block text-blue-400 group-hover:text-blue-300 font-medium">
                                         <div className="flex flex-col">
                                             <span className="text-white">{user.name || '—'}</span>
-                                            <span className="text-xs text-gray-500">{user.email}</span>
+                                            <span className="text-xs text-gray-400">{user.email}</span>
                                         </div>
                                     </Link>
                                 </td>

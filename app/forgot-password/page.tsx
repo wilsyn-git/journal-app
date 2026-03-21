@@ -55,7 +55,7 @@ export default function ForgotPasswordPage() {
                                 type="email"
                                 autoComplete="email"
                                 required
-                                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary transition-all"
                                 placeholder="you@example.com"
                             />
                         </div>
@@ -75,7 +75,7 @@ export default function ForgotPasswordPage() {
                         </button>
 
                         <div className="text-center">
-                            <Link href="/login" className="text-sm text-gray-500 hover:text-white transition-colors">
+                            <Link href="/login" className="text-sm text-gray-400 hover:text-white transition-colors">
                                 Cancel and return to login
                             </Link>
                         </div>

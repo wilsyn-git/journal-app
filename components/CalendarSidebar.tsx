@@ -139,20 +139,20 @@ export function CalendarSidebar({ completedDates }: Props) {
     return (
         <div className="w-full">
             <div className="flex items-center justify-between mb-4 px-2">
-                <button onClick={() => changeMonth(-1)} className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white">
+                <button onClick={() => changeMonth(-1)} className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white" aria-label="Previous month">
                     &lt;
                 </button>
                 <div className="font-bold text-white text-sm">
                     {monthName}
                 </div>
-                <button onClick={() => changeMonth(1)} className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white">
+                <button onClick={() => changeMonth(1)} className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white" aria-label="Next month">
                     &gt;
                 </button>
             </div>
 
             <div className="grid grid-cols-7 gap-y-1 text-center mb-2">
                 {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                    <div key={i} className="text-[10px] text-gray-500 font-bold">
+                    <div key={i} className="text-xs text-gray-400 font-bold">
                         {day}
                     </div>
                 ))}

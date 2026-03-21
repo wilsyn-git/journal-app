@@ -1,7 +1,7 @@
 "use client"
 
 export function WordCloud({ words }: { words: { text: string, value: number }[] }) {
-    if (words.length === 0) return <div className="text-gray-500 italic">No text entries yet.</div>
+    if (words.length === 0) return <div className="text-gray-400 italic">No text entries yet.</div>
 
     // Normalize size
     const max = words[0]?.value || 1
@@ -25,6 +25,7 @@ export function WordCloud({ words }: { words: { text: string, value: number }[] 
                     key={i}
                     className="text-white hover:text-primary transition-colors cursor-default select-none"
                     title={`${w.value} uses`}
+                    aria-label={`${w.text}: ${w.value} times`}
                     style={{
                         fontSize: getSize(w.value),
                         opacity: getOpacity(w.value)

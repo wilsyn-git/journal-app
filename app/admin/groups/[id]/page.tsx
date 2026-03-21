@@ -56,7 +56,7 @@ export default async function GroupDetailPage({ params }: Props) {
                             <select
                                 name="profileId"
                                 defaultValue={group.profiles[0]?.id || ""}
-                                className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary/50 outline-none appearance-none cursor-pointer"
+                                className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary outline-none appearance-none cursor-pointer"
                             >
                                 <option value="">No Profile (Members get only Global Prompts)</option>
                                 {allProfiles.map(profile => (
@@ -84,7 +84,7 @@ export default async function GroupDetailPage({ params }: Props) {
                             name="email"
                             required
                             defaultValue=""
-                            className="flex-1 bg-black/20 border border-white/10 rounded-lg p-2 text-white focus:ring-2 focus:ring-primary/50 outline-none text-sm appearance-none cursor-pointer"
+                            className="flex-1 bg-black/20 border border-white/10 rounded-lg p-2 text-white focus:ring-2 focus:ring-primary outline-none text-sm appearance-none cursor-pointer"
                         >
                             <option value="" disabled>Select User</option>
                             {allUsers
@@ -103,7 +103,7 @@ export default async function GroupDetailPage({ params }: Props) {
 
                     <div className="space-y-2 max-h-[400px] overflow-y-auto custom-scrollbar">
                         {group.users.length === 0 ? (
-                            <p className="text-gray-500 text-sm text-center py-4">No members yet.</p>
+                            <p className="text-gray-400 text-sm text-center py-4">No members yet.</p>
                         ) : (
                             group.users.map(user => (
                                 <div key={user.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
@@ -117,7 +117,7 @@ export default async function GroupDetailPage({ params }: Props) {
                                         "use server"
                                         await removeUserFromGroup(group.id, user.id)
                                     }}>
-                                        <button className="text-xs text-gray-500 hover:text-red-400 p-1">
+                                        <button className="text-xs text-gray-400 hover:text-red-400 p-1">
                                             Remove
                                         </button>
                                     </form>

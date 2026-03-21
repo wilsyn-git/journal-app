@@ -31,12 +31,12 @@ export function ProfileEditor({ profile }: { profile: { id: string, name: string
                     <h1 className="text-3xl font-bold text-white">{profile.name}</h1>
                     <button
                         onClick={() => setIsEditing(true)}
-                        className="text-gray-500 hover:text-white transition-colors"
+                        className="text-gray-400 hover:text-white transition-colors"
                         title="Edit Details"
                     >
                         ✏️
                     </button>
-                    <span className="text-gray-500 text-lg font-normal">Rules</span>
+                    <span className="text-gray-400 text-lg font-normal">Rules</span>
                 </div>
                 <p className="text-gray-400">{profile.description}</p>
             </div>

@@ -17,7 +17,7 @@ export function EditUserForm({ user }: { user: { id: string, name: string | null
                         type="text"
                         defaultValue={user.name || ''}
                         placeholder="e.g. John Doe"
-                        className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary/50 outline-none"
+                        className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary outline-none"
                     />
                 </div>
                 <div>
@@ -28,7 +28,7 @@ export function EditUserForm({ user }: { user: { id: string, name: string | null
                         type="email"
                         required
                         defaultValue={user.email}
-                        className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary/50 outline-none"
+                        className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary outline-none"
                     />
                 </div>
                 <div className="md:col-span-2">
@@ -37,7 +37,7 @@ export function EditUserForm({ user }: { user: { id: string, name: string | null
                             name="excludeFromStats"
                             type="checkbox"
                             defaultChecked={user.excludeFromStats}
-                            className="w-4 h-4 rounded border-white/10 bg-black/20 text-primary focus:ring-primary/50"
+                            className="w-4 h-4 rounded border-white/10 bg-black/20 text-primary focus:ring-primary"
                         />
                         <span className="text-sm text-gray-300 group-hover:text-white transition-colors">Exclude from Statistics (e.g. Test User)</span>
                     </label>

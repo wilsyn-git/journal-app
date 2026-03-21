@@ -75,7 +75,7 @@ function EntryCard({ entry, isAdmin }: { entry: EntryWithPrompt, isAdmin: boolea
                             ${optimisticLiked
                                 ? 'text-red-500 scale-110 opacity-100'
                                 : (isAdmin
-                                    ? 'text-gray-500 hover:text-red-400 opacity-50 hover:opacity-100'
+                                    ? 'text-gray-400 hover:text-red-400 opacity-50 hover:opacity-100'
                                     : 'text-gray-600 opacity-0 group-hover:opacity-100')
                             }
                         `}

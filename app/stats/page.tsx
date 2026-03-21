@@ -83,7 +83,7 @@ export default async function StatsPage({ searchParams }: Props) {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-8 pt-16 md:pt-8">
+            <main id="main-content" className="flex-1 overflow-y-auto custom-scrollbar p-8 pt-16 md:pt-8">
                 <div className="max-w-4xl mx-auto">
                     <div className="flex justify-between items-end mb-8">
                         <div>
@@ -95,7 +95,7 @@ export default async function StatsPage({ searchParams }: Props) {
                         {isViewingSelf && (
                             <div className="text-right">
                                 <span className="text-3xl font-bold text-primary">{stats.currentStreak}</span>
-                                <span className="text-sm text-gray-500 block uppercase tracking-wider">Current Streak</span>
+                                <span className="text-sm text-gray-400 block uppercase tracking-wider">Current Streak</span>
                             </div>
                         )}
                     </div>
@@ -104,19 +104,19 @@ export default async function StatsPage({ searchParams }: Props) {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
                         <div className="glass-card p-6 rounded-xl border border-white/10">
                             <div className="text-3xl font-bold text-white mb-1">{stats.maxStreak}</div>
-                            <div className="text-xs text-gray-500 uppercase tracking-widest">Max Streak</div>
+                            <div className="text-xs text-gray-400 uppercase tracking-widest">Max Streak</div>
                         </div>
                         <div className="glass-card p-6 rounded-xl border border-white/10">
                             <div className="text-3xl font-bold text-white mb-1">{stats.daysCompleted}</div>
-                            <div className="text-xs text-gray-500 uppercase tracking-widest">Days Logged</div>
+                            <div className="text-xs text-gray-400 uppercase tracking-widest">Days Logged</div>
                         </div>
                         <div className="glass-card p-6 rounded-xl border border-white/10">
                             <div className="text-3xl font-bold text-white mb-1">{stats.totalEntries}</div>
-                            <div className="text-xs text-gray-500 uppercase tracking-widest">Total Answers</div>
+                            <div className="text-xs text-gray-400 uppercase tracking-widest">Total Answers</div>
                         </div>
                         <div className="glass-card p-6 rounded-xl border border-white/10">
                             <div className="text-3xl font-bold text-white mb-1">{stats.avgWords}</div>
-                            <div className="text-xs text-gray-500 uppercase tracking-widest">Avg Words / Answer</div>
+                            <div className="text-xs text-gray-400 uppercase tracking-widest">Avg Words / Answer</div>
                         </div>
                     </div>
 
@@ -170,16 +170,16 @@ export default async function StatsPage({ searchParams }: Props) {
                                 <div key={task.id} className="glass-card p-4 rounded-xl border border-white/10 flex justify-between items-center group hover:bg-white/5 transition-colors">
                                     <div className="flex-1">
                                         <h3 className="text-white font-medium">{task.content}</h3>
-                                        <p className="text-xs text-gray-500 mt-1">Answered {task.count} times total</p>
+                                        <p className="text-xs text-gray-400 mt-1">Answered {task.count} times total</p>
                                     </div>
                                     <div className="flex gap-8 text-right">
                                         <div>
                                             <span className="block text-xl font-bold text-green-400">{task.currentStreak}</span>
-                                            <span className="text-[10px] text-gray-500 uppercase">Streak</span>
+                                            <span className="text-xs text-gray-400 uppercase">Streak</span>
                                         </div>
                                         <div>
                                             <span className="block text-xl font-bold text-gray-300">{task.maxStreak}</span>
-                                            <span className="text-[10px] text-gray-500 uppercase">Best</span>
+                                            <span className="text-xs text-gray-400 uppercase">Best</span>
                                         </div>
                                     </div>
                                 </div>
@@ -192,7 +192,7 @@ export default async function StatsPage({ searchParams }: Props) {
                     )}
 
                 </div>
-            </div>
+            </main>
         </div>
     )
 }

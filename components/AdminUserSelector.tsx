@@ -30,7 +30,7 @@ export function AdminUserSelector({ users, currentUserId }: { users: UserOption[
 
     return (
         <div className="px-2">
-            <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2 block px-1">
+            <label className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2 block px-1">
                 Inspect User
             </label>
             <select

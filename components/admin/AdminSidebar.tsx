@@ -36,7 +36,7 @@ export function AdminSidebar() {
                 </button>
             </div>
 
-            <nav className="flex-1 space-y-2 overflow-y-auto">
+            <nav aria-label="Admin navigation" className="flex-1 space-y-2 overflow-y-auto">
                 <Link
                     href="/dashboard"
                     className="block px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors mb-4"
@@ -76,7 +76,7 @@ export function AdminSidebar() {
                     Tools (Data)
                 </Link>
             </nav>
-            <div className="pt-4 border-t border-white/10 text-xs text-gray-500">
+            <div className="pt-4 border-t border-white/10 text-xs text-gray-400">
                 v0.1.0 (Mobile Ready)
             </div>
         </>

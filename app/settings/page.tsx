@@ -59,7 +59,7 @@ export default async function SettingsPage() {
                 </Link>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-8 pt-16 md:pt-8">
+            <main id="main-content" className="flex-1 overflow-y-auto p-8 pt-16 md:pt-8">
                 <div className="max-w-2xl mx-auto">
                     <h1 className="text-3xl font-bold mb-8">Settings</h1>
 
@@ -97,7 +97,7 @@ export default async function SettingsPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <h3 className="font-medium">Account ID</h3>
-                                <p className="text-sm text-gray-500 font-mono mt-1">{user.id}</p>
+                                <p className="text-sm text-gray-400 font-mono mt-1">{user.id}</p>
                             </div>
                         </div>
                     </div>
@@ -119,7 +119,7 @@ export default async function SettingsPage() {
                         </div>
                     </div>
                 </div>
-            </div>
+            </main>
         </div>
     )
 }

@@ -18,7 +18,7 @@ export default function NewProfilePage() {
                         type="text"
                         required
                         placeholder="e.g. Anxiety Track, Leadership Group"
-                        className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary/50 outline-none"
+                        className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary outline-none"
                     />
                 </div>
 
@@ -28,7 +28,7 @@ export default function NewProfilePage() {
                         name="description"
                         rows={3}
                         placeholder="Brief description of this profile's purpose."
-                        className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary/50 outline-none"
+                        className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary outline-none"
                     />
                 </div>
 

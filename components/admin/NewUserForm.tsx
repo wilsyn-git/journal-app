@@ -45,7 +45,7 @@ export function NewUserForm() {
                             name="name"
                             type="text"
                             placeholder="e.g. John Doe"
-                            className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary/50 outline-none"
+                            className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary outline-none"
                         />
                     </div>
                     <div>
@@ -56,7 +56,7 @@ export function NewUserForm() {
                             type="email"
                             required
                             placeholder="user@example.com"
-                            className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary/50 outline-none"
+                            className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary outline-none"
                         />
                     </div>
                 </div>
@@ -71,9 +71,9 @@ export function NewUserForm() {
                         // Or password with a toggle. Let's stick to text for admin convenience "Copy this password".
                         required
                         placeholder="Initial Password"
-                        className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary/50 outline-none font-mono"
+                        className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary outline-none font-mono"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Make sure to copy this password to share with the user.</p>
+                    <p className="text-xs text-gray-400 mt-1">Make sure to copy this password to share with the user.</p>
                 </div>
 
                 {state?.error && (

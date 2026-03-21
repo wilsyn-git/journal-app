@@ -60,7 +60,7 @@ export function PromptCard({ prompt, value = "", onChange, disabled }: PromptCar
                     value={value}
                     onChange={(e) => handleChange(e.target.value)}
                     disabled={disabled}
-                    className="w-full h-32 bg-white/5 border border-white/10 rounded-lg p-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none disabled:opacity-50"
+                    className="w-full h-32 bg-white/5 border border-white/10 rounded-lg p-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary transition-all resize-none disabled:opacity-50"
                     placeholder="Type your answer here..."
                 />
             </div>
@@ -103,7 +103,7 @@ export function PromptCard({ prompt, value = "", onChange, disabled }: PromptCar
                         onChange={handleRangeChange}
                         disabled={disabled}
                         className={`
-                            w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50
+                            w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary
                             slider-thumb
                             ${!hasInteracted ? 'opacity-50 grayscale hover:opacity-80 hover:grayscale-0' : 'opacity-100'}
                             transition-all duration-300
@@ -132,7 +132,7 @@ export function PromptCard({ prompt, value = "", onChange, disabled }: PromptCar
                             checked={value === option}
                             onChange={(e) => handleChange(e.target.value)}
                             disabled={disabled}
-                            className="w-4 h-4 border-2 border-white/20 bg-transparent text-primary focus:ring-primary/50 focus:ring-offset-0 focus:ring-offset-transparent transition-all checked:border-primary checked:bg-primary disabled:opacity-50"
+                            className="w-4 h-4 border-2 border-white/20 bg-transparent text-primary focus:ring-primary focus:ring-offset-0 focus:ring-offset-transparent transition-all checked:border-primary checked:bg-primary disabled:opacity-50"
                         />
                         <span className="text-xs text-gray-400 group-hover/option:text-white transition-colors uppercase tracking-wide font-medium">{option}</span>
                     </label>
@@ -156,7 +156,7 @@ export function PromptCard({ prompt, value = "", onChange, disabled }: PromptCar
                                 checked={isChecked}
                                 onChange={(e) => handleCheckboxChange(option, e.target.checked)}
                                 disabled={disabled}
-                                className="w-4 h-4 rounded border-2 border-white/20 bg-transparent text-primary focus:ring-primary/50 focus:ring-offset-0 focus:ring-offset-transparent transition-all checked:border-primary checked:bg-primary disabled:opacity-50"
+                                className="w-4 h-4 rounded border-2 border-white/20 bg-transparent text-primary focus:ring-primary focus:ring-offset-0 focus:ring-offset-transparent transition-all checked:border-primary checked:bg-primary disabled:opacity-50"
                             />
                             <span className="text-xs text-gray-400 group-hover/option:text-white transition-colors uppercase tracking-wide font-medium">{option}</span>
                         </label>

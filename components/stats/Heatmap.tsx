@@ -42,7 +42,7 @@ export function Heatmap({ data }: { data: Record<string, number> }) {
                     ))}
                 </div>
             </div>
-            <div className="flex justify-end gap-2 items-center text-[10px] text-gray-500 mt-2">
+            <div className="flex justify-end gap-2 items-center text-xs text-gray-400 mt-2">
                 <span>Less</span>
                 <div className="flex gap-1">
                     <div className="w-3 h-3 rounded-sm bg-white/5" />

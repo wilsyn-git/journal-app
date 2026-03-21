@@ -39,7 +39,7 @@ export default async function AdminGroupsPage() {
                                 <h3 className="text-xl font-bold text-white mb-1">{group.name}</h3>
                             </Link>
                             <p className="text-gray-400 text-sm mb-2">{group.description}</p>
-                            <div className="flex gap-4 text-xs text-gray-500">
+                            <div className="flex gap-4 text-xs text-gray-400">
                                 <span>{group._count.users} Users</span>
                                 <span>{group._count.profiles} Profiles</span>
                             </div>
@@ -54,7 +54,7 @@ export default async function AdminGroupsPage() {
                 ))}
 
                 {groups.length === 0 && (
-                    <div className="text-center py-12 text-gray-500">
+                    <div className="text-center py-12 text-gray-400">
                         No groups found. Create one to organize your users.
                     </div>
                 )}

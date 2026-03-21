@@ -76,7 +76,7 @@ export function PromptEditor({ prompt, categories, categoryId, mode = 'create' }
                     rows={2}
                     required
                     defaultValue={prompt?.content}
-                    className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary/50 outline-none"
+                    className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary outline-none"
                     placeholder="e.g. How did you sleep?"
                 />
             </div>
@@ -89,7 +89,7 @@ export function PromptEditor({ prompt, categories, categoryId, mode = 'create' }
                         name="type"
                         value={type}
                         onChange={(e) => setType(e.target.value)}
-                        className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary/50 outline-none"
+                        className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary outline-none"
                     >
                         <option value="TEXT">Text Answer</option>
                         <option value="RADIO">Radio Choices</option>
@@ -109,17 +109,17 @@ export function PromptEditor({ prompt, categories, categoryId, mode = 'create' }
                                 type="text"
                                 defaultValue={rangeMinLabel}
                                 placeholder="Low (Left)"
-                                className="w-1/2 bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary/50 outline-none"
+                                className="w-1/2 bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary outline-none"
                             />
                             <input
                                 name="rangeMaxLabel"
                                 type="text"
                                 defaultValue={rangeMaxLabel}
                                 placeholder="High (Right)"
-                                className="w-1/2 bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary/50 outline-none"
+                                className="w-1/2 bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary outline-none"
                             />
                         </div>
-                        <p className="text-xs text-gray-500">Labels for the low and high ends of the slider.</p>
+                        <p className="text-xs text-gray-400">Labels for the low and high ends of the slider.</p>
                         {mode === 'edit' && <p className="text-xs text-amber-500">Warning: Changing labels does not update historical data.</p>}
                     </div>
                 ) : (
@@ -132,10 +132,10 @@ export function PromptEditor({ prompt, categories, categoryId, mode = 'create' }
                             defaultValue={defaultOptions}
                             placeholder={type === 'TEXT' ? "Not applicable" : "Default: Yes, No"}
                             disabled={type === 'TEXT'}
-                            className={`w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary/50 outline-none ${type === 'TEXT' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary outline-none ${type === 'TEXT' ? 'opacity-50 cursor-not-allowed' : ''}`}
                         />
                         {(type === 'RADIO' || type === 'CHECKBOX') && (
-                            <p className="text-xs text-gray-500 mt-1">Leave blank for &quot;Yes, No&quot;. Comma separated.</p>
+                            <p className="text-xs text-gray-400 mt-1">Leave blank for &quot;Yes, No&quot;. Comma separated.</p>
                         )}
                     </div>
                 )}

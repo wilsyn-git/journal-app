@@ -13,26 +13,26 @@ export default async function Home() {
         <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-accent/20 blur-[120px] animate-pulse" />
       </div>
 
-      <main className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 sm:px-6 lg:px-8">
-
-        {/* Navigation / Header */}
-        <header className="absolute top-0 w-full p-6 flex justify-between items-center max-w-7xl mx-auto">
-          <div className="flex items-center gap-3">
-            {/* Logo would go here if we had one specific logic for it, or just text */}
-            {org?.logoUrl && <Image src={org.logoUrl} alt="Logo" width={32} height={32} className="object-contain" />}
-            <div className="text-xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
-              {org?.siteName || "myJournal"}
-            </div>
+      {/* Navigation / Header */}
+      <header className="relative z-10 absolute top-0 w-full p-6 flex justify-between items-center max-w-7xl mx-auto">
+        <div className="flex items-center gap-3">
+          {/* Logo would go here if we had one specific logic for it, or just text */}
+          {org?.logoUrl && <Image src={org.logoUrl} alt="Logo" width={32} height={32} className="object-contain" />}
+          <div className="text-xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
+            {org?.siteName || "myJournal"}
           </div>
-          <nav>
-            <Link
-              href="/login"
-              className="text-sm font-medium text-muted-foreground hover:text-white transition-colors"
-            >
-              Log in
-            </Link>
-          </nav>
-        </header>
+        </div>
+        <nav>
+          <Link
+            href="/login"
+            className="text-sm font-medium text-muted-foreground hover:text-white transition-colors"
+          >
+            Log in
+          </Link>
+        </nav>
+      </header>
+
+      <main className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 sm:px-6 lg:px-8">
 
         {/* Hero Section */}
         <section className="text-center max-w-4xl mx-auto mt-20 sm:mt-0 animate-[fade-in_1s_ease-out]">
@@ -74,7 +74,7 @@ export default async function Home() {
             <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300">
               <span className="text-2xl">✨</span>
             </div>
-            <h3 className="text-xl font-semibold text-white">Daily Prompts</h3>
+            <h2 className="text-xl font-semibold text-white">Daily Prompts</h2>
             <p className="text-muted-foreground leading-relaxed">
               Receive curated prompts every morning tailored to your personal growth journey.
             </p>
@@ -85,7 +85,7 @@ export default async function Home() {
             <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300">
               <span className="text-2xl">🔒</span>
             </div>
-            <h3 className="text-xl font-semibold text-white">Secure Storage</h3>
+            <h2 className="text-xl font-semibold text-white">Secure Storage</h2>
             <p className="text-muted-foreground leading-relaxed">
               Your thoughts are private using end-to-end encryption. Only you have the key.
             </p>
@@ -96,7 +96,7 @@ export default async function Home() {
             <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300">
               <span className="text-2xl">📊</span>
             </div>
-            <h3 className="text-xl font-semibold text-white">Growth Analytics</h3>
+            <h2 className="text-xl font-semibold text-white">Growth Analytics</h2>
             <p className="text-muted-foreground leading-relaxed">
               Visualize your mood trends and consistency streaks over time.
             </p>

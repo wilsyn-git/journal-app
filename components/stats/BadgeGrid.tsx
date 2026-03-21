@@ -16,7 +16,8 @@ export function BadgeGrid({ badges }: { badges: any[] }) {
                 >
                     <div className="text-4xl mb-2">{b.icon}</div>
                     <div className="font-bold text-sm mb-1">{b.name}</div>
-                    <div className="text-[10px] opacity-70 leading-tight">{b.description}</div>
+                    <div className="text-xs opacity-70 leading-tight">{b.description}</div>
+                    <span className="sr-only">{b.unlocked ? "Earned" : "Locked"}</span>
                 </div>
             ))}
         </div>

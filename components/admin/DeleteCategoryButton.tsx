@@ -66,7 +66,7 @@ export function DeleteCategoryButton({ categoryId, categoryName }: Props) {
         <>
             <button
                 onClick={handleOpen}
-                className="p-1.5 hover:bg-red-500/20 rounded text-gray-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                className="p-1.5 hover:bg-red-500/20 rounded text-gray-400 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 group-focus-within:opacity-100"
                 title="Delete Category"
             >
                 🗑️

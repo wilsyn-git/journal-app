@@ -11,7 +11,7 @@ export function TimeOfDayChart({ data }: { data: number[] }) {
     ]
 
     return (
-        <div className="h-40 flex items-end justify-between gap-1 mt-4 relative">
+        <div className="h-40 flex items-end justify-between gap-1 mt-4 relative" role="img" aria-label="Journal entries by time of day">
             {data.map((count, i) => (
                 <div key={i} className="flex-1 flex flex-col items-center group relative h-full justify-end">
                     <div
@@ -28,7 +28,7 @@ export function TimeOfDayChart({ data }: { data: number[] }) {
             ))}
 
             {/* Axis Labels */}
-            <div className="absolute -bottom-6 w-full flex justify-between text-[10px] text-gray-500 px-2">
+            <div className="absolute -bottom-6 w-full flex justify-between text-xs text-gray-400 px-2">
                 {buckets.map(b => (
                     <span key={b.idx} style={{ left: `${(b.idx / 24) * 100}%` }} className="absolute">
                         {b.range}

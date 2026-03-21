@@ -68,7 +68,7 @@ export function ChangePasswordDialog({ trigger, targetUserId }: Props) {
             <div role="dialog" aria-modal="true" aria-labelledby="change-password-dialog-title" className="bg-[#09090b] border border-white/10 rounded-xl p-6 max-w-md w-full shadow-2xl relative animate-in zoom-in-95 duration-200">
                 <button
                     onClick={() => setIsOpen(false)}
-                    className="absolute top-4 right-4 text-gray-500 hover:text-white"
+                    className="absolute top-4 right-4 text-gray-400 hover:text-white"
                 >
                     ✕
                 </button>
@@ -91,7 +91,7 @@ export function ChangePasswordDialog({ trigger, targetUserId }: Props) {
                                 type="password"
                                 name="currentPassword"
                                 required
-                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary"
                                 placeholder="••••••••"
                             />
                         </div>
@@ -105,7 +105,7 @@ export function ChangePasswordDialog({ trigger, targetUserId }: Props) {
                             name="newPassword"
                             required
                             minLength={6}
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary"
                             placeholder="Min 6 characters"
                         />
                     </div>
@@ -118,7 +118,7 @@ export function ChangePasswordDialog({ trigger, targetUserId }: Props) {
                             name="confirmPassword"
                             required
                             minLength={6}
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-primary"
                             placeholder="Or else..."
                         />
                     </div>
