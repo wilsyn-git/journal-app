@@ -53,8 +53,9 @@ export function PromptCard({ prompt, value = "", onChange, disabled }: PromptCar
     if (isText) {
         return (
             <div className="glass-card p-4 rounded-xl border border-white/10 mb-6 group hover:border-white/20 transition-all duration-300">
-                <h3 className="text-lg font-medium text-white mb-4">{prompt.content}</h3>
+                <h3 id={`prompt-${prompt.id}`} className="text-lg font-medium text-white mb-4">{prompt.content}</h3>
                 <textarea
+                    aria-labelledby={`prompt-${prompt.id}`}
                     name={`prompt_${prompt.id}`}
                     value={value}
                     onChange={(e) => handleChange(e.target.value)}
@@ -88,12 +89,13 @@ export function PromptCard({ prompt, value = "", onChange, disabled }: PromptCar
         return (
             <div className="glass-card p-4 rounded-xl border border-white/10 mb-3 group hover:border-white/20 transition-all duration-300 flex flex-col gap-4">
                 <div className="flex justify-between items-center">
-                    <h3 className="text-base font-medium text-white">{prompt.content}</h3>
+                    <h3 id={`prompt-${prompt.id}`} className="text-base font-medium text-white">{prompt.content}</h3>
                     {hasInteracted && <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-0.5 rounded animate-in fade-in hidden">{value}</span>}
                 </div>
 
                 <div className="relative pt-2 pb-1">
                     <input
+                        aria-labelledby={`prompt-${prompt.id}`}
                         type="range"
                         min="0"
                         max="100"

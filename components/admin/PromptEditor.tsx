@@ -69,8 +69,9 @@ export function PromptEditor({ prompt, categories, categoryId, mode = 'create' }
             }
         }} className="space-y-6 glass-card p-8 rounded-xl border border-white/10">
             <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Prompt Question</label>
+                <label htmlFor="prompt-content" className="block text-sm font-medium text-gray-300 mb-2">Prompt Question</label>
                 <textarea
+                    id="prompt-content"
                     name="content"
                     rows={2}
                     required
@@ -82,8 +83,9 @@ export function PromptEditor({ prompt, categories, categoryId, mode = 'create' }
 
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Type</label>
+                    <label htmlFor="prompt-type" className="block text-sm font-medium text-gray-300 mb-2">Type</label>
                     <select
+                        id="prompt-type"
                         name="type"
                         value={type}
                         onChange={(e) => setType(e.target.value)}
@@ -99,9 +101,10 @@ export function PromptEditor({ prompt, categories, categoryId, mode = 'create' }
                 {/* Dynamic Options Field based on Type */}
                 {type === 'RANGE' ? (
                     <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-300">Slider Labels</label>
+                        <label htmlFor="prompt-range-min" className="block text-sm font-medium text-gray-300">Slider Labels</label>
                         <div className="flex gap-2">
                             <input
+                                id="prompt-range-min"
                                 name="rangeMinLabel"
                                 type="text"
                                 defaultValue={rangeMinLabel}
@@ -121,8 +124,9 @@ export function PromptEditor({ prompt, categories, categoryId, mode = 'create' }
                     </div>
                 ) : (
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Options (for Radio/Checkbox)</label>
+                        <label htmlFor="prompt-options" className="block text-sm font-medium text-gray-300 mb-2">Options (for Radio/Checkbox)</label>
                         <input
+                            id="prompt-options"
                             name="options"
                             type="text"
                             defaultValue={defaultOptions}

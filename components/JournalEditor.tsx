@@ -85,7 +85,7 @@ export function JournalEditor({ prompts, initialAnswers = {} }: JournalEditorPro
                 </div>
 
                 {/* Status Indicator */}
-                <div className="flex flex-col items-end h-10 justify-center">
+                <div role="status" aria-live="polite" className="flex flex-col items-end h-10 justify-center">
                     {status === 'saving' && (
                         <span className="text-sm text-yellow-400 animate-pulse">Saving...</span>
                     )}

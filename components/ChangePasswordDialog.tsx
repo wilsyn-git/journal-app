@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { changePassword } from '@/app/actions/auth'
 
 type Props = {
@@ -50,13 +50,22 @@ export function ChangePasswordDialog({ trigger, targetUserId }: Props) {
         setIsLoading(false)
     }
 
+    useEffect(() => {
+        if (!isOpen) return
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setIsOpen(false)
+        }
+        document.addEventListener('keydown', handleKeyDown)
+        return () => document.removeEventListener('keydown', handleKeyDown)
+    }, [isOpen])
+
     if (!isOpen) {
         return <div onClick={() => setIsOpen(true)}>{trigger}</div>
     }
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-[#09090b] border border-white/10 rounded-xl p-6 max-w-md w-full shadow-2xl relative animate-in zoom-in-95 duration-200">
+            <div role="dialog" aria-modal="true" aria-labelledby="change-password-dialog-title" className="bg-[#09090b] border border-white/10 rounded-xl p-6 max-w-md w-full shadow-2xl relative animate-in zoom-in-95 duration-200">
                 <button
                     onClick={() => setIsOpen(false)}
                     className="absolute top-4 right-4 text-gray-500 hover:text-white"
@@ -64,7 +73,7 @@ export function ChangePasswordDialog({ trigger, targetUserId }: Props) {
                     ✕
                 </button>
 
-                <h2 className="text-xl font-bold text-white mb-2">
+                <h2 id="change-password-dialog-title" className="text-xl font-bold text-white mb-2">
                     {targetUserId ? 'Reset User Password' : 'Change Password'}
                 </h2>
                 <p className="text-sm text-gray-400 mb-6">
@@ -76,8 +85,9 @@ export function ChangePasswordDialog({ trigger, targetUserId }: Props) {
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {!targetUserId && (
                         <div>
-                            <label className="block text-xs font-medium text-gray-400 mb-1">Current Password</label>
+                            <label htmlFor="current-password" className="block text-xs font-medium text-gray-400 mb-1">Current Password</label>
                             <input
+                                id="current-password"
                                 type="password"
                                 name="currentPassword"
                                 required
@@ -88,8 +98,9 @@ export function ChangePasswordDialog({ trigger, targetUserId }: Props) {
                     )}
 
                     <div>
-                        <label className="block text-xs font-medium text-gray-400 mb-1">New Password</label>
+                        <label htmlFor="new-password" className="block text-xs font-medium text-gray-400 mb-1">New Password</label>
                         <input
+                            id="new-password"
                             type="password"
                             name="newPassword"
                             required
@@ -100,8 +111,9 @@ export function ChangePasswordDialog({ trigger, targetUserId }: Props) {
                     </div>
 
                     <div>
-                        <label className="block text-xs font-medium text-gray-400 mb-1">Confirm New Password</label>
+                        <label htmlFor="confirm-password" className="block text-xs font-medium text-gray-400 mb-1">Confirm New Password</label>
                         <input
+                            id="confirm-password"
                             type="password"
                             name="confirmPassword"
                             required
@@ -112,13 +124,13 @@ export function ChangePasswordDialog({ trigger, targetUserId }: Props) {
                     </div>
 
                     {error && (
-                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-200 text-sm">
+                        <div role="alert" className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-200 text-sm">
                             {error}
                         </div>
                     )}
 
                     {success && (
-                        <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-200 text-sm flex items-center gap-2">
+                        <div role="alert" className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-200 text-sm flex items-center gap-2">
                             ✓ {success}
                         </div>
                     )}

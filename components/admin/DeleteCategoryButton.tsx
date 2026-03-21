@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { deletePromptCategory } from '@/app/lib/admin-actions'
 import { useToast } from '@/components/providers/ToastProvider'
 
@@ -41,6 +41,15 @@ export function DeleteCategoryButton({ categoryId, categoryName }: Props) {
         }
     }
 
+    useEffect(() => {
+        if (!isOpen) return
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setIsOpen(false)
+        }
+        document.addEventListener('keydown', handleKeyDown)
+        return () => document.removeEventListener('keydown', handleKeyDown)
+    }, [isOpen])
+
     const handleOpen = (e: React.MouseEvent) => {
         e.preventDefault()
         e.stopPropagation()
@@ -71,8 +80,8 @@ export function DeleteCategoryButton({ categoryId, categoryName }: Props) {
                         e.stopPropagation()
                     }}
                 >
-                    <div className="bg-[#09090b] border border-white/10 rounded-xl p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
-                        <h3 className="text-lg font-bold text-white mb-2">Delete Category?</h3>
+                    <div role="dialog" aria-modal="true" aria-labelledby="delete-category-dialog-title" className="bg-[#09090b] border border-white/10 rounded-xl p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+                        <h3 id="delete-category-dialog-title" className="text-lg font-bold text-white mb-2">Delete Category?</h3>
                         <p className="text-gray-400 text-sm mb-6">
                             Are you sure you want to delete <span className="text-white font-medium">{categoryName}</span>?
                             <br /><br />

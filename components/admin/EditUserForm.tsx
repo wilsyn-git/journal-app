@@ -10,8 +10,9 @@ export function EditUserForm({ user }: { user: { id: string, name: string | null
         <form action={action} className="space-y-4 mb-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Name</label>
+                    <label htmlFor="edit-user-name" className="block text-sm font-medium text-gray-300 mb-2">Name</label>
                     <input
+                        id="edit-user-name"
                         name="name"
                         type="text"
                         defaultValue={user.name || ''}
@@ -20,8 +21,9 @@ export function EditUserForm({ user }: { user: { id: string, name: string | null
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                    <label htmlFor="edit-user-email" className="block text-sm font-medium text-gray-300 mb-2">Email</label>
                     <input
+                        id="edit-user-email"
                         name="email"
                         type="email"
                         required
@@ -43,11 +45,11 @@ export function EditUserForm({ user }: { user: { id: string, name: string | null
             </div>
 
             {state?.error && (
-                <div className="text-red-400 text-sm">{state.error}</div>
+                <div role="alert" className="text-red-400 text-sm">{state.error}</div>
             )}
 
             {state?.success && (
-                <div className="text-green-400 text-sm">User updated successfully.</div>
+                <div role="alert" className="text-green-400 text-sm">User updated successfully.</div>
             )}
 
             <div className="flex justify-end">

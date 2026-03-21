@@ -43,8 +43,9 @@ export function BrandingForm({ currentName, currentLogo }: Props) {
                 <h2 className="text-xl font-semibold text-white mb-4">Site Identity</h2>
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-1">Application Name</label>
+                        <label htmlFor="app-name" className="block text-sm font-medium text-gray-400 mb-1">Application Name</label>
                         <input
+                            id="app-name"
                             type="text"
                             name="siteName"
                             defaultValue={currentName}
@@ -61,11 +62,12 @@ export function BrandingForm({ currentName, currentLogo }: Props) {
                 <h2 className="text-xl font-semibold text-white mb-4">Logo</h2>
                 <div className="flex flex-col sm:flex-row gap-8 items-start">
                     <div className="flex-1">
-                        <label className="block text-sm font-medium text-gray-400 mb-2">Upload Logo</label>
+                        <label htmlFor="upload-logo" className="block text-sm font-medium text-gray-400 mb-2">Upload Logo</label>
                         <div className="flex items-center gap-4">
                             <label className="cursor-pointer px-4 py-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors text-sm text-white">
                                 <span>Choose File</span>
                                 <input
+                                    id="upload-logo"
                                     type="file"
                                     name="logo"
                                     accept="image/png, image/jpeg"

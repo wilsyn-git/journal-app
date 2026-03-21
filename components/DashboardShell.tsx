@@ -44,7 +44,7 @@ export function DashboardShell({ sidebar, children, streak }: Props) {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col relative z-10 w-full h-full overflow-hidden">
+            <main id="main-content" className="flex-1 flex flex-col relative z-10 w-full h-full overflow-hidden">
                 {/* Mobile Header */}
                 <header className="md:hidden border-b border-white/10 p-4 flex justify-between items-center bg-background/80 backdrop-blur-md sticky top-0 z-20">
                     <div className="flex items-center gap-3">

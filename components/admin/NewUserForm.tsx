@@ -36,8 +36,9 @@ export function NewUserForm() {
             <form action={action} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Name</label>
+                        <label htmlFor="new-user-name" className="block text-sm font-medium text-gray-300 mb-2">Name</label>
                         <input
+                            id="new-user-name"
                             name="name"
                             type="text"
                             placeholder="e.g. John Doe"
@@ -45,8 +46,9 @@ export function NewUserForm() {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                        <label htmlFor="new-user-email" className="block text-sm font-medium text-gray-300 mb-2">Email</label>
                         <input
+                            id="new-user-email"
                             name="email"
                             type="email"
                             required
@@ -57,8 +59,9 @@ export function NewUserForm() {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                    <label htmlFor="new-user-password" className="block text-sm font-medium text-gray-300 mb-2">Password</label>
                     <input
+                        id="new-user-password"
                         name="password"
                         type="text" // Visible for admin creation convenience? Or password type?
                         // Let's use text so admin can see what they are typing to tell the user. 

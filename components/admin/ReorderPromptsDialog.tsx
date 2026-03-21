@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
     DndContext,
     closestCenter,
@@ -72,6 +72,14 @@ export function ReorderPromptsDialog({ categoryId, categoryName, prompts, onOpen
         }
     }
 
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onOpenChange(false)
+        }
+        document.addEventListener('keydown', handleKeyDown)
+        return () => document.removeEventListener('keydown', handleKeyDown)
+    }, [onOpenChange])
+
     async function handleSave() {
         setIsSaving(true)
         // Map new order to items
@@ -87,9 +95,9 @@ export function ReorderPromptsDialog({ categoryId, categoryName, prompts, onOpen
 
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-[#121212] border border-white/10 rounded-xl w-full max-w-md max-h-[80vh] flex flex-col shadow-2xl">
+            <div role="dialog" aria-modal="true" aria-labelledby="reorder-prompts-dialog-title" className="bg-[#121212] border border-white/10 rounded-xl w-full max-w-md max-h-[80vh] flex flex-col shadow-2xl">
                 <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
-                    <h3 className="font-bold text-white">Reorder: {categoryName}</h3>
+                    <h3 id="reorder-prompts-dialog-title" className="font-bold text-white">Reorder: {categoryName}</h3>
                     <button onClick={() => onOpenChange(false)} className="text-gray-400 hover:text-white">✕</button>
                 </div>
 

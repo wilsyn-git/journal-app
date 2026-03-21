@@ -188,8 +188,9 @@ export function ProfileForm({ userId, activeAvatar, initialName, initialEmail, i
             {/* Info Section */}
             <div className="space-y-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1">Display Name</label>
+                    <label htmlFor="profile-name" className="block text-sm font-medium text-gray-400 mb-1">Display Name</label>
                     <input
+                        id="profile-name"
                         type="text"
                         name="name"
                         defaultValue={initialName || ''}
@@ -197,8 +198,9 @@ export function ProfileForm({ userId, activeAvatar, initialName, initialEmail, i
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1">Email</label>
+                    <label htmlFor="profile-email" className="block text-sm font-medium text-gray-400 mb-1">Email</label>
                     <input
+                        id="profile-email"
                         type="text"
                         value={initialEmail}
                         disabled
@@ -206,8 +208,9 @@ export function ProfileForm({ userId, activeAvatar, initialName, initialEmail, i
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-1">Bio / About Me</label>
+                    <label htmlFor="profile-bio" className="block text-sm font-medium text-gray-400 mb-1">Bio / About Me</label>
                     <textarea
+                        id="profile-bio"
                         name="bio"
                         defaultValue={initialBio || ''}
                         rows={4}
