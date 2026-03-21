@@ -1,4 +1,4 @@
-import { createGroup } from "@/app/lib/admin-actions"
+import { createGroup } from "@/app/actions/groups"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"

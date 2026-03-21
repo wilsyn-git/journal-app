@@ -3,11 +3,13 @@ import type { Metadata } from "next"
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
+import { resolveUserId } from "@/lib/auth-helpers"
 import { getUserStats } from "@/app/lib/analytics"
 import { getActiveOrganization } from "@/app/lib/data"
 import { AdminUserSelector } from "@/components/AdminUserSelector"
 import Link from "next/link"
 import Image from "next/image"
+import { SidebarHeader } from "@/components/SidebarHeader"
 import { ContributionHeatmap } from "@/components/ContributionHeatmap"
 import { TimeOfDayChart } from "@/components/stats/TimeOfDayChart"
 import { WordCloud } from "@/components/stats/WordCloud"
@@ -30,13 +32,7 @@ export default async function StatsPage({ searchParams }: Props) {
     const viewUserId = typeof params.viewUserId === 'string' ? params.viewUserId : null;
     const isAdmin = session.user.role === 'ADMIN';
 
-    let currentUserId = session.user.id;
-    if (!currentUserId && session.user.email) {
-        const user = await prisma.user.findUnique({ where: { email: session.user.email } })
-        if (user) {
-            currentUserId = user.id
-        }
-    }
+    const currentUserId = await resolveUserId(session)
     if (!currentUserId) redirect("/login");
     const targetUserId = (isAdmin && viewUserId) ? viewUserId : currentUserId;
     const isViewingSelf = targetUserId === currentUserId;
@@ -61,10 +57,7 @@ export default async function StatsPage({ searchParams }: Props) {
             {/* Sidebar (Simplified) */}
             <div className="w-64 border-r border-white/10 hidden md:flex flex-col bg-black/50">
                 <div className="p-6 border-b border-white/10">
-                    <Link href="/dashboard" className="text-xl font-bold tracking-tighter text-white flex items-center gap-2">
-                        {org?.logoUrl && <Image src={org.logoUrl} alt="Logo" width={24} height={24} className="object-contain" />}
-                        <span>{org?.siteName || "myJournal"}</span>
-                    </Link>
+                    <SidebarHeader logoUrl={org?.logoUrl} siteName={org?.siteName} />
                 </div>
                 <div className="p-4 flex-1">
                     <Link href="/dashboard" className="block p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors mb-2">

@@ -1,6 +1,6 @@
 'use client'
 
-import { createPrompt, updatePrompt } from "@/app/lib/admin-actions"
+import { createPrompt, updatePrompt } from "@/app/actions/prompts"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 

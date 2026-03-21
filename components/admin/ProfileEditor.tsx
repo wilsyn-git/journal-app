@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { updateProfile } from '@/app/lib/admin-actions'
+import { updateProfile } from '@/app/actions/profiles'
 
 export function ProfileEditor({ profile }: { profile: { id: string, name: string, description: string | null } }) {
     const [isEditing, setIsEditing] = useState(false)

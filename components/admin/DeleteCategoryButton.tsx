@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { deletePromptCategory } from '@/app/lib/admin-actions'
+import { deletePromptCategory } from '@/app/actions/prompts'
 import { useToast } from '@/components/providers/ToastProvider'
 
 type Props = {

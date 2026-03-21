@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { createGroup, deleteGroup } from "@/app/lib/admin-actions"
+import { createGroup, deleteGroup } from "@/app/actions/groups"
 
 export default async function AdminGroupsPage() {
     const session = await auth();

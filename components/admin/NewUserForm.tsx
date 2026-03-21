@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useEffect, useState } from "react"
-import { createUser } from "@/app/lib/admin-actions"
+import { createUser } from "@/app/actions/users"
 
 export function NewUserForm() {
     const [isOpen, setIsOpen] = useState(false);

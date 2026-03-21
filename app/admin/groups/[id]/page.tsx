@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { addUserToGroup, removeUserFromGroup, updateGroupProfiles } from "@/app/lib/admin-actions"
+import { addUserToGroup, removeUserFromGroup, updateGroupProfiles } from "@/app/actions/groups"
 import { UserGroupEditor } from "@/components/admin/UserGroupEditor"
 
 type Props = {

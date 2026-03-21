@@ -2,7 +2,7 @@
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 import Link from "next/link"
-import { deleteProfile } from "@/app/lib/admin-actions"
+import { deleteProfile } from "@/app/actions/profiles"
 
 export default async function AdminProfilesPage() {
     const session = await auth();

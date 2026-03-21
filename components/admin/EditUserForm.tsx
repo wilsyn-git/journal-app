@@ -1,6 +1,6 @@
 'use client'
 
-import { updateUser } from "@/app/lib/admin-actions"
+import { updateUser } from "@/app/actions/users"
 import { useActionState } from "react"
 
 export function EditUserForm({ user }: { user: { id: string, name: string | null, email: string, excludeFromStats: boolean } }) {

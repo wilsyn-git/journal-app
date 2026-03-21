@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
-import { authenticate } from '@/app/lib/actions';
+import { authenticate } from '@/app/actions/journal';
 import Link from 'next/link';
 
 export default function LoginPage() {

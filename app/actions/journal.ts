@@ -3,6 +3,7 @@
 import { signIn, auth } from '@/auth'
 import { AuthError } from 'next-auth'
 import { prisma } from '@/lib/prisma'
+import { resolveUserId } from '@/lib/auth-helpers'
 import { revalidatePath } from 'next/cache'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -30,6 +31,9 @@ export async function submitEntry(formData: FormData) {
     const session = await auth()
     if (!session?.user?.email) throw new Error("Unauthorized")
 
+    const userId = await resolveUserId(session)
+    if (!userId) throw new Error("User not found")
+
     // Iterate over formData to find prompt answers
     const promptAnswers = new Map<string, string[]>();
 
@@ -48,29 +52,15 @@ export async function submitEntry(formData: FormData) {
     for (const [promptId, values] of promptAnswers.entries()) {
         // Join multiple values (checkboxes) with a delimiter or JSON array
         // Let's use JSON array for multiple values, plain string for single.
-        // OR just JSON stringify everything for consistency if multiple? 
+        // OR just JSON stringify everything for consistency if multiple?
         // Simpler: comma separated for now, or JSON.
         const answer = values.length > 1 ? JSON.stringify(values) : values[0];
 
         entries.push({
-            userId: session.user.id,
+            userId,
             promptId: promptId,
             answer: answer
         })
-    }
-
-    // NOTE: Session User ID is NOT in the default session type unless we add it. 
-    // We need to fetch user by email if ID is missing or extend the session type.
-    // For now, let's fetch user by email from session.
-
-    if (!session.user.id && session.user.email) {
-        const user = await prisma.user.findUnique({ where: { email: session.user.email } })
-        if (user) {
-            // Update entries with real ID
-            entries.forEach(e => e.userId = user.id)
-        } else {
-            throw new Error("User not found")
-        }
     }
 
     // Save entries
@@ -96,12 +86,8 @@ export async function saveJournalResponse(promptId: string, answer: string) {
     const session = await auth()
     if (!session?.user?.email) throw new Error("Unauthorized")
 
-    let userId = session.user.id;
-    if (!userId) {
-        const user = await prisma.user.findUnique({ where: { email: session.user.email } })
-        if (!user) throw new Error("User not found")
-        userId = user.id;
-    }
+    const userId = await resolveUserId(session)
+    if (!userId) throw new Error("User not found")
 
     // Determine "Today" (Server Time)
     const now = new Date();

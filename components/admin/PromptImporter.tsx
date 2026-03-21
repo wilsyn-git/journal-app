@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { importPrompts } from '@/app/lib/admin-actions'
+import { importPrompts } from '@/app/actions/prompts'
 
 export function PromptImporter() {
     const inputRef = useRef<HTMLInputElement>(null)

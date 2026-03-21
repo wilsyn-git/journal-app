@@ -1,5 +1,5 @@
 
-import { createProfile } from "@/app/lib/admin-actions"
+import { createProfile } from "@/app/actions/profiles"
 import Link from "next/link"
 
 export default function NewProfilePage() {

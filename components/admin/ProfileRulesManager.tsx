@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { addProfileRule, deleteProfileRule, updateProfileRule, moveProfileRule } from '@/app/lib/admin-actions'
+import { addProfileRule, deleteProfileRule, updateProfileRule, moveProfileRule } from '@/app/actions/profiles'
 
 type Category = {
     id: string;

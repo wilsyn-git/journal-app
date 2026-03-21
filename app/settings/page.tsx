@@ -1,9 +1,11 @@
 import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
+import { resolveUserId } from "@/lib/auth-helpers"
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
+import { SidebarHeader } from "@/components/SidebarHeader"
 import { ProfileForm } from "./ProfileForm"
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog"
 
@@ -15,18 +17,8 @@ export default async function SettingsPage() {
     const session = await auth()
     if (!session?.user?.email) redirect('/')
 
-    // Resolve User ID & Org logic
-    // We'll fetch the user with organization relation in one go later, or just fetch active org first if needed.
-    // Better to just fetch Main Active Org for generic settings page if user not fully loaded, 
-    // BUT we are authenticated.
-
-    // Let's resolve user first to be safe
-    let currentUserId = session.user.id
-    if (!currentUserId) {
-        const u = await prisma.user.findUnique({ where: { email: session.user.email || "" }, select: { id: true } })
-        if (!u) redirect('/')
-        currentUserId = u.id
-    }
+    const currentUserId = await resolveUserId(session)
+    if (!currentUserId) redirect('/')
 
     const user = await prisma.user.findUnique({
         where: { id: currentUserId },
@@ -49,10 +41,9 @@ export default async function SettingsPage() {
         <div className="flex h-screen bg-[#09090b] text-white font-sans overflow-hidden">
             {/* Simple Sidebar/Nav Back */}
             <div className="w-64 border-r border-white/10 bg-black/20 flex flex-col p-4">
-                <Link href="/dashboard" className="text-xl font-bold tracking-tighter text-white mb-8 flex items-center gap-2">
-                    {org?.logoUrl && <Image src={org.logoUrl} alt="Logo" width={24} height={24} className="object-contain" />}
-                    <span>{org?.siteName || "myJournal"}</span>
-                </Link>
+                <div className="mb-8">
+                    <SidebarHeader logoUrl={org?.logoUrl} siteName={org?.siteName} />
+                </div>
                 <Link href="/dashboard" className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
                     <span>←</span> Back to Dashboard
                 </Link>

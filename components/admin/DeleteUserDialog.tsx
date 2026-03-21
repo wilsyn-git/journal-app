@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import * as Dialog from '@radix-ui/react-dialog'
-import { deleteUser } from '@/app/lib/admin-actions'
+import { deleteUser } from '@/app/actions/users'
 
 type Props = {
     userId: string

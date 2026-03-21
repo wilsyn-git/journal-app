@@ -3,7 +3,7 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { PromptCard } from './PromptCard';
-import { saveJournalResponse } from '@/app/lib/actions';
+import { saveJournalResponse } from '@/app/actions/journal';
 import { Prompt } from '@prisma/client';
 
 interface JournalEditorProps {

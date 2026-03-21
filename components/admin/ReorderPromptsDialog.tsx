@@ -18,7 +18,7 @@ import {
     useSortable
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { reorderPrompts } from '@/app/lib/admin-actions'
+import { reorderPrompts } from '@/app/actions/prompts'
 
 type Prompt = {
     id: string

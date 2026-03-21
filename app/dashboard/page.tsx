@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { auth, signOut } from "@/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
+import { resolveUserId } from "@/lib/auth-helpers"
 import Link from "next/link"
 import { getEntriesByDate, getJournalHistory, getEffectiveProfileIds, getActivePrompts } from "@/app/lib/data"
 import { revalidatePath } from "next/cache"
@@ -21,6 +22,7 @@ type Props = {
 
 import Image from "next/image"
 import { DashboardShell } from "@/components/DashboardShell"
+import { SidebarHeader } from "@/components/SidebarHeader"
 
 // ... imports remain same ...
 
@@ -32,14 +34,7 @@ export default async function DashboardPage({ searchParams }: Props) {
     const session = await auth()
     if (!session) redirect("/login")
 
-    // ... (User resolution logic same as before) ...
-    let currentUserId = session.user?.id
-    if (!currentUserId && session.user?.email) {
-        const user = await prisma.user.findUnique({ where: { email: session.user.email } })
-        if (user) {
-            currentUserId = user.id
-        }
-    }
+    const currentUserId = await resolveUserId(session)
     if (!currentUserId) redirect("/login");
 
     const isAdmin = session.user?.role === 'ADMIN';
@@ -174,10 +169,7 @@ export default async function DashboardPage({ searchParams }: Props) {
     const SidebarContent = (
         <>
             <div className="p-6 border-b border-white/10 flex items-center justify-between">
-                <Link href="/dashboard" className="text-xl font-bold tracking-tighter text-white flex items-center gap-2">
-                    {brandingOrg?.logoUrl && <Image src={brandingOrg.logoUrl} alt="Logo" width={24} height={24} className="object-contain" />}
-                    <span>{brandingOrg?.siteName || "myJournal"}</span>
-                </Link>
+                <SidebarHeader logoUrl={brandingOrg?.logoUrl} siteName={brandingOrg?.siteName} />
                 <Link href="/settings" className="text-gray-400 hover:text-white transition-colors">
                     <span className="sr-only">Settings</span>
                     ⚙️

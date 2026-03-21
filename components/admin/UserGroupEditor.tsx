@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { updateUserGroup } from '@/app/lib/admin-actions'
+import { updateUserGroup } from '@/app/actions/groups'
 
 export function UserGroupEditor({ group }: { group: { id: string, name: string, description: string | null } }) {
     const [isEditing, setIsEditing] = useState(false)

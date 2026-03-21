@@ -2,7 +2,7 @@
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { togglePrompt, deletePrompt, deletePromptCategory } from "@/app/lib/admin-actions"
+import { togglePrompt, deletePrompt, deletePromptCategory } from "@/app/actions/prompts"
 import { auth } from "@/auth"
 import { NewCategoryForm } from "@/components/admin/NewCategoryForm"
 import { PromptImporter } from "@/components/admin/PromptImporter"

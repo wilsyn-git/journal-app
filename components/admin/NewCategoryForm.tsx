@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { createPromptCategory } from '@/app/lib/admin-actions'
+import { createPromptCategory } from '@/app/actions/prompts'
 
 export function NewCategoryForm() {
     const [isAdding, setIsAdding] = useState(false)
