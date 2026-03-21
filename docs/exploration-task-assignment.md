@@ -83,7 +83,30 @@ model TaskAssignment {
 
 ## Value Proposition
 
-Users already open this app daily to journal. Co-locating tasks eliminates friction of checking a second app. Admin already controls what questions users answer; now they also control what actions users take. Completion notes bridge tasks and journaling.
+Users already open this app daily to journal. Co-locating tasks eliminates friction of checking a second app. Admin already controls what questions users answer; now they also control what actions users take.
+
+## The Reflection Bridge
+
+The key differentiator from a generic todo app. On task completion, offer a toggle: "Add completion notes to today's journal?" This pipes the completion context into a JournalEntry, bridging directive action and personal reflection. Without this, tasks are just checkboxes — with it, they become structured journaling prompts tied to real actions.
+
+## UX Principles
+
+**Journaling is calm. Tasks must not introduce productivity anxiety.**
+
+- **Sidebar placement:** Tasks go in the existing sidebar, below the calendar. Calendar looks backward (history), tasks look forward (obligations). Same sidebar, two time directions.
+- **Urgency styling:** Subtle glow effect or soft left-border accent for urgent tasks — not harsh red. Match the app's glassmorphism aesthetic.
+- **Low priority:** De-emphasized with reduced opacity until hovered.
+- **Completion:** Server action, no page reload. Smooth transition (fade/slide) on check-off.
+- **Mobile:** Tasks appear in the existing hamburger menu sidebar, not a separate drawer.
+
+## Admin Assignment Flow
+
+Three assignment modes:
+- **Single user** — admin picks a user from dropdown
+- **Group** — admin picks a UserGroup, assignments fan out at creation time (not lazily)
+- **All users** — fan out to all org members at creation time
+
+Admin sees a completion matrix: task rows x user columns with completed/pending status. Filter by overdue, by user, by group.
 
 ## Scope Boundaries
 
