@@ -23,6 +23,11 @@ export async function GET() {
         const organizations = await prisma.organization.findMany()
 
         const users = await prisma.user.findMany({
+            omit: {
+                password: true,
+                resetToken: true,
+                resetTokenExpiry: true
+            },
             include: {
                 profiles: { select: { id: true } },
                 groups: { select: { id: true } }

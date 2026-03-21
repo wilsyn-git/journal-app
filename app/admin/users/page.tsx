@@ -1,6 +1,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
+import { redirect } from "next/navigation"
 import Link from "next/link"
 
 import { NewUserForm } from "@/components/admin/NewUserForm"
@@ -8,6 +9,12 @@ import { ChangePasswordDialog } from "@/components/ChangePasswordDialog"
 import { DeleteUserDialog } from "@/components/admin/DeleteUserDialog"
 
 export default async function AdminUsersPage() {
+    const session = await auth()
+
+    if (!session?.user || (session.user as any).role !== 'ADMIN') {
+        redirect("/dashboard")
+    }
+
     const users = await prisma.user.findMany({
         orderBy: { createdAt: 'desc' },
         include: {

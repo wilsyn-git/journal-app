@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
-import { join } from "path"
+import path from "path"
 import { writeFile, mkdir } from "fs/promises"
 import { gunzip } from "zlib"
 import { promisify } from "util"
@@ -142,19 +142,31 @@ export async function restoreSystemData(formData: FormData) {
 
 async function restoreBinary(item: any) {
     try {
-        const path = item.logoUrl || item.url // Org or Avatar field
-        if (!path) return
+        const filePath = item.logoUrl || item.url // Org or Avatar field
+        if (!filePath) return
+
+        // Reject paths containing directory traversal components
+        if (filePath.includes('..')) {
+            console.warn("Rejected path with traversal components:", filePath)
+            return
+        }
 
         // matches "data:image/png;base64,..."
         const matches = item.base64Data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/)
         if (!matches || matches.length !== 3) return
 
         const buffer = Buffer.from(matches[2], 'base64')
-        const fullPath = join(process.cwd(), 'public', path)
+        const publicDir = path.resolve(process.cwd(), 'public')
+        const fullPath = path.resolve(publicDir, filePath)
+
+        // Ensure resolved path is within the public directory
+        if (!fullPath.startsWith(publicDir + path.sep) && fullPath !== publicDir) {
+            console.warn("Rejected path outside public directory:", filePath)
+            return
+        }
 
         // Ensure dir
-        const { dirname } = require('path')
-        await mkdir(dirname(fullPath), { recursive: true })
+        await mkdir(path.dirname(fullPath), { recursive: true })
 
         await writeFile(fullPath, buffer)
     } catch (e) {

@@ -1,5 +1,6 @@
 'use server'
 
+import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { writeFile, unlink } from "fs/promises"
@@ -8,6 +9,18 @@ import { randomUUID } from 'crypto'
 
 export async function updateProfile(userId: string, formData: FormData) {
     if (!userId) throw new Error("Unauthorized")
+
+    const session = await auth()
+    if (!session?.user) throw new Error("Unauthorized")
+
+    let currentUserId = session.user.id
+    if (!currentUserId && session.user.email) {
+        const user = await prisma.user.findUnique({ where: { email: session.user.email } })
+        if (user) {
+            currentUserId = user.id
+        }
+    }
+    if (currentUserId !== userId) throw new Error("Unauthorized")
 
     const name = formData.get("name") as string
     const bio = formData.get("bio") as string

@@ -1,11 +1,17 @@
 
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
+import { redirect } from "next/navigation"
 import Link from "next/link"
 import { createGroup, deleteGroup } from "@/app/lib/admin-actions"
 
 export default async function AdminGroupsPage() {
     const session = await auth();
+
+    if (!session?.user || (session.user as any).role !== 'ADMIN') {
+        redirect("/dashboard")
+    }
+
     const orgId = session?.user?.organizationId;
 
     const groups = await prisma.userGroup.findMany({
