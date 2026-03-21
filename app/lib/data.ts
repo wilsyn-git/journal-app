@@ -1,6 +1,9 @@
 
 import { cache } from "react"
+import { createHash } from 'crypto'
 import { prisma } from "@/lib/prisma"
+
+const RECENCY_SUPPRESSION_DAYS = 4
 
 /**
  * Returns the "active" organization (the one with the most users).
@@ -13,32 +16,21 @@ export const getActiveOrganization = cache(async () => {
     })
 })
 
-// Simple seeded random generator (Linear Congruential Generator)
-function mulberry32(a: number) {
-    return function () {
-        var t = a += 0x6D2B79F5;
-        t = Math.imul(t ^ t >>> 15, t | 1);
-        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-        return ((t ^ t >>> 14) >>> 0) / 4294967296;
-    }
-}
+function createSeededRandom(seed: string): () => number {
+    let hashIndex = 0
+    let byteOffset = 0
+    let currentHash = createHash('sha256').update(seed).digest()
 
-// Convert string to seed
-function cyrb128(str: string) {
-    let h1 = 1779033703, h2 = 3144134277,
-        h3 = 1013904242, h4 = 2773480762;
-    for (let i = 0, k; i < str.length; i++) {
-        k = str.charCodeAt(i);
-        h1 = h2 ^ Math.imul(h1 ^ k, 597399067);
-        h2 = h3 ^ Math.imul(h2 ^ k, 2869860281);
-        h3 = h4 ^ Math.imul(h3 ^ k, 951274213);
-        h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
+    return function random(): number {
+        if (byteOffset >= 32) {
+            hashIndex++
+            currentHash = createHash('sha256').update(seed + '-' + hashIndex).digest()
+            byteOffset = 0
+        }
+        const value = currentHash.readUInt32BE(byteOffset)
+        byteOffset += 4
+        return value / 0x100000000 // normalize to [0, 1)
     }
-    h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067);
-    h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860281);
-    h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213);
-    h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179);
-    return (h1 ^ h2 ^ h3 ^ h4) >>> 0;
 }
 
 // Helper to resolve all profiles (Direct + Group Inherited)
@@ -76,7 +68,8 @@ export async function getActivePrompts(
     userId: string,
     organizationId: string,
     userProfileIds: string[] = [],
-    dateStr?: string // YYYY-MM-DD
+    dateStr?: string, // YYYY-MM-DD
+    recentPromptIdsOverride?: Set<string>
 ) {
     try {
         // 1. Fetch Global Prompts (Mandatory)
@@ -91,6 +84,30 @@ export async function getActivePrompts(
 
         const selectedPromptsMap = new Map<string, any>();
         globalPrompts.forEach(p => selectedPromptsMap.set(p.id, p));
+
+        // Recency suppression: determine which prompts were shown recently
+        let recentPromptIds: Set<string>
+        if (recentPromptIdsOverride) {
+            recentPromptIds = recentPromptIdsOverride
+        } else {
+            // Query actual journal history for recency suppression
+            const today = new Date(dateStr || new Date().toISOString().split('T')[0])
+            const suppressionStart = new Date(today)
+            suppressionStart.setDate(suppressionStart.getDate() - RECENCY_SUPPRESSION_DAYS)
+
+            const recentEntries = await prisma.journalEntry.findMany({
+                where: {
+                    userId,
+                    createdAt: {
+                        gte: suppressionStart,
+                        lt: today
+                    }
+                },
+                select: { promptId: true },
+                distinct: ['promptId']
+            })
+            recentPromptIds = new Set(recentEntries.map(e => e.promptId))
+        }
 
         // 2. Fetch User Profile Rules
         const profiles = await prisma.profile.findMany({
@@ -109,8 +126,7 @@ export async function getActivePrompts(
         // Use provided date or today for stable seeding
         const seedDate = dateStr || new Date().toISOString().split('T')[0];
         const seedStr = `${userId}-${seedDate}`;
-        const seed = cyrb128(seedStr);
-        const random = mulberry32(seed);
+        const random = createSeededRandom(seedStr);
 
         // Collect all category targets upfront
         const allCategoryStrings: string[] = [];
@@ -181,7 +197,14 @@ export async function getActivePrompts(
                 }
 
                 // Exclude already selected
-                pool = pool.filter(p => !selectedPromptsMap.has(p.id));
+                pool = pool.filter(p => !selectedPromptsMap.has(p.id))
+                if (!rule.includeAll) {
+                    const filteredPool = pool.filter(p => !recentPromptIds.has(p.id))
+                    // Fall back to unsuppressed pool if recency removes all candidates
+                    if (filteredPool.length > 0) {
+                        pool = filteredPool
+                    }
+                }
 
                 if (rule.includeAll) {
                     pool.forEach(p => selectedPromptsMap.set(p.id, p));
