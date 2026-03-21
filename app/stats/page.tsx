@@ -1,4 +1,5 @@
 
+import type { Metadata } from "next"
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
@@ -15,6 +16,10 @@ import { TrendChart } from "@/components/stats/TrendChart"
 
 type Props = {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+
+export const metadata: Metadata = {
+    title: 'Stats | myJournal',
 }
 
 export default async function StatsPage({ searchParams }: Props) {

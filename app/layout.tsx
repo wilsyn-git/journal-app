@@ -20,6 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const title = `${siteName} | De-clutter your mind`;
 
   return {
+    metadataBase: new URL('https://myjournal.lol'),
     title,
     description: "A focused journaling application for daily reflection and personal growth.",
     openGraph: {
@@ -28,6 +29,11 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: siteName,
       locale: "en_US",
       type: "website",
+    },
+    twitter: {
+      card: 'summary',
+      title: 'myJournal',
+      description: "Capture your thoughts, find clarity, and track your personal growth.",
     },
     icons: {
         icon: org?.logoUrl || '/icon-192.png',

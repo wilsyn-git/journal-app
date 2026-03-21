@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
@@ -5,6 +6,10 @@ import Link from "next/link"
 import Image from "next/image"
 import { ProfileForm } from "./ProfileForm"
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog"
+
+export const metadata: Metadata = {
+    title: 'Settings | myJournal',
+}
 
 export default async function SettingsPage() {
     const session = await auth()

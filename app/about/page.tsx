@@ -1,5 +1,11 @@
 
+import type { Metadata } from "next"
 import Link from "next/link"
+
+export const metadata: Metadata = {
+    title: 'About | myJournal',
+    description: 'Learn about myJournal - a daily journaling platform for personal growth and reflection.',
+}
 
 export default function AboutPage() {
     return (

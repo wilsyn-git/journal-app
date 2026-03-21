@@ -1,7 +1,12 @@
 
+import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
+
+export const metadata: Metadata = {
+    title: 'Admin Dashboard | myJournal',
+}
 
 export default async function AdminPage() {
     const session = await auth()

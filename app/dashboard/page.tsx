@@ -1,4 +1,5 @@
 
+import type { Metadata } from "next"
 import { auth, signOut } from "@/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
@@ -22,6 +23,10 @@ import Image from "next/image"
 import { DashboardShell } from "@/components/DashboardShell"
 
 // ... imports remain same ...
+
+export const metadata: Metadata = {
+    title: 'Dashboard | myJournal',
+}
 
 export default async function DashboardPage({ searchParams }: Props) {
     const session = await auth()
