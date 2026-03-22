@@ -29,7 +29,7 @@ export default async function AdminTasksPage({ searchParams }: Props) {
     const tasks = await prisma.task.findMany({
         where: { organizationId: orgId, archivedAt: isArchived ? { not: null } : null },
         include: {
-            assignments: { select: { completedAt: true } },
+            assignments: { include: { user: { select: { name: true } } } },
             createdBy: { select: { name: true } }
         },
         orderBy: isArchived
@@ -73,27 +73,39 @@ export default async function AdminTasksPage({ searchParams }: Props) {
         return dueDateStr < todayStr
     }
 
-    function getAssignmentLabel(task: typeof tasks[number]) {
-        const count = task.assignments.length
-        if (task.assignmentMode === ASSIGNMENT_MODES.USER) {
-            // Single user - show first assignment user name or count
-            if (count === 1) {
-                return `${count} user`
-            }
-            return `${count} users`
+    function renderAssignmentPills(task: typeof tasks[number]) {
+        if (task.assignmentMode === ASSIGNMENT_MODES.ALL) {
+            return <span className="text-xs bg-white/10 text-gray-300 px-2 py-0.5 rounded-full">All</span>
         }
         if (task.assignmentMode === ASSIGNMENT_MODES.GROUP) {
             const groupName = task.groupId ? groupMap.get(task.groupId) : null
-            return groupName ? `${groupName} (${count} users)` : `Group (${count} users)`
+            return <span className="text-xs bg-white/10 text-gray-300 px-2 py-0.5 rounded-full">{groupName || 'Group'}</span>
         }
-        return `All users (${count} users)`
-    }
-
-    function getCompletionLabel(task: typeof tasks[number]) {
-        const total = task.assignments.length
-        if (total === 0) return null
-        const completed = task.assignments.filter(a => a.completedAt !== null).length
-        return `${completed} of ${total} done`
+        // USER mode or fallback — show individual user pills with completion status
+        return (
+            <div className="flex flex-wrap gap-1">
+                {task.assignments.map((a: any) => {
+                    const name = a.user?.name || 'User'
+                    const firstName = name.split(' ')[0]
+                    const done = !!a.completedAt
+                    return (
+                        <span
+                            key={a.id || firstName}
+                            className={`text-xs px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${
+                                done ? 'bg-green-500/15 text-green-400' : 'bg-white/10 text-gray-300'
+                            }`}
+                        >
+                            {firstName}
+                            {done && (
+                                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                                    <path d="M2 5L4.5 7.5L8 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            )}
+                        </span>
+                    )
+                })}
+            </div>
+        )
     }
 
     function getPriorityBadgeClass(priority: PriorityValue) {
@@ -114,17 +126,17 @@ export default async function AdminTasksPage({ searchParams }: Props) {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-white">Tasks</h1>
-                    <p className="text-gray-400 text-sm mt-1">Assign and track tasks for your users</p>
+            <div>
+                <h1 className="text-2xl font-bold text-white">Tasks</h1>
+                <div className="flex items-center justify-between mt-1">
+                    <p className="text-gray-400 text-sm">Assign and track tasks for your users</p>
+                    <Link
+                        href="/admin/tasks/new"
+                        className="text-sm bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-center"
+                    >
+                        + New Task
+                    </Link>
                 </div>
-                <Link
-                    href="/admin/tasks/new"
-                    className="text-sm bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-center"
-                >
-                    + New Task
-                </Link>
             </div>
 
             {/* Tabs */}
@@ -165,7 +177,6 @@ export default async function AdminTasksPage({ searchParams }: Props) {
                     {sortedTasks.map(task => {
                         const overdue = isOverdue(task)
                         const priority = task.priority as PriorityValue
-                        const completionLabel = getCompletionLabel(task)
 
                         return (
                             <Link
@@ -193,15 +204,10 @@ export default async function AdminTasksPage({ searchParams }: Props) {
                                                             Due {task.dueDate.toLocaleDateString('en-US', { timeZone: timezone, month: 'short', day: 'numeric' })}
                                                         </span>
                                                     )}
-                                                    <span>{getAssignmentLabel(task)}</span>
+                                                    {renderAssignmentPills(task)}
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2 shrink-0">
-                                                {completionLabel && (
-                                                    <span className="text-xs text-gray-400 bg-white/5 px-2 py-1 rounded">
-                                                        {completionLabel}
-                                                    </span>
-                                                )}
                                                 <span className={`text-xs px-2 py-1 rounded ${getPriorityBadgeClass(priority)}`}>
                                                     {PRIORITY_LABELS[priority] ?? 'Normal'}
                                                 </span>

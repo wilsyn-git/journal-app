@@ -220,9 +220,9 @@ export default async function DashboardPage({ searchParams }: Props) {
                     </div>
                 )}
 
-                <CalendarSidebar completedDates={historyDates} />
-
                 <TaskSidebar assignments={taskAssignments} />
+
+                <CalendarSidebar completedDates={historyDates} />
             </div>
 
             <div className="p-4 border-t border-white/10 bg-black/20">

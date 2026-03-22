@@ -36,16 +36,15 @@ type TaskSidebarProps = {
 }
 
 export function TaskSidebar({ assignments }: TaskSidebarProps) {
-  const [expandedId, setExpandedId] = useState<string | null>(null)
   const [notes, setNotes] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState<Record<string, boolean>>({})
 
-  // Hide completed tasks older than 2 days
-  const twoDaysAgo = new Date()
-  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2)
+  // Hide completed tasks from before today
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
 
   const filtered = assignments.filter((a) => {
-    if (a.completedAt && new Date(a.completedAt) < twoDaysAgo) return false
+    if (a.completedAt && new Date(a.completedAt) < todayStart) return false
     return true
   })
 
@@ -57,10 +56,8 @@ export function TaskSidebar({ assignments }: TaskSidebarProps) {
     const bComplete = !!b.completedAt
     if (aComplete !== bComplete) return aComplete ? 1 : -1
 
-    // Priority asc (urgent=0 first)
     if (a.task.priority !== b.task.priority) return a.task.priority - b.task.priority
 
-    // Due date: soonest first, null last
     const aDue = a.task.dueDate ? new Date(a.task.dueDate).getTime() : Infinity
     const bDue = b.task.dueDate ? new Date(b.task.dueDate).getTime() : Infinity
     return aDue - bDue
@@ -76,15 +73,6 @@ export function TaskSidebar({ assignments }: TaskSidebarProps) {
       } else {
         await completeTask(assignment.id, notes[assignment.id])
       }
-    } finally {
-      setLoading((prev) => ({ ...prev, [assignment.id]: false }))
-    }
-  }
-
-  const handleComplete = async (assignment: TaskAssignment) => {
-    setLoading((prev) => ({ ...prev, [assignment.id]: true }))
-    try {
-      await completeTask(assignment.id, notes[assignment.id])
     } finally {
       setLoading((prev) => ({ ...prev, [assignment.id]: false }))
     }
@@ -113,9 +101,8 @@ export function TaskSidebar({ assignments }: TaskSidebarProps) {
         )}
       </div>
 
-      <div className="space-y-1">
+      <div className="space-y-2">
         {sorted.map((assignment) => {
-          const isExpanded = expandedId === assignment.id
           const isComplete = !!assignment.completedAt
           const colors = priorityColor(assignment.task.priority)
           const isLoading = loading[assignment.id]
@@ -123,23 +110,19 @@ export function TaskSidebar({ assignments }: TaskSidebarProps) {
           return (
             <div
               key={assignment.id}
-              className={`rounded-lg transition-colors ${isComplete ? 'opacity-50' : ''} ${isExpanded ? 'bg-white/5' : 'hover:bg-white/5'}`}
+              className={`rounded-lg p-2 ${isComplete ? 'opacity-50 bg-white/3' : 'bg-white/5'}`}
             >
-              {/* Collapsed card row */}
-              <div className="flex items-start gap-2 p-2">
+              {/* Task header row */}
+              <div className="flex items-start gap-2">
                 {/* Checkbox */}
                 <div
                   role="checkbox"
                   aria-checked={isComplete}
                   tabIndex={0}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    if (!isLoading) handleToggle(assignment)
-                  }}
+                  onClick={() => !isLoading && handleToggle(assignment)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault()
-                      e.stopPropagation()
                       if (!isLoading) handleToggle(assignment)
                     }
                   }}
@@ -156,13 +139,9 @@ export function TaskSidebar({ assignments }: TaskSidebarProps) {
                   )}
                 </div>
 
-                {/* Clickable card area */}
-                <div
-                  className="flex-1 min-w-0 cursor-pointer"
-                  onClick={() => setExpandedId(isExpanded ? null : assignment.id)}
-                  aria-expanded={isExpanded}
-                >
-                  <div className={`text-xs truncate ${isComplete ? 'text-gray-400 line-through' : 'text-white'}`}>
+                {/* Title and meta */}
+                <div className="flex-1 min-w-0">
+                  <div className={`text-xs ${isComplete ? 'text-gray-400 line-through' : 'text-white'}`}>
                     {assignment.task.title}
                   </div>
                   <div className="flex items-center gap-1.5 mt-0.5">
@@ -178,33 +157,22 @@ export function TaskSidebar({ assignments }: TaskSidebarProps) {
                 </div>
               </div>
 
-              {/* Expanded content */}
-              {isExpanded && (
-                <div className="px-2 pb-2 pl-8">
-                  {assignment.task.description && (
-                    <p className="text-xs text-gray-400 mb-2">{assignment.task.description}</p>
-                  )}
-                  {!isComplete && (
-                    <>
-                      <textarea
-                        className="w-full text-xs bg-white/5 border border-white/10 rounded p-2 text-gray-300 placeholder-gray-500 resize-none focus:outline-none focus:border-primary/50 mb-2"
-                        rows={2}
-                        placeholder="Completion notes (optional)"
-                        aria-label={`Completion notes for ${assignment.task.title}`}
-                        value={notes[assignment.id] || ''}
-                        onChange={(e) => setNotes((prev) => ({ ...prev, [assignment.id]: e.target.value }))}
-                      />
-                      <div className="flex justify-end">
-                        <button
-                          onClick={() => handleComplete(assignment)}
-                          disabled={isLoading}
-                          className="text-xs px-3 py-1 bg-primary hover:bg-primary/80 text-white rounded transition-colors disabled:opacity-50"
-                        >
-                          Complete
-                        </button>
-                      </div>
-                    </>
-                  )}
+              {/* Description */}
+              {!isComplete && assignment.task.description && (
+                <p className="text-xs text-gray-400 mt-1.5 pl-6">{assignment.task.description}</p>
+              )}
+
+              {/* Notes textarea — always visible for incomplete tasks */}
+              {!isComplete && (
+                <div className="mt-2 pl-6">
+                  <textarea
+                    className="w-full text-xs bg-white/5 border border-white/10 rounded p-2 text-gray-300 placeholder-gray-500 resize-none focus:outline-none focus:border-primary/50"
+                    rows={2}
+                    placeholder="Completion notes (optional)"
+                    aria-label={`Completion notes for ${assignment.task.title}`}
+                    value={notes[assignment.id] || ''}
+                    onChange={(e) => setNotes((prev) => ({ ...prev, [assignment.id]: e.target.value }))}
+                  />
                 </div>
               )}
             </div>

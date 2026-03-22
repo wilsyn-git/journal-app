@@ -195,14 +195,20 @@ export function TaskForm({ users, groups, action, initialData, mode }: TaskFormP
       {/* Due Date */}
       <div>
         <label htmlFor="task-due-date" className="block text-sm font-medium text-gray-200 mb-2">
-          Due Date
+          Due Date <span className="text-gray-400 font-normal">(optional)</span>
         </label>
         <input
           id="task-due-date"
           name="dueDate"
           type="date"
           defaultValue={dueDateDefault}
-          className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary outline-none"
+          className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary outline-none [color-scheme:dark] invalid:text-gray-500"
+          ref={(el) => {
+            if (el && !el.value) el.style.color = '#6b7280'
+            el?.addEventListener('change', () => {
+              el.style.color = el.value ? 'white' : '#6b7280'
+            })
+          }}
         />
       </div>
 
