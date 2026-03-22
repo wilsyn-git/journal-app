@@ -2,12 +2,69 @@
 'use client';
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
+import { useBranding } from "@/components/BrandingProvider"
+
+function Breadcrumbs() {
+    const pathname = usePathname()
+
+    // Build breadcrumb segments from pathname
+    // /admin -> ["Admin"]
+    // /admin/tasks -> ["Admin", "Tasks"]
+    // /admin/tasks/[id] -> ["Admin", "Tasks", "Detail"]
+    // /admin/tasks/[id]/edit -> ["Admin", "Tasks", "Edit"]
+    const segments = pathname.split('/').filter(Boolean) // ["admin", "tasks", "abc123", "edit"]
+
+    const crumbs: { label: string; href: string }[] = []
+
+    if (segments.length >= 1) {
+        crumbs.push({ label: 'Admin', href: '/admin' })
+    }
+
+    if (segments.length >= 2) {
+        const section = segments[1]
+        const label = section.charAt(0).toUpperCase() + section.slice(1)
+        crumbs.push({ label, href: `/admin/${section}` })
+    }
+
+    if (segments.length >= 3) {
+        const sub = segments[2]
+        if (sub === 'new') {
+            crumbs.push({ label: 'New', href: pathname })
+        } else if (segments.length >= 4 && segments[3] === 'edit') {
+            crumbs.push({ label: 'Edit', href: pathname })
+        }
+    }
+
+    // Don't show breadcrumb if we're just on /admin
+    if (crumbs.length <= 1) return null
+
+    return (
+        <nav aria-label="Breadcrumb" className="mb-4">
+            <ol className="flex items-center gap-1 text-xs text-gray-400">
+                {crumbs.map((crumb, i) => (
+                    <li key={crumb.href} className="flex items-center gap-1">
+                        {i > 0 && <span aria-hidden="true" className="text-gray-500">/</span>}
+                        {i === crumbs.length - 1 ? (
+                            <span className="text-gray-300">{crumb.label}</span>
+                        ) : (
+                            <Link href={crumb.href} className="hover:text-white transition-colors">
+                                {crumb.label}
+                            </Link>
+                        )}
+                    </li>
+                ))}
+            </ol>
+        </nav>
+    )
+}
 
 export function AdminSidebar() {
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
+    const { siteName, logoUrl } = useBranding();
 
     const isActive = (path: string) => {
         if (path === '/admin' && pathname === '/admin') return true;
@@ -24,11 +81,16 @@ export function AdminSidebar() {
 
     const SidebarContent = () => (
         <>
-            <div className="flex items-center justify-between mb-8">
-                <h2 className="text-xl font-bold text-white">Journal Admin</h2>
+            {/* Brand header — clickable, links to dashboard */}
+            <div className="flex items-center justify-between mb-4">
+                <Link href="/dashboard" className="text-xl font-bold tracking-tighter text-white flex items-center gap-2">
+                    {logoUrl && <Image src={logoUrl} alt="Logo" width={24} height={24} className="object-contain" />}
+                    <span>{siteName || "myJournal"}</span>
+                </Link>
                 <button
                     onClick={() => setIsOpen(false)}
                     className="md:hidden text-gray-400 hover:text-white"
+                    aria-label="Close menu"
                 >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -36,15 +98,10 @@ export function AdminSidebar() {
                 </button>
             </div>
 
-            <nav aria-label="Admin navigation" className="flex-1 space-y-2 overflow-y-auto">
-                <Link
-                    href="/dashboard"
-                    className="block px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors mb-4"
-                    onClick={() => setIsOpen(false)}
-                >
-                    &larr; User Dashboard
-                </Link>
+            {/* Breadcrumbs */}
+            <Breadcrumbs />
 
+            <nav aria-label="Admin navigation" className="flex-1 space-y-2 overflow-y-auto">
                 <Link href="/admin" className={linkClass('/admin')} onClick={() => setIsOpen(false)}>
                     Overview
                 </Link>
@@ -78,9 +135,19 @@ export function AdminSidebar() {
                 <Link href="/admin/tools" className={linkClass('/admin/tools')} onClick={() => setIsOpen(false)}>
                     Tools (Data)
                 </Link>
+
+                <div className="h-px bg-white/10 my-2" />
+
+                <Link
+                    href="/dashboard"
+                    className="block px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+                    onClick={() => setIsOpen(false)}
+                >
+                    &larr; Back to Journal
+                </Link>
             </nav>
             <div className="pt-4 border-t border-white/10 text-xs text-gray-400">
-                v0.1.0 (Mobile Ready)
+                v0.1.0
             </div>
         </>
     );
@@ -89,10 +156,14 @@ export function AdminSidebar() {
         <>
             {/* Mobile Header */}
             <div className="md:hidden bg-black/40 backdrop-blur-md border-b border-white/10 p-4 sticky top-0 z-30 flex items-center justify-between">
-                <h1 className="text-lg font-bold text-white">Journal Admin</h1>
+                <Link href="/dashboard" className="text-lg font-bold text-white flex items-center gap-2">
+                    {logoUrl && <Image src={logoUrl} alt="Logo" width={20} height={20} className="object-contain" />}
+                    <span>{siteName || "myJournal"}</span>
+                </Link>
                 <button
                     onClick={() => setIsOpen(true)}
                     className="text-white p-1 hover:bg-white/10 rounded"
+                    aria-label="Open menu"
                 >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
