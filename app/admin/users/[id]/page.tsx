@@ -6,6 +6,7 @@ import Link from "next/link"
 
 import { EditUserForm } from "@/components/admin/EditUserForm"
 import { DeleteUserDialog } from "@/components/admin/DeleteUserDialog"
+import { DeviceSessionsList } from "@/components/admin/DeviceSessionsList"
 
 type Props = {
     params: Promise<{ id: string }>
@@ -29,6 +30,12 @@ export default async function AdminUserDetailPage({ params }: Props) {
         where: { organizationId: orgId }
     });
 
+    const deviceSessions = await prisma.deviceSession.findMany({
+        where: { userId: id, revokedAt: null },
+        select: { id: true, deviceName: true, lastActiveAt: true, createdAt: true },
+        orderBy: { lastActiveAt: 'desc' },
+    });
+
     const userProfileIds = new Set(user.profiles.map(p => p.id));
 
     return (
@@ -41,6 +48,11 @@ export default async function AdminUserDetailPage({ params }: Props) {
             <div className="glass-card p-8 rounded-xl border border-white/10">
                 <h2 className="text-xl font-bold text-white mb-6">User Details</h2>
                 <EditUserForm user={user} />
+            </div>
+
+            <div className="mt-8 glass-card p-8 rounded-xl border border-white/10">
+                <h2 className="text-xl font-bold text-white mb-4">Device Sessions</h2>
+                <DeviceSessionsList sessions={deviceSessions} userId={id} />
             </div>
 
             {/* Danger Zone */}

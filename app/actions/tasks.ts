@@ -75,6 +75,31 @@ export async function createTask(formData: FormData) {
             }
         })
 
+        // Send push notifications to assigned users
+        if (userIds.length > 0) {
+            import('@/lib/api/pushNotifications').then(async ({ sendPushNotification }) => {
+                const sessions = await prisma.deviceSession.findMany({
+                    where: {
+                        userId: { in: userIds },
+                        deviceToken: { not: null },
+                        revokedAt: null,
+                    },
+                    select: { deviceToken: true },
+                })
+                const tokens = sessions
+                    .map((s) => s.deviceToken)
+                    .filter((t): t is string => t !== null)
+                if (tokens.length > 0) {
+                    sendPushNotification(
+                        tokens,
+                        'myJournal',
+                        `New task: ${title}`,
+                        { type: 'task_assigned' }
+                    )
+                }
+            })
+        }
+
         revalidatePath('/admin/tasks')
         revalidatePath('/dashboard')
         return { success: true }

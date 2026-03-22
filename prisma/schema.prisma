@@ -76,6 +76,7 @@ model User {
   avatars   UserAvatar[]
   tasksCreated    Task[]           @relation("TasksCreated")
   taskAssignments TaskAssignment[] @relation("TaskAssignments")
+  deviceSessions DeviceSession[]
   bio       String?
   resetToken     String?   @unique
   resetTokenExpiry DateTime?
@@ -212,4 +213,19 @@ model JournalEntry {
 
   @@index([userId, createdAt])
   @@index([userId, promptId, createdAt])
+}
+
+model DeviceSession {
+  id           String    @id @default(uuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceToken  String?
+  refreshToken String    @unique
+  deviceName   String
+  lastActiveAt DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+  revokedAt    DateTime?
+
+  @@index([userId])
+  @@index([refreshToken])
 }
