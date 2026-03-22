@@ -2,66 +2,7 @@
 import { cache } from "react"
 import { prisma } from "@/lib/prisma"
 import { getUserTimezone } from "@/lib/timezone"
-
-// Helper to calculate streak from a sorted list of date strings (descending)
-// Helper to calculate streak from a sorted list of date strings (descending)
-function calculateStreaks(sortedDays: string[], todayStr: string) {
-    if (sortedDays.length === 0) return { current: 0, max: 0 };
-
-    let currentStreak = 0;
-    let maxStreak = 0;
-    let tempStreak = 0;
-
-    // Calculate yesterday string from todayStr (YYYY-MM-DD)
-    const t = new Date(todayStr); // Treating as UTC for math is fine as long as we put it back
-    // Actually, simple Date parsing of YYYY-MM-DD returns UTC midnight.
-    // Subtract 24h
-    t.setUTCDate(t.getUTCDate() - 1);
-    const yesterdayStr = t.toISOString().split('T')[0];
-
-    // Current Streak logic
-    // Check start point
-    if (sortedDays[0] === todayStr || sortedDays[0] === yesterdayStr) {
-        currentStreak = 1;
-    } else {
-        currentStreak = 0;
-    }
-
-    // Single pass for Max Streak
-    for (let i = 0; i < sortedDays.length; i++) {
-        if (i === 0) {
-            tempStreak = 1;
-        } else {
-            const current = new Date(sortedDays[i - 1]);
-            const prev = new Date(sortedDays[i]);
-            const diffTime = Math.abs(current.getTime() - prev.getTime());
-            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-
-            if (diffDays === 1) {
-                tempStreak++;
-            } else {
-                if (tempStreak > maxStreak) maxStreak = tempStreak;
-                tempStreak = 1;
-            }
-        }
-    }
-    if (tempStreak > maxStreak) maxStreak = tempStreak;
-
-    // Finalize Current Streak
-    let cStreak = 0;
-    if (sortedDays.includes(todayStr) || sortedDays.includes(yesterdayStr)) {
-        cStreak = 1;
-        for (let i = 0; i < sortedDays.length - 1; i++) {
-            const d1 = new Date(sortedDays[i]);
-            const d2 = new Date(sortedDays[i + 1]);
-            const diff = Math.round((d1.getTime() - d2.getTime()) / (1000 * 3600 * 24));
-            if (diff === 1) cStreak++;
-            else break;
-        }
-    }
-
-    return { current: cStreak, max: maxStreak };
-}
+import { calculateStreaks } from "@/lib/streaks"
 
 const STOP_WORDS = new Set([
     'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at',
