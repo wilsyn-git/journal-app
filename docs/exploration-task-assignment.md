@@ -1,7 +1,9 @@
 # Exploration: Admin Task Assignment Feature
 
 **Date:** 2026-03-21
-**Status:** Exploration (no implementation planned yet)
+**Status:** Shipped (v1 complete 2026-03-21)
+**Implementation:** `docs/superpowers/plans/2026-03-21-task-assignment.md`
+**Spec:** `docs/superpowers/specs/2026-03-21-task-assignment-design.md`
 
 ---
 

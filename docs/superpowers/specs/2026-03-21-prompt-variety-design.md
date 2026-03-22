@@ -1,7 +1,7 @@
 # Prompt Variety Improvement — Design Spec
 
 **Date:** 2026-03-21
-**Status:** Draft
+**Status:** Shipped (2026-03-21)
 **Problem:** Users see the same non-global prompts repeated across consecutive days despite a large pool (103 General prompts). The PRNG produces similar early outputs for similar seeds (consecutive dates), and there is no mechanism to suppress recently-shown prompts.
 
 ---

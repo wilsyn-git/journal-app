@@ -1,11 +1,50 @@
-# Journal App — Remaining Roadmap
+# Journal App — Roadmap
 
-**Date:** 2026-03-21
-**Context:** Items deferred from the comprehensive audit (Phases 1-8 complete).
+**Last updated:** 2026-03-21
 
 ---
 
-## Dependency Upgrades
+## Recently Completed (2026-03-21)
+
+### Codebase Audit — Phases 1-8
+All 79 findings addressed across 8 phases:
+- **Phase 1:** Security hardening (password export fix, security headers, path traversal, auth checks)
+- **Phase 2:** Error boundaries + loading states (9 new files)
+- **Phase 3:** Performance (DB indexes, React.cache, query parallelization)
+- **Phase 4:** Accessibility foundations (form labels, dialog ARIA, status announcements, skip link)
+- **Phase 5:** SEO (robots.txt, sitemap, per-page metadata, Open Graph)
+- **Phase 6:** Code organization (split 908-line admin-actions.ts, shared helpers)
+- **Phase 7:** UX polish (toast notifications, empty states, mobile nav)
+- **Phase 8:** Remaining accessibility (contrast, landmarks, keyboard visibility, screen reader)
+
+### Prompt Variety Improvement
+- 4-day recency suppression excludes recently-shown prompts from selection
+- SHA-256 PRNG replaces mulberry32 for better distribution on consecutive dates
+- Simulation script (`scripts/simulatePrompts.sh`) for validation
+
+### Task Assignment Feature
+- Task + TaskAssignment data model with fan-out assignment (user/group/all)
+- Admin CRUD: list page, create form, detail page with progress tracking, edit page
+- User dashboard: sidebar task list with inline completion notes, notification banner
+- Admin dashboard: task stats card
+
+### Infrastructure
+- Pinned Node 22 via `.node-version` + `engines` field
+- Updated Next.js 16.1.4 -> 16.2.1, eslint-config-next, dotenv, zod, @types/react
+- Installed `fnm` for local Node version management
+
+---
+
+## Upcoming — Task Stats Enhancement
+- Add completion rate card to admin dashboard
+- Add task activity section to user stats page
+- See `docs/exploration-task-stats.md` for details
+
+---
+
+## Remaining Work
+
+### Dependency Upgrades
 
 These need their own planning/testing cycles.
 
@@ -17,49 +56,48 @@ These need their own planning/testing cycles.
 | ESLint | 9.x | 10.x | Major version, config format changes likely. |
 | AWS SDK (SES) | 3.975.0 | 3.1014+ | Large jump but should be compatible. Test email flows (password reset, etc.). |
 
----
+### Security Improvements
 
-## Security Improvements
-
-### Rate limiting on auth endpoints
+**Rate limiting on auth endpoints**
 - **Priority:** Medium
 - **Files:** `auth.ts`, `app/actions/forgot-password.ts`
-- **Issue:** No rate limiting on login attempts or password reset requests. Brute-force and email flooding possible.
-- **Fix:** Implement rate limiting via middleware or in-memory store (e.g., `rate-limiter-flexible`).
+- **Issue:** No rate limiting on login attempts or password reset requests.
+- **Fix:** Implement rate limiting via middleware or in-memory store.
 
-### Route protection whitelist approach
+**Route protection whitelist approach**
 - **Priority:** Medium
 - **File:** `auth.config.ts`
-- **Issue:** Currently only `/dashboard` is protected at the proxy level. Other routes (`/admin`, `/settings`, `/stats`, `/api`) rely on per-page `auth()` checks.
-- **Fix:** Switch to a public-route whitelist (like ScoringApp's `proxy.ts` pattern). Default to protected, explicitly allow public routes.
+- **Issue:** Currently only `/dashboard` is protected at the proxy level. Other routes rely on per-page `auth()` checks.
+- **Fix:** Switch to a public-route whitelist (like ScoringApp's `proxy.ts` pattern).
 
----
+### Code Quality
 
-## Code Quality
-
-### Eliminate `any` types (19+ instances)
+**Eliminate `any` types (19+ instances)**
 - **Priority:** Medium
-- **Files:** `app/stats/page.tsx`, `app/actions/restore.ts`, `app/actions/admin.ts`, `app/actions/feedback.ts`, `app/admin/tools/page.tsx`, `app/admin/prompts/page.tsx`
-- **Fix:** Define proper interfaces. Use Zod schemas with `z.infer` for validated data. Particularly important in restore action where untrusted data flows through `any` into the database.
+- **Fix:** Define proper interfaces. Use Zod schemas with `z.infer` for validated data.
 
-### Replace console.log/error with structured logger
+**Replace console.log/error with structured logger**
 - **Priority:** Low
-- **Files:** `auth.ts`, `lib/email/index.ts`, multiple action files
-- **Fix:** Replace with a structured logger (e.g., `pino`) that can be configured per environment. Remove debug logs like `console.log('Invalid credentials')` in auth.ts.
+- **Fix:** Replace with a structured logger (e.g., `pino`).
 
-### Add breadcrumbs to admin section
+**Add breadcrumbs to admin section**
 - **Priority:** Low
-- **Issue:** No breadcrumbs in admin (e.g., "Admin > Profiles > [Profile Name]"). ScoringApp has accessible breadcrumbs.
-- **Fix:** Create a `Breadcrumbs` component with `<nav aria-label="Breadcrumb">` and `<ol>` list pattern.
+- **Fix:** Create a `Breadcrumbs` component with accessible `<nav>` and `<ol>`.
+
+### Future Features
+
+**Multi-tenancy** — See `docs/exploration-multi-tenancy.md`. Minimal path (3-4 days) would fix scoping gaps and allow a second org. Full self-registration/invite system is 2-3 weeks.
 
 ---
 
 ## Suggested Order
 
-1. **Rate limiting** — security, standalone change
-2. **Route protection whitelist** — security, standalone change
-3. **`any` types cleanup** — code quality, can be done incrementally
-4. **Prisma 7 upgrade** — needs migration planning, aligns with ScoringApp
-5. **Dependency upgrades** (Tailwind, React, ESLint, AWS SDK) — batch after Prisma
-6. **Structured logger** — nice-to-have
-7. **Admin breadcrumbs** — nice-to-have
+1. **Task stats enhancement** — quick win, builds on shipped feature
+2. **Rate limiting** — security, standalone change
+3. **Route protection whitelist** — security, standalone change
+4. **`any` types cleanup** — code quality, incremental
+5. **Prisma 7 upgrade** — needs migration planning
+6. **Dependency upgrades** — batch after Prisma
+7. **Structured logger** — nice-to-have
+8. **Admin breadcrumbs** — nice-to-have
+9. **Multi-tenancy** — if the use case materializes

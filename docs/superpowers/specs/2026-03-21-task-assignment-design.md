@@ -1,7 +1,7 @@
 # Admin Task Assignment — Design Spec
 
 **Date:** 2026-03-21
-**Status:** Draft
+**Status:** Shipped (2026-03-21)
 **Problem:** Admins have no way to assign actionable directives to users within the journal app. Tasks sent via email or Slack have no visibility into completion status. Users must check a separate tool for to-dos, adding friction to their daily workflow.
 
 ---
