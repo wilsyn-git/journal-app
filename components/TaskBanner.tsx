@@ -12,10 +12,6 @@ export function TaskBanner({ totalTasks, urgentCount }: TaskBannerProps) {
 
   if (totalTasks === 0 || dismissed) return null
 
-  const handleViewInSidebar = () => {
-    document.querySelector('[aria-label="Tasks"]')?.scrollIntoView({ behavior: 'smooth' })
-  }
-
   return (
     <div
       role="status"
@@ -35,34 +31,26 @@ export function TaskBanner({ totalTasks, urgentCount }: TaskBannerProps) {
         </span>
       </div>
 
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <button
-          onClick={handleViewInSidebar}
-          className="text-[12px] text-primary hover:text-white transition-colors whitespace-nowrap"
+      <button
+        onClick={() => setDismissed(true)}
+        aria-label="Dismiss task notification"
+        className="text-gray-400 hover:text-white transition-colors p-0.5 flex-shrink-0"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-          View in sidebar
-        </button>
-        <button
-          onClick={() => setDismissed(true)}
-          aria-label="Dismiss task notification"
-          className="text-gray-400 hover:text-white transition-colors p-0.5"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
-      </div>
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
     </div>
   )
 }
