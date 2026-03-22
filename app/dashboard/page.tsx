@@ -10,11 +10,13 @@ import { revalidatePath } from "next/cache"
 import { DailyJournalForm } from "@/components/DailyJournalForm"
 import { PastJournalView } from "@/components/PastJournalView"
 import { CalendarSidebar } from "@/components/CalendarSidebar"
+import { TaskSidebar } from "@/components/TaskSidebar"
 import { StreakBadge } from "@/components/StreakBadge"
 import { getUserStats } from "@/app/lib/analytics"
 import { AdminUserSelector } from "@/components/AdminUserSelector"
 import { getUserTimezone, getTodayForUser } from "@/lib/timezone"
 import { ContributionHeatmap } from "@/components/ContributionHeatmap"
+import { TaskBanner } from "@/components/TaskBanner"
 
 type Props = {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -59,7 +61,8 @@ export default async function DashboardPage({ searchParams }: Props) {
         timezone,
         userWithOrg,
         targetUserOrg,
-        currentUser
+        currentUser,
+        taskAssignments
     ] = await Promise.all([
         getJournalHistory(targetUserId),
         getUserStats(targetUserId),
@@ -84,8 +87,18 @@ export default async function DashboardPage({ searchParams }: Props) {
                 groups: { select: { name: true } },
                 avatars: { where: { isActive: true }, take: 1, select: { url: true } }
             }
+        }),
+        prisma.taskAssignment.findMany({
+            where: {
+                userId: targetUserId,
+                task: { archivedAt: null, organizationId: (session?.user as any)?.organizationId || '' }
+            },
+            include: { task: true }
         })
     ]);
+
+    const incompleteTasks = taskAssignments.filter(a => !a.completedAt).length
+    const urgentTasks = taskAssignments.filter(a => !a.completedAt && a.task.priority === 0).length
 
     const brandingOrg = userWithOrg?.organization;
     const hasConfiguration = profileIds.length > 0;
@@ -208,6 +221,8 @@ export default async function DashboardPage({ searchParams }: Props) {
                 )}
 
                 <CalendarSidebar completedDates={historyDates} />
+
+                <TaskSidebar assignments={taskAssignments} />
             </div>
 
             <div className="p-4 border-t border-white/10 bg-black/20">
@@ -259,6 +274,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 
             <div className="flex-1 overflow-y-auto p-4 md:p-10 custom-scrollbar">
                 <div className="max-w-7xl mx-auto w-full">
+                    <TaskBanner totalTasks={incompleteTasks} urgentCount={urgentTasks} />
                     {ContentComponent}
                 </div>
             </div>
