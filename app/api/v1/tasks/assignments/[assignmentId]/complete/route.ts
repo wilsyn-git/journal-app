@@ -31,11 +31,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     if (assignment.task.organizationId !== orgId) {
-      return apiError('UNAUTHORIZED', 'Access denied', 403)
+      return apiError('FORBIDDEN', 'Access denied', 403)
     }
 
     if (assignment.userId !== userId) {
-      return apiError('UNAUTHORIZED', 'Access denied', 403)
+      return apiError('FORBIDDEN', 'Access denied', 403)
     }
 
     // Idempotent: if already completed, return success

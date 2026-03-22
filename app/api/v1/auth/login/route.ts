@@ -39,7 +39,9 @@ export async function POST(request: NextRequest) {
   const ip = request.headers.get('x-forwarded-for') || 'unknown'
   const rateCheck = checkRateLimit(ip)
   if (rateCheck.limited) {
-    return apiError('RATE_LIMITED', 'Too many login attempts', 429)
+    const res = apiError('RATE_LIMITED', 'Too many login attempts', 429)
+    res.headers.set('Retry-After', String(rateCheck.retryAfter))
+    return res
   }
 
   try {
