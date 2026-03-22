@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { StreakBadge } from './StreakBadge'
@@ -15,6 +15,13 @@ type Props = {
 export function DashboardShell({ sidebar, children, streak }: Props) {
     const [isSidebarOpen, setSidebarOpen] = useState(false)
     const { siteName, logoUrl } = useBranding()
+
+    // Listen for custom event to open sidebar (used by TaskBanner)
+    useEffect(() => {
+        const handler = () => setSidebarOpen(true)
+        window.addEventListener('open-sidebar', handler)
+        return () => window.removeEventListener('open-sidebar', handler)
+    }, [])
 
     return (
         <div className="flex w-full h-screen bg-background text-foreground overflow-hidden">

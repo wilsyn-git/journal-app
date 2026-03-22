@@ -12,6 +12,15 @@ export function TaskBanner({ totalTasks, urgentCount }: TaskBannerProps) {
 
   if (totalTasks === 0 || dismissed) return null
 
+  const handleViewTasks = () => {
+    // On mobile, open the sidebar via custom event
+    window.dispatchEvent(new Event('open-sidebar'))
+    // On desktop, scroll to the tasks section
+    setTimeout(() => {
+      document.querySelector('[aria-label="Tasks"]')?.scrollIntoView({ behavior: 'smooth' })
+    }, 300)
+  }
+
   return (
     <div
       role="status"
@@ -31,26 +40,34 @@ export function TaskBanner({ totalTasks, urgentCount }: TaskBannerProps) {
         </span>
       </div>
 
-      <button
-        onClick={() => setDismissed(true)}
-        aria-label="Dismiss task notification"
-        className="text-gray-400 hover:text-white transition-colors p-0.5 flex-shrink-0"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <button
+          onClick={handleViewTasks}
+          className="text-[12px] text-primary hover:text-white transition-colors whitespace-nowrap"
         >
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-      </button>
+          View tasks
+        </button>
+        <button
+          onClick={() => setDismissed(true)}
+          aria-label="Dismiss task notification"
+          className="text-gray-400 hover:text-white transition-colors p-0.5"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
     </div>
   )
 }
