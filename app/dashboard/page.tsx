@@ -196,9 +196,12 @@ export default async function DashboardPage({ searchParams }: Props) {
                             users={allUsers.map(u => ({ ...u, name: u.name || u.email }))}
                             currentUserId={currentUserId}
                         />
-                        <div className="grid grid-cols-2 gap-2 px-4 mt-2">
+                        <div className="grid grid-cols-3 gap-2 px-4 mt-2">
                             <Link href="/admin" className="text-xs text-center p-2 rounded bg-purple-500/20 text-purple-300 hover:bg-purple-500/30">
                                 Admin
+                            </Link>
+                            <Link href="/admin/tasks" className="text-xs text-center p-2 rounded bg-white/5 text-gray-300 hover:bg-white/10">
+                                Tasks
                             </Link>
                             <Link href="/stats" className="text-xs text-center p-2 rounded bg-white/5 text-gray-300 hover:bg-white/10">
                                 Stats
