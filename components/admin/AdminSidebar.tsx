@@ -57,6 +57,9 @@ export function AdminSidebar() {
                 <Link href="/admin/users" className={linkClass('/admin/users')} onClick={() => setIsOpen(false)}>
                     Users
                 </Link>
+                <Link href="/admin/tasks" className={linkClass('/admin/tasks')} onClick={() => setIsOpen(false)}>
+                    Tasks
+                </Link>
 
                 <div className="h-px bg-white/10 my-2" />
 
