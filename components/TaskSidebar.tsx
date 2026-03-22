@@ -36,6 +36,7 @@ type TaskSidebarProps = {
 }
 
 export function TaskSidebar({ assignments }: TaskSidebarProps) {
+  const [expandedId, setExpandedId] = useState<string | null>(null)
   const [notes, setNotes] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState<Record<string, boolean>>({})
 
@@ -70,7 +71,10 @@ export function TaskSidebar({ assignments }: TaskSidebarProps) {
     try {
       if (assignment.completedAt) {
         await uncompleteTask(assignment.id)
+        setExpandedId(null)
       } else {
+        // On completion, expand to show notes field
+        setExpandedId(assignment.id)
         await completeTask(assignment.id, notes[assignment.id])
       }
     } finally {
@@ -101,28 +105,33 @@ export function TaskSidebar({ assignments }: TaskSidebarProps) {
         )}
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-1">
         {sorted.map((assignment) => {
           const isComplete = !!assignment.completedAt
+          const isExpanded = expandedId === assignment.id
           const colors = priorityColor(assignment.task.priority)
           const isLoading = loading[assignment.id]
 
           return (
             <div
               key={assignment.id}
-              className={`rounded-lg p-2 ${isComplete ? 'opacity-50 bg-white/3' : 'bg-white/5'}`}
+              className={`rounded-lg transition-colors ${isComplete ? 'opacity-50' : ''} ${isExpanded ? 'bg-white/5 p-2' : 'p-2 hover:bg-white/5'}`}
             >
-              {/* Task header row */}
+              {/* Collapsed row — always visible */}
               <div className="flex items-start gap-2">
                 {/* Checkbox */}
                 <div
                   role="checkbox"
                   aria-checked={isComplete}
                   tabIndex={0}
-                  onClick={() => !isLoading && handleToggle(assignment)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (!isLoading) handleToggle(assignment)
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault()
+                      e.stopPropagation()
                       if (!isLoading) handleToggle(assignment)
                     }
                   }}
@@ -139,8 +148,12 @@ export function TaskSidebar({ assignments }: TaskSidebarProps) {
                   )}
                 </div>
 
-                {/* Title and meta */}
-                <div className="flex-1 min-w-0">
+                {/* Clickable title area — expands/collapses */}
+                <div
+                  className="flex-1 min-w-0 cursor-pointer"
+                  onClick={() => setExpandedId(isExpanded ? null : assignment.id)}
+                  aria-expanded={isExpanded}
+                >
                   <div className={`text-xs ${isComplete ? 'text-gray-400 line-through' : 'text-white'}`}>
                     {assignment.task.title}
                   </div>
@@ -157,14 +170,12 @@ export function TaskSidebar({ assignments }: TaskSidebarProps) {
                 </div>
               </div>
 
-              {/* Description */}
-              {!isComplete && assignment.task.description && (
-                <p className="text-xs text-gray-400 mt-1.5 pl-6">{assignment.task.description}</p>
-              )}
-
-              {/* Notes textarea — always visible for incomplete tasks */}
-              {!isComplete && (
+              {/* Expanded content */}
+              {isExpanded && (
                 <div className="mt-2 pl-6">
+                  {assignment.task.description && (
+                    <p className="text-xs text-gray-400 mb-2">{assignment.task.description}</p>
+                  )}
                   <textarea
                     className="w-full text-xs bg-white/5 border border-white/10 rounded p-2 text-gray-300 placeholder-gray-500 resize-none focus:outline-none focus:border-primary/50"
                     rows={2}
