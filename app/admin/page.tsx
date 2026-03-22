@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
+import Link from "next/link"
 
 export const metadata: Metadata = {
     title: 'Admin Dashboard | myJournal',
@@ -31,7 +32,9 @@ export default async function AdminPage() {
         activeUsers,
         totalEntries,
         recentEntries,
-        activePrompts
+        activePrompts,
+        openTaskCount,
+        overdueTaskCount
     ] = await Promise.all([
         // Total Users in Org
         prisma.user.count({
@@ -72,6 +75,17 @@ export default async function AdminPage() {
             where: {
                 organizationId,
                 isActive: true
+            }
+        }),
+        // Open Tasks (not archived)
+        prisma.task.count({
+            where: { organizationId, archivedAt: null }
+        }),
+        // Overdue Task Assignments
+        prisma.taskAssignment.count({
+            where: {
+                completedAt: null,
+                task: { organizationId, archivedAt: null, dueDate: { lt: new Date() } }
             }
         })
     ])
@@ -212,6 +226,19 @@ export default async function AdminPage() {
                     <h3 className="text-muted-foreground text-sm font-medium uppercase relative z-10">Active Prompts</h3>
                     <p className="text-4xl font-bold text-white mt-2 relative z-10">{activePrompts}</p>
                 </div>
+
+                <Link href="/admin/tasks">
+                    <div className="glass-card p-6 rounded-xl border border-white/10 relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-amber-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <h3 className="text-muted-foreground text-sm font-medium uppercase relative z-10">Open Tasks</h3>
+                        <div className="flex items-baseline gap-2 mt-2 relative z-10">
+                            <p className="text-4xl font-bold text-white">{openTaskCount}</p>
+                            <p className={`text-sm ${overdueTaskCount > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                                {overdueTaskCount > 0 ? `${overdueTaskCount} overdue` : 'All on track'}
+                            </p>
+                        </div>
+                    </div>
+                </Link>
             </div>
 
             {/* Engagement Stats */}
