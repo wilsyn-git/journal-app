@@ -1,98 +1,149 @@
-# Journaling App 📓
+# Journaling App
 
-A focused, intelligent journaling application designed to help you de-clutter your mind and track your personal growth through daily reflection.
+A daily journaling platform with admin-managed prompts, task assignment, analytics, and multi-user support. Built with Next.js 16, designed for organizations where one admin guides many users through structured reflection.
 
-![Journal Dashboard](public/dashboard-preview.jpg)
+## Key Features
 
+### Smart Dashboard
+- **Dynamic Prompts**: Admin-configurable questions (Text, Checkbox, Radio, Range slider) served daily via profile rules
+- **Recency Suppression**: Prompts shown in the last 4 days are excluded from selection, ensuring variety across a pool of 100+ prompts
+- **Timezone Aware**: "Today" is calculated based on the user's local time
+- **Prompt Reordering**: Drag-and-drop interface for prompt ordering within categories
 
-## ✨ Key Features
+### Task Assignment
+- **Admin-Assigned Tasks**: Create tasks with priority (Urgent/Normal/Low), optional due dates, and assign to individual users, groups, or all users
+- **Dashboard Integration**: Tasks appear in the sidebar with inline completion notes
+- **Completion Tracking**: Admin detail page shows per-user status with progress bar
+- **Notification Banner**: Users see a dismissable banner when they have pending tasks
 
-### 🧠 Smart Dashboard
-- **Dynamic Prompts**: Admin-configurable questions that can be Text, Checkboxes, or Radio buttons.
-- **Timezone Aware**: "Today" is calculated based on *your* local time, ensuring your streaks are accurate no matter where you travel.
-- **Daily Context**: Tracks your habits alongside your thoughts.
-- **Slider Prompts**: New "Range" input type for tracking quantitative data (Mood, Energy, etc.) with trend visualization.
-- **Prompt Reordering**: Drag-and-drop interface to control exactly in which order prompts appear in your journal.
+### Analytics
+- **Contribution Heatmap**: GitHub-style journaling history
+- **Word Cloud**: Visual representation of frequent themes
+- **Time of Day**: Entry distribution patterns
+- **Trend Charts**: Mood/energy tracking over time from Range prompts
+- **Badge System**: Achievement badges for streaks and milestones
 
-### 📊 Deep Analytics
-- **Contribution Heatmap**: Customizable GitHub-style history (12-week view on Dashboard, 46-week view on Stats).
-- **Word Cloud**: Visual representation of your most frequent themes.
-- **Time of Day**: See if you are an "Early Bird" or a "Night Owl".
+### Admin Tools
+- **User Management**: Create users, monitor last activity, safe deletion with backup
+- **Prompt Management**: Category-based prompt editor with profile rules (min/max random selection per category)
+- **Groups & Profiles**: Assign users to groups, link profiles with prompt rules
+- **Task Management**: Create, edit, archive tasks with completion matrix view
+- **Branding**: Custom site name and logo per organization
+- **Backup/Restore**: Full system export (gzipped JSON with binary assets) and restore with merge/overwrite modes
 
-### ❤️ Feedback Loop
-- **Admin Hearts**: Admins can "Like" entries to provide subtle encouragement.
-- **Visual Indicators**: Users see a red bubble on their calendar and a heart on their entry when feedback is received.
+### Security
+- **Security Headers**: X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+- **Auth Checks**: Admin role verification on all admin pages, session ownership on user actions
+- **Path Traversal Protection**: Validated file paths on restore/upload operations
+- **Sensitive Data Exclusion**: Password hashes excluded from admin exports
 
-### 🛡️ Data Sovereignty
-- **Full Backup (Admin)**: Exports the entire system state (including binary assets) to a secure `.json.gz` file.
-- **Smart Restore (Admin)**: Restore functionality with "Merge" (safe) or "Overwrite" modes.
-- **Personal Export (User)**: Users can download their own journal history as a portable JSON file from the Settings page.
-- **Binary Handling**: Automatically reconstructs avatar and logo files from the backup.
+### Accessibility (WCAG 2.2)
+- Skip navigation link
+- Proper form labels (htmlFor/id) across all forms
+- Dialog ARIA attributes and Escape key handlers
+- Screen reader announcements for errors and status changes
+- Keyboard-visible focus indicators
+- Color contrast compliance (AA)
+- Accessible charts and data visualizations
 
-### 🛠️ Admin & Configuration
-- **User Management**: Admin role can view stats for other users, **monitor last activity**, and perform **Safe Deletion** (transactional removal of users with mandatory data backup).
-- **Branding**: Customize the Site Name and Logo via the Admin Panel.
-- **Prompt Rules**: Assign specific prompts to specific User Groups (e.g., "Athletes" get different questions than "Artists").
-- **Profile Customization**: Users can upload avatars and manage their bio.
+### SEO
+- robots.txt and sitemap.xml via Next.js Metadata API
+- Per-page metadata with unique titles
+- Open Graph and Twitter card support
 
-## 🏗️ Technology Stack
+## Technology Stack
 
-- **Framework**: Next.js 16 (App Router)
-- **Language**: TypeScript
-- **Database**: SQLite (via Prisma ORM)
-- **Styling**: TailwindCSS & Custom "Glassmorphism" Utilities
-- **Auth**: NextAuth.js (Auth.js)
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 16 (App Router, Turbopack) |
+| Language | TypeScript (strict mode) |
+| Database | SQLite via Prisma 6 |
+| Auth | NextAuth.js v5 (Credentials provider) |
+| Styling | TailwindCSS 4 |
+| Email | AWS SES |
+| Process Manager | PM2 |
 
-## 🚀 Getting Started
+## Requirements
 
-> **New to the platform?** Check out our detailed [Getting Started Guide](GETTING_STARTED.md) for a walkthrough of the "Company Journal" setup scenario!
+- **Node.js 22.x** (pinned via `.node-version` and `engines` field)
+- Use `fnm` or `nvm` to manage Node versions
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/wilsyn-git/journal-app.git
-    cd journal-app
-    ```
+## Getting Started
 
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
+1. **Clone and install:**
+   ```bash
+   git clone https://github.com/wilsyn-git/journal-app.git
+   cd journal-app
+   npm install
+   ```
 
-3.  **Setup Database:**
-    This project uses a local SQLite file. Initialize it with Prisma:
-    ```bash
-    npx prisma generate
-    npx prisma db push
-    # Optional: Seed initial data
-    # npx prisma db seed
-    ```
+2. **Setup environment:**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your DATABASE_URL, NEXTAUTH_SECRET, AWS SES credentials
+   ```
 
-4.  **Run Development Server:**
-    ```bash
-    npm run dev
-    # Or to restart cleanly:
-    # npm run restart
-    ```
+3. **Initialize database:**
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   npx prisma db seed  # Optional: seed initial data
+   ```
 
-5.  **Open Browser:**
-    Navigate to [http://localhost:3000](http://localhost:3000).
+4. **Run development server:**
+   ```bash
+   npm run dev
+   ```
 
-## 🗃️ Project Structure
+5. **Open browser:**
+   Navigate to [http://localhost:3000](http://localhost:3000)
 
-- `app/`: Next.js App Router pages and layouts.
-- `components/`: Reusable UI components (Heatmaps, PromptCards, etc.).
-- `lib/`: Utilities for Database (`prisma.ts`), Analytics (`analytics.ts`), & Timezones (`timezone.ts`).
-- `prisma/`: Database schema and migrations.
+## Project Structure
 
-## 🛣️ Roadmap
+```
+app/
+  actions/          Server actions (journal, tasks, profiles, groups, prompts, users)
+  admin/            Admin pages (dashboard, users, prompts, profiles, groups, tasks, branding, tools)
+  dashboard/        User journal dashboard
+  stats/            Analytics page
+  settings/         User profile settings
+  lib/              Data fetching (data.ts, analytics.ts)
+components/
+  admin/            Admin UI components (TaskForm, PromptEditor, ProfileRulesManager, etc.)
+  stats/            Chart components (WordCloud, TrendChart, TimeOfDayChart, etc.)
+  providers/        Context providers (Branding, Toast)
+  TaskSidebar.tsx   User-facing task list
+  TaskBanner.tsx    Task notification banner
+  DashboardShell.tsx  Layout shell with sidebar
+lib/
+  prisma.ts         Prisma client singleton
+  timezone.ts       Timezone utilities
+  auth-helpers.ts   Session/user resolution
+  taskConstants.ts  Task priority and assignment mode constants
+prisma/
+  schema.prisma     Database schema
+scripts/
+  simulatePrompts.sh  Validate prompt variety across N days
+```
 
-- [ ] **Mobile Polish**: Responsiveness improvements for small screens.
-- [ ] **Advanced Insights**: Sentiment analysis and mood tracking.
-- [ ] **Mobile Polish**: Responsiveness improvements for small screens.
-- [ ] **Advanced Insights**: Sentiment analysis and mood tracking.
-- [x] **AWS SES Integration**: Email infrastructure for password resets.
+## Deployment
 
+Production runs on EC2 via PM2:
 
-## 📄 License
+```bash
+ssh your-server
+cd /path/to/journal-app
+git pull origin main
+npm install
+npx prisma db push
+npm run build
+pm2 restart journal-app
+```
+
+## Roadmap
+
+See [docs/roadmap.md](docs/roadmap.md) for planned improvements including rate limiting, route protection whitelist, Prisma 7 upgrade, and structured logging.
+
+## License
 
 MIT
