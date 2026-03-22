@@ -80,17 +80,25 @@ All endpoints except `/auth/login` require `Authorization: Bearer <accessToken>`
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
 | POST | `/auth/login` | Authenticate with email + password, return tokens |
-| POST | `/auth/refresh` | Exchange refresh token for new access token |
+| POST | `/auth/refresh` | Exchange refresh token for new access + rotated refresh token |
+| POST | `/auth/logout` | Invalidate refresh token / revoke device session |
 
 **POST `/auth/login`**
-- Request: `{email, password}`
+- Request: `{email, password, deviceName}`
 - Response: `{accessToken, refreshToken, expiresIn, user: {id, name, email}}`
 - Validates credentials via bcrypt (same as existing NextAuth flow)
+- Creates a `DeviceSession` record server-side
 
 **POST `/auth/refresh`**
 - Request: `{refreshToken}`
-- Response: `{accessToken, expiresIn}`
-- Returns 401 if refresh token is expired or revoked
+- Response: `{accessToken, refreshToken, expiresIn}` (rotated refresh token)
+- Refresh token rotation: each use invalidates the old token and issues a new one
+- Returns 401 if refresh token is expired, revoked, or already used (replay detection)
+
+**POST `/auth/logout`**
+- Request: `{refreshToken}`
+- Sets `revokedAt` on the DeviceSession
+- iOS app calls this when user taps "Sign Out", then clears Keychain
 
 ### Prompts
 
@@ -105,7 +113,9 @@ All endpoints except `/auth/login` require `Authorization: Bearer <accessToken>`
 
 **GET `/prompts/all`**
 - Returns everything needed to run prompt selection offline
-- Response: `{prompts, categories, profileRules}`
+- Response: `{prompts, categories, profileRules, effectiveProfileIds}`
+- `effectiveProfileIds` includes the user's direct profiles + group-inherited profiles (needed by the selection algorithm)
+- Category names resolved from the relation, not the legacy `categoryString` field
 - iOS app caches this in SwiftData
 
 ### Journal Entries
@@ -118,9 +128,9 @@ All endpoints except `/auth/login` require `Authorization: Bearer <accessToken>`
 | POST | `/entries/batch` | Sync multiple offline entries |
 
 **POST `/entries`**
-- Request: `{promptId, answer, date}`
-- Upsert: creates or updates based on unique constraint (userId + promptId + date)
-- Same logic as existing `saveJournalResponse()` server action
+- Request: `{promptId, answer, date}` where `date` is a `YYYY-MM-DD` string
+- Upsert logic: queries by userId + promptId + createdAt within the day range (matching existing `saveJournalResponse()` behavior)
+- Note: The `date` field on JournalEntry is a DateTime, not a date string. The API normalizes the incoming date to match the existing createdAt-range query pattern used by the web app. A future migration may clean up the date field, but the API abstracts this from clients.
 
 **POST `/entries/batch`**
 - Request: `{entries: [{promptId, answer, date, updatedAt}]}`
@@ -133,15 +143,17 @@ All endpoints except `/auth/login` require `Authorization: Bearer <accessToken>`
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
 | GET | `/tasks` | Active tasks assigned to the user |
-| PATCH | `/tasks/:id/complete` | Mark task assignment complete |
+| PATCH | `/tasks/assignments/:assignmentId/complete` | Mark task assignment complete |
 
 **GET `/tasks`**
 - Returns tasks assigned to user (via TaskAssignment) that are not archived
-- Response includes: `{id, title, description, priority, dueDate, completedAt, notes}`
+- Response is a flattened join: `{taskId, assignmentId, title, description, priority, dueDate, completedAt, notes}`
+- `taskId` is the Task record; `assignmentId` is the TaskAssignment record (used for the complete endpoint)
 
-**PATCH `/tasks/:id/complete`**
+**PATCH `/tasks/assignments/:assignmentId/complete`**
 - Request: `{notes?: string}`
-- Sets `completedAt` on the TaskAssignment
+- Sets `completedAt` on the TaskAssignment (matches existing `completeTask()` which takes an assignmentId)
+- Idempotent: if already completed, returns success without modifying
 - Queued offline if no connectivity
 
 ### Stats
@@ -177,7 +189,7 @@ model DeviceSession {
   id           String    @id @default(uuid())
   userId       String
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  deviceToken  String
+  deviceToken  String?
   refreshToken String    @unique
   deviceName   String
   lastActiveAt DateTime  @default(now())
@@ -189,9 +201,9 @@ model DeviceSession {
 }
 ```
 
-- `refreshToken` is stored hashed (bcrypt or SHA256)
-- `revokedAt` null = active session; set = revoked by admin
-- `deviceToken` is the APNs token for push notifications
+- `refreshToken` is stored hashed (SHA256)
+- `revokedAt` null = active session; set = revoked by admin or user logout
+- `deviceToken` is the APNs token for push notifications (nullable — user may deny push permission)
 - `deviceName` is user-facing (e.g., "Sam's iPhone")
 - Cascade delete: removing a user cleans up their sessions
 
@@ -250,6 +262,7 @@ deviceSessions DeviceSession[]
 - Prompts, categories, and profile rules cached locally
 - The deterministic selection algorithm (seeded SHA256 of userId + dateStr) runs client-side
 - Same prompts shown regardless of connectivity
+- **Recency suppression caveat:** The server-side algorithm suppresses prompts shown in the last 4 days by querying recent entries. When offline, the iOS app applies the same suppression using locally cached entries. If the cache is stale (e.g., entries submitted on web aren't synced yet), the offline selection may differ slightly from what the server would pick. This is acceptable — the prompts will still be valid, just potentially less varied.
 
 ### Entry Queue
 
@@ -292,7 +305,7 @@ Revoking sets `revokedAt = now()` — does not delete the record (audit trail).
 - Refresh tokens hashed before storage (never stored in plaintext)
 - Access tokens are stateless JWTs validated on every request
 - All API routes validate the access token and extract userId from it
-- Rate limiting on `/auth/login` to prevent brute force
+- Rate limiting on `/auth/login` to prevent brute force (429 with `Retry-After` header)
 - APNs device tokens are per-device, per-user — revocation clears push capability
 - All endpoints scoped to the authenticated user's data only (no cross-user access)
 
@@ -303,7 +316,7 @@ Standard error format across all endpoints:
 ```json
 {
   "error": {
-    "code": "UNAUTHORIZED | NOT_FOUND | VALIDATION_ERROR | INTERNAL_ERROR",
+    "code": "UNAUTHORIZED | NOT_FOUND | VALIDATION_ERROR | RATE_LIMITED | INTERNAL_ERROR",
     "message": "Human-readable description"
   }
 }
@@ -312,4 +325,17 @@ Standard error format across all endpoints:
 - 401: Invalid/expired token → iOS app triggers re-login
 - 403: Valid token but insufficient permissions
 - 422: Validation error (missing fields, invalid format)
+- 429: Rate limited (login attempts) — includes `Retry-After` header
 - 500: Server error
+
+## Timezone Handling
+
+The existing web app reads timezone from a browser cookie (`user-timezone`). The iOS app sends timezone via a `X-Timezone` request header (e.g., `America/Chicago`). API endpoints that need timezone-sensitive computation (stats, prompts/today, streak checks) read from this header, falling back to the user's stored timezone preference or `America/New_York` as a default.
+
+The iOS app sets this header automatically from `TimeZone.current.identifier`.
+
+## Notes
+
+- `isLiked` is returned on journal entries as a read-only field. The iOS app displays it but cannot toggle it (out of scope for v1).
+- Prompt `type` includes TEXT, RADIO, CHECKBOX, and RANGE. The stats endpoint excludes RANGE trend data for v1, but the prompts endpoints return all types so entries can still be submitted for RANGE prompts.
+- The `POST /entries/batch` endpoint uses simple "last write wins" — it does not compare `updatedAt` timestamps. The `updatedAt` field in the batch request is stored on the entry but not used for conflict resolution. This is acceptable given single-user-per-device usage.
