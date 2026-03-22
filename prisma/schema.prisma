@@ -26,6 +26,7 @@ model Organization {
   profiles  Profile[]
   groups    UserGroup[]
   promptCategories PromptCategory[]
+  tasks     Task[]
 }
 
 model PromptCategory {
@@ -73,6 +74,8 @@ model User {
 
   entries   JournalEntry[]
   avatars   UserAvatar[]
+  tasksCreated    Task[]           @relation("TasksCreated")
+  taskAssignments TaskAssignment[] @relation("TaskAssignments")
   bio       String?
   resetToken     String?   @unique
   resetTokenExpiry DateTime?
@@ -151,6 +154,41 @@ model ProfileRule {
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Task {
+  id             String           @id @default(uuid())
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id])
+  title          String
+  description    String?
+  priority       Int              @default(1)
+  assignmentMode String           @default("USER")
+  groupId        String?
+  createdById    String
+  createdBy      User             @relation("TasksCreated", fields: [createdById], references: [id])
+  dueDate        DateTime?
+  archivedAt     DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  assignments    TaskAssignment[]
+
+  @@index([organizationId, archivedAt])
+}
+
+model TaskAssignment {
+  id          String    @id @default(uuid())
+  taskId      String
+  task        Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation("TaskAssignments", fields: [userId], references: [id], onDelete: Cascade)
+  completedAt DateTime?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([taskId, userId])
+  @@index([userId, completedAt])
 }
 
 model JournalEntry {
