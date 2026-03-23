@@ -242,7 +242,9 @@ export async function getActivePrompts(
     }
 }
 
-export async function getJournalHistory(userId: string) {
+export async function getJournalHistory(userId: string, timezone?: string) {
+    const tz = timezone || await getUserTimezoneById(userId)
+
     // Group entries by date (YYYY-MM-DD)
     // We fetch select fields and process in JS for simplicity/compatibility.
     const entries = await prisma.journalEntry.findMany({
@@ -254,7 +256,7 @@ export async function getJournalHistory(userId: string) {
     const datesMap = new Map<string, boolean>(); // Date -> hasLike
 
     entries.forEach(e => {
-        const dateStr = new Date(e.createdAt).toLocaleDateString('en-CA');
+        const dateStr = new Date(e.createdAt).toLocaleDateString('en-CA', { timeZone: tz });
         // If map already has this date, OR if current entry is liked, update it.
         // We want to know if *any* entry on this date is liked.
         const currentStatus = datesMap.get(dateStr) || false;
