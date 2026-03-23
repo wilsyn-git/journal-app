@@ -206,11 +206,7 @@ model JournalEntry {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([userId, promptId, date]) // Prevent duplicate answers for the same prompt per day?
-  // Actually, 'date' might be too granular (timestamp).
-  // For "daily", we might want to store just the YYYY-MM-DD string or normalize the date.
-  // For now, let's keep it simple and maybe just index them.
-  // If unique constraint is problematic with timestamps, I'll remove it or manage it in app logic.
+  @@unique([userId, promptId, date])
 
   @@index([userId, createdAt])
   @@index([userId, promptId, createdAt])

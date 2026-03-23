@@ -229,11 +229,6 @@ export async function getActivePrompts(
             }
         }
 
-        // Return combined list, maybe sorted by some logic? 
-        // For now, Globals first, then mixed. OR just all sorted by createdAt or something.
-        // Let's keep Globals at top, then others.
-
-        // Actually, Map preserves insertion order mostly.
         return Array.from(selectedPromptsMap.values());
 
     } catch (error) {

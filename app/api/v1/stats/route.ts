@@ -115,7 +115,7 @@ export async function GET(request: NextRequest) {
     const taskMap = new Map<string, { prompt: string; days: Set<string> }>()
 
     entries.forEach((e) => {
-      if (['CHECKBOX', 'RADIO', 'Checkboxes', 'Radio'].includes(e.prompt.type)) {
+      if (['CHECKBOX', 'RADIO'].includes(e.prompt.type)) {
         if (!taskMap.has(e.prompt.id)) {
           taskMap.set(e.prompt.id, { prompt: e.prompt.content, days: new Set() })
         }
