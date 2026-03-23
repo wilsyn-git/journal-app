@@ -2,8 +2,7 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendPushNotification } from '@/lib/api/pushNotifications'
 import { apiSuccess, apiError } from '@/lib/api/apiResponse'
-import { startOfDayInTimezone, getTodayForUser } from '@/lib/timezone'
-import { DEFAULT_TIMEZONE } from '@/lib/timezone'
+import { startOfDayInTimezone, getTodayForUser, DEFAULT_TIMEZONE } from '@/lib/timezone'
 
 export async function POST(request: NextRequest) {
     // Simple shared secret auth for cron endpoints
