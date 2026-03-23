@@ -4,6 +4,7 @@ import { signIn, auth } from '@/auth'
 import { AuthError } from 'next-auth'
 import { prisma } from '@/lib/prisma'
 import { resolveUserId } from '@/lib/auth-helpers'
+import { getUserTimezoneById, startOfDayInTimezone, endOfDayInTimezone, getTodayForUser } from "@/lib/timezone"
 import { revalidatePath } from 'next/cache'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -89,10 +90,10 @@ export async function saveJournalResponse(promptId: string, answer: string) {
     const userId = await resolveUserId(session)
     if (!userId) throw new Error("User not found")
 
-    // Determine "Today" (Server Time)
-    const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    const timezone = await getUserTimezoneById(userId)
+    const todayStr = getTodayForUser(timezone)
+    const startOfDay = startOfDayInTimezone(todayStr, timezone)
+    const endOfDay = endOfDayInTimezone(todayStr, timezone)
 
     try {
         // Check for existing entry for this prompt today
