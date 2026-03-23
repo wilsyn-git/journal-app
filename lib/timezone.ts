@@ -1,10 +1,35 @@
 import { cookies } from "next/headers"
+import { prisma } from "@/lib/prisma"
 
 export const DEFAULT_TIMEZONE = "America/New_York"
 
-export async function getUserTimezone() {
+/**
+ * Get timezone for the current request context.
+ * Priority: DB (if authenticated) → Cookie → Default
+ */
+export async function getUserTimezone(userId?: string): Promise<string> {
+    if (userId) {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { timezone: true }
+        })
+        if (user?.timezone) return user.timezone
+    }
+
     const cookieStore = await cookies()
     return cookieStore.get("user-timezone")?.value || DEFAULT_TIMEZONE
+}
+
+/**
+ * Get timezone for a specific user by ID. Falls back to DEFAULT_TIMEZONE.
+ * Use this in server actions and data queries where you have userId.
+ */
+export async function getUserTimezoneById(userId: string): Promise<string> {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { timezone: true }
+    })
+    return user?.timezone || DEFAULT_TIMEZONE
 }
 
 export function toUserDate(date: Date, timezone: string) {
@@ -19,26 +44,50 @@ export function getTodayForUser(timezone: string) {
     return dateStr
 }
 
-export function startOfDayInTimezone(date: Date, timezone: string): Date {
-    // This is tricky. We want a Date object that represents 00:00:00 in the Target Timezone.
-    // But Date objects are absolute.
-    // So we want the timestamp where it IS midnight in that timezone.
+/**
+ * Returns a UTC Date representing midnight (00:00:00.000) in the given timezone
+ * for the given YYYY-MM-DD date string.
+ *
+ * Example: startOfDayInTimezone("2026-03-23", "America/New_York")
+ *   → 2026-03-23T04:00:00.000Z (midnight EDT = UTC+4h)
+ */
+export function startOfDayInTimezone(dateStr: string, timezone: string): Date {
+    const [year, month, day] = dateStr.split('-').map(Number)
+    const noonUtc = new Date(Date.UTC(year, month - 1, day, 12, 0, 0))
 
-    // 1. Get the date string in that timezone: "2024-01-25"
-    const dateStr = date.toLocaleDateString("en-CA", { timeZone: timezone })
+    const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+    })
 
-    // 2. Parse it back regarding that timezone.
-    // There isn't a native "parse in timezone" in JS without libraries like date-fns-tz or luxon.
-    // Hack: Append 00:00:00 and the offset?
+    const parts = formatter.formatToParts(noonUtc)
+    const get = (type: string) => parseInt(parts.find(p => p.type === type)!.value)
 
-    // Easier hack with Intl:
-    // We already have the YYYY-MM-DD string.
-    // Creating a Date from "YYYY-MM-DD" usually treats it as UTC.
-    // If we want the absolute time that corresponds to Midnight in New York:
-    // It's "2024-01-25T05:00:00Z" (if EST).
+    const tzYear = get('year')
+    const tzMonth = get('month')
+    const tzDay = get('day')
+    const tzHour = get('hour') === 24 ? 0 : get('hour')
+    const tzMinute = get('minute')
+    const tzSecond = get('second')
 
-    // Let's use `Intl.DateTimeFormat` parts to manually reconstruct if needed, or rely on a simpler approach:
-    // Just work with Strings for logic, and use the DB's absolute time for queries.
+    const tzNoonMs = Date.UTC(tzYear, tzMonth - 1, tzDay, tzHour, tzMinute, tzSecond)
+    const offsetMs = tzNoonMs - noonUtc.getTime()
 
-    return new Date() // Placeholder if not needed yet.
+    const midnightLocal = Date.UTC(year, month - 1, day, 0, 0, 0, 0)
+    return new Date(midnightLocal - offsetMs)
+}
+
+/**
+ * Returns a UTC Date representing 23:59:59.999 in the given timezone
+ * for the given YYYY-MM-DD date string.
+ */
+export function endOfDayInTimezone(dateStr: string, timezone: string): Date {
+    const start = startOfDayInTimezone(dateStr, timezone)
+    return new Date(start.getTime() + 24 * 60 * 60 * 1000 - 1)
 }
