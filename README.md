@@ -7,7 +7,7 @@ A daily journaling platform with admin-managed prompts, task assignment, analyti
 ### Smart Dashboard
 - **Dynamic Prompts**: Admin-configurable questions (Text, Checkbox, Radio, Range slider) served daily via profile rules
 - **Recency Suppression**: Prompts shown in the last 4 days are excluded from selection, ensuring variety across a pool of 100+ prompts
-- **Timezone Aware**: "Today" is calculated based on the user's local time
+- **Timezone Aware**: "Today" is calculated based on the user's timezone (stored in DB, auto-detected on first visit, configurable in Settings)
 - **Prompt Reordering**: Drag-and-drop interface for prompt ordering within categories
 
 ### Task Assignment
@@ -33,7 +33,7 @@ A daily journaling platform with admin-managed prompts, task assignment, analyti
 
 ### Security
 - **Security Headers**: X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
-- **Auth Checks**: Admin role verification on all admin pages, session ownership on user actions
+- **Auth Checks**: Middleware protects all app routes by default, admin role verification on admin pages, session ownership on user actions
 - **Path Traversal Protection**: Validated file paths on restore/upload operations
 - **Sensitive Data Exclusion**: Password hashes excluded from admin exports
 
@@ -106,7 +106,7 @@ app/
   admin/            Admin pages (dashboard, users, prompts, profiles, groups, tasks, branding, tools)
   dashboard/        User journal dashboard
   stats/            Analytics page
-  settings/         User profile settings
+  settings/         User profile settings and timezone preference
   lib/              Data fetching (data.ts, analytics.ts)
 components/
   admin/            Admin UI components (TaskForm, PromptEditor, ProfileRulesManager, etc.)
@@ -133,9 +133,13 @@ Production runs on EC2 via PM2:
 ```bash
 ssh your-server
 cd /path/to/journal-app
+pm2 stop journal-app
+# If schema changes: backup first
+# tar czf ~/journal-app_$(date +%Y%m%d_%H%M%S).tar.gz journal-app/
 git pull origin main
 npm install
-npx prisma db push
+npx prisma migrate deploy   # Apply pending migrations (safe, additive only)
+npx prisma generate          # Regenerate client for new schema fields
 npm run build
 pm2 restart journal-app
 ```
