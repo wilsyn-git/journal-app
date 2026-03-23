@@ -144,7 +144,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         )
     } else if (isPast || (!isViewingSelf)) {
         // Fetch Entries
-        const rawEntries = await getEntriesByDate(targetUserId, targetDate);
+        const rawEntries = await getEntriesByDate(targetUserId, targetDate, timezone);
 
         // Sort entries by the active prompt order
         const entries = rawEntries.sort((a, b) => {
@@ -163,7 +163,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         }
     } else {
         // Fetch today's existing answers to pre-fill the form
-        const todayEntries = await getEntriesByDate(targetUserId, today);
+        const todayEntries = await getEntriesByDate(targetUserId, today, timezone);
         const initialAnswers = todayEntries.reduce((acc, entry) => {
             acc[entry.promptId] = entry.answer;
             return acc;

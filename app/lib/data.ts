@@ -2,7 +2,7 @@
 import { cache } from "react"
 import { createHash } from 'crypto'
 import { prisma } from "@/lib/prisma"
-import { getUserTimezoneById, startOfDayInTimezone, getTodayForUser } from "@/lib/timezone"
+import { getUserTimezoneById, startOfDayInTimezone, endOfDayInTimezone, getTodayForUser } from "@/lib/timezone"
 
 const RECENCY_SUPPRESSION_DAYS = 4
 
@@ -266,21 +266,10 @@ export async function getJournalHistory(userId: string) {
     }));
 }
 
-export async function getEntriesByDate(userId: string, dateStr: string) {
-    // dateStr is YYYY-MM-DD
-    // Filter between start and end of that day in UTC or server time.
-    // Ideally we store YYYY-MM-DD as a string field for exact calling, but using range on createdAt works too.
-    // dateStr is YYYY-MM-DD
-    // Ensure we parse this as LOCAL time for the server/user context, not UTC.
-    // Appending 'T00:00:00' forces local time parsing in most environments.
-    // Alternatively, construct using arguments.
-    const parts = dateStr.split('-');
-    const year = parseInt(parts[0]);
-    const month = parseInt(parts[1]) - 1; // 0-indexed
-    const day = parseInt(parts[2]);
-
-    const start = new Date(year, month, day, 0, 0, 0, 0);
-    const end = new Date(year, month, day, 23, 59, 59, 999);
+export async function getEntriesByDate(userId: string, dateStr: string, timezone?: string) {
+    const tz = timezone || await getUserTimezoneById(userId)
+    const start = startOfDayInTimezone(dateStr, tz)
+    const end = endOfDayInTimezone(dateStr, tz)
 
     return await prisma.journalEntry.findMany({
         where: {
