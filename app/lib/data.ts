@@ -86,14 +86,16 @@ export async function getActivePrompts(
         const selectedPromptsMap = new Map<string, any>();
         globalPrompts.forEach(p => selectedPromptsMap.set(p.id, p));
 
+        // Hoist timezone and todayStr so both recency suppression and seed use the same value
+        const timezone = await getUserTimezoneById(userId)
+        const todayStr = dateStr || getTodayForUser(timezone)
+
         // Recency suppression: determine which prompts were shown recently
         let recentPromptIds: Set<string>
         if (recentPromptIdsOverride) {
             recentPromptIds = recentPromptIdsOverride
         } else {
             // Query actual journal history for recency suppression
-            const timezone = await getUserTimezoneById(userId)
-            const todayStr = dateStr || getTodayForUser(timezone)
             const todayStart = startOfDayInTimezone(todayStr, timezone)
 
             // Calculate suppression start date string
@@ -130,8 +132,8 @@ export async function getActivePrompts(
         });
 
         // 3. Process Rules
-        // Use provided date or today for stable seeding
-        const seedDate = dateStr || new Date().toISOString().split('T')[0];
+        // Use provided date or today for stable seeding (timezone-aware via todayStr)
+        const seedDate = todayStr;
         const seedStr = `${userId}-${seedDate}`;
         const random = createSeededRandom(seedStr);
 
