@@ -7,7 +7,7 @@ import { startOfDayInTimezone, endOfDayInTimezone, getUserTimezoneById } from '@
 
 const entrySchema = z.object({
   promptId: z.string().uuid(),
-  answer: z.string(),
+  answer: z.string().max(10000),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 })
 
