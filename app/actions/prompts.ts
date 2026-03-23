@@ -29,16 +29,37 @@ export async function createPromptCategory(formData: FormData) {
 }
 
 export async function deletePromptCategory(id: string) {
-    await ensureAdmin();
-    try {
-        const [prompts, rules, cat] = await prisma.$transaction([
-            // 1. Delete Prompts
-            prisma.prompt.deleteMany({ where: { categoryId: id } }),
+    const session = await ensureAdmin();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const organizationId = (session?.user as any)?.organizationId as string;
 
-            // 2. Delete Rules
+    try {
+        // Find or create the _archived category for this org
+        let archivedCategory = await prisma.promptCategory.findFirst({
+            where: { name: '_archived', organizationId }
+        })
+        if (!archivedCategory) {
+            archivedCategory = await prisma.promptCategory.create({
+                data: { name: '_archived', organizationId }
+            })
+        }
+
+        // Transaction: reassign prompts, delete rules, delete category
+        const [prompts, rules, cat] = await prisma.$transaction([
+            // 1. Reassign prompts to _archived and deactivate
+            prisma.prompt.updateMany({
+                where: { categoryId: id },
+                data: {
+                    categoryId: archivedCategory.id,
+                    categoryString: '_archived',
+                    isActive: false
+                }
+            }),
+
+            // 2. Delete rules (they reference the old category)
             prisma.profileRule.deleteMany({ where: { categoryId: id } }),
 
-            // 3. Delete Category
+            // 3. Delete the category
             prisma.promptCategory.delete({ where: { id } })
         ]);
 
@@ -48,13 +69,12 @@ export async function deletePromptCategory(id: string) {
         return {
             success: true,
             details: {
-                promptsDeleted: prompts.count,
-                rulesDeleted: rules.count,
-                categoryName: cat.name
+                promptsArchived: prompts.count,
+                rulesRemoved: rules.count,
+                categoryDeleted: cat.name
             }
         }
     } catch (e) {
-        console.error("Delete Category Error:", e)
         return { error: 'Failed to delete category' }
     }
 }
