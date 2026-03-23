@@ -2,6 +2,7 @@
 import { cache } from "react"
 import { createHash } from 'crypto'
 import { prisma } from "@/lib/prisma"
+import { getUserTimezoneById, startOfDayInTimezone, getTodayForUser } from "@/lib/timezone"
 
 const RECENCY_SUPPRESSION_DAYS = 4
 
@@ -91,16 +92,22 @@ export async function getActivePrompts(
             recentPromptIds = recentPromptIdsOverride
         } else {
             // Query actual journal history for recency suppression
-            const today = new Date(dateStr || new Date().toISOString().split('T')[0])
-            const suppressionStart = new Date(today)
-            suppressionStart.setDate(suppressionStart.getDate() - RECENCY_SUPPRESSION_DAYS)
+            const timezone = await getUserTimezoneById(userId)
+            const todayStr = dateStr || getTodayForUser(timezone)
+            const todayStart = startOfDayInTimezone(todayStr, timezone)
+
+            // Calculate suppression start date string
+            const suppressionDate = new Date(todayStr + 'T12:00:00Z') // noon to avoid DST issues
+            suppressionDate.setDate(suppressionDate.getDate() - RECENCY_SUPPRESSION_DAYS)
+            const suppressionDateStr = suppressionDate.toISOString().split('T')[0]
+            const suppressionStart = startOfDayInTimezone(suppressionDateStr, timezone)
 
             const recentEntries = await prisma.journalEntry.findMany({
                 where: {
                     userId,
                     createdAt: {
                         gte: suppressionStart,
-                        lt: today
+                        lt: todayStart
                     }
                 },
                 select: { promptId: true },
