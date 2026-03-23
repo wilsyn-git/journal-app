@@ -91,7 +91,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         prisma.taskAssignment.findMany({
             where: {
                 userId: targetUserId,
-                task: { archivedAt: null, organizationId: (session?.user as any)?.organizationId || '' }
+                task: { archivedAt: null, organizationId: session.user.organizationId }
             },
             include: { task: true }
         })

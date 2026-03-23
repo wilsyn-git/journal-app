@@ -166,7 +166,7 @@ export const getUserStats = cache(async function getUserStats(userId: string) {
 
     entries.forEach(e => {
         // Habits (Checkboxes / Radio)
-        if (['Checkboxes', 'Radio', 'CHECKBOX', 'RADIO'].includes(e.prompt.type)) {
+        if (['CHECKBOX', 'RADIO'].includes(e.prompt.type)) {
             if (!taskMap.has(e.prompt.id)) {
                 taskMap.set(e.prompt.id, { prompt: e.prompt.content, type: e.prompt.type, days: new Set() });
             }

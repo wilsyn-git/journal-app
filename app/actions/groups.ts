@@ -7,19 +7,12 @@ import { ensureAdmin } from './helpers'
 // Enhanced createGroup to handle initial profile and users
 export async function createGroup(formData: FormData) {
     const session = await ensureAdmin();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const organizationId = (session?.user as any)?.organizationId as string;
+    const organizationId = session.user.organizationId;
 
     const name = formData.get('name') as string;
     const description = formData.get('description') as string;
     const profileId = formData.get('profileId') as string;
 
-    // Users are passed as comma-separated emails or JSON string of IDs/emails?
-    // Let's stick to the UI plan: Add Initial Users via multi-select or just one-by-one later?
-    // The user said: "The add users option should use the same control that exists on the dialog used when editing a profile." -> Wait, that's complex to replicate in a simple create form.
-    // Let's assume for v1 we just allow Profile first. adding users can be done in edit mode or via a simple comma-seperated list if needed.
-    // BUT the prompt said: "In the New Group, we should allow a user to pick a profile and add users."
-    // Let's support an array of emails if posted.
     const initialEmails = formData.getAll('initialUsers') as string[];
 
     try {

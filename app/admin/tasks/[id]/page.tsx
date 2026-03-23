@@ -12,10 +12,8 @@ type Props = {
 
 export default async function TaskDetailPage({ params }: Props) {
     const session = await auth()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const orgId = (session?.user as any)?.organizationId as string
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (!session?.user || (session.user as any).role !== 'ADMIN' || !orgId) {
+    const orgId = session?.user?.organizationId
+    if (!session?.user || session.user.role !== 'ADMIN' || !orgId) {
         notFound()
     }
 

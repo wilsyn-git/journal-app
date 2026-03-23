@@ -197,10 +197,10 @@ export async function getActivePrompts(
                 // Build pool from pre-fetched data, excluding already-selected prompts
                 let pool: typeof allCandidatePrompts = [];
 
-                if (rule.categoryString) {
-                    pool = [...(promptsByCategoryString.get(rule.categoryString) || [])];
-                } else if (rule.categoryId) {
+                if (rule.categoryId) {
                     pool = [...(promptsByCategoryId.get(rule.categoryId) || [])];
+                } else if (rule.categoryString) {
+                    pool = [...(promptsByCategoryString.get(rule.categoryString) || [])];
                 } else {
                     continue;
                 }
@@ -229,11 +229,6 @@ export async function getActivePrompts(
             }
         }
 
-        // Return combined list, maybe sorted by some logic? 
-        // For now, Globals first, then mixed. OR just all sorted by createdAt or something.
-        // Let's keep Globals at top, then others.
-
-        // Actually, Map preserves insertion order mostly.
         return Array.from(selectedPromptsMap.values());
 
     } catch (error) {

@@ -11,8 +11,7 @@ import { ASSIGNMENT_MODES } from '@/lib/taskConstants'
 
 export async function createTask(formData: FormData) {
     const session = await ensureAdmin()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const organizationId = (session?.user as any)?.organizationId as string
+    const organizationId = session.user.organizationId
 
     const title = formData.get('title') as string
     const description = formData.get('description') as string | null
@@ -111,8 +110,7 @@ export async function createTask(formData: FormData) {
 
 export async function updateTask(taskId: string, formData: FormData) {
     const session = await ensureAdmin()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const organizationId = (session?.user as any)?.organizationId as string
+    const organizationId = session.user.organizationId
 
     const title = formData.get('title') as string
     const description = formData.get('description') as string | null
@@ -195,8 +193,7 @@ export async function updateTask(taskId: string, formData: FormData) {
 
 export async function archiveTask(taskId: string) {
     const session = await ensureAdmin()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const organizationId = (session?.user as any)?.organizationId as string
+    const organizationId = session.user.organizationId
 
     try {
         const task = await prisma.task.findUnique({ where: { id: taskId } })
@@ -220,8 +217,7 @@ export async function archiveTask(taskId: string) {
 
 export async function unarchiveTask(taskId: string) {
     const session = await ensureAdmin()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const organizationId = (session?.user as any)?.organizationId as string
+    const organizationId = session.user.organizationId
 
     try {
         const task = await prisma.task.findUnique({ where: { id: taskId } })
@@ -257,8 +253,7 @@ export async function completeTask(assignmentId: string, notes?: string) {
 
         if (!assignment) return { error: 'Assignment not found' }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const orgId = (session.user as any)?.organizationId as string
+        const orgId = session.user.organizationId
         if (assignment.task.organizationId !== orgId) {
             return { error: 'Unauthorized' }
         }
@@ -297,8 +292,7 @@ export async function uncompleteTask(assignmentId: string) {
 
         if (!assignment) return { error: 'Assignment not found' }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const orgId = (session.user as any)?.organizationId as string
+        const orgId = session.user.organizationId
         if (assignment.task.organizationId !== orgId) {
             return { error: 'Unauthorized' }
         }

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default async function AdminPage() {
     const session = await auth()
 
-    if (!session?.user || (session.user as any).role !== 'ADMIN') {
+    if (!session?.user || session.user.role !== 'ADMIN') {
         redirect("/dashboard")
     }
 
