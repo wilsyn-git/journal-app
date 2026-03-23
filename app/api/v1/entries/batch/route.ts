@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { authenticateRequest } from '@/lib/api/apiAuth'
 import { apiSuccess, apiError } from '@/lib/api/apiResponse'
 import { prisma } from '@/lib/prisma'
+import { startOfDayInTimezone, endOfDayInTimezone, getUserTimezoneById } from '@/lib/timezone'
 
 const batchSchema = z.object({
   entries: z.array(
@@ -26,14 +27,15 @@ export async function POST(request: NextRequest) {
     }
 
     const { userId } = auth.payload
+    const timezone = request.headers.get('x-timezone')
+      || await getUserTimezoneById(userId)
     const errors: { promptId: string; date: string; error: string }[] = []
     let synced = 0
 
     for (const entry of parsed.data.entries) {
       try {
-        const [year, month, day] = entry.date.split('-').map(Number)
-        const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0)
-        const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999)
+        const startOfDay = startOfDayInTimezone(entry.date, timezone)
+        const endOfDay = endOfDayInTimezone(entry.date, timezone)
 
         const existing = await prisma.journalEntry.findFirst({
           where: {

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { authenticateRequest } from '@/lib/api/apiAuth'
 import { apiSuccess, apiError } from '@/lib/api/apiResponse'
 import { prisma } from '@/lib/prisma'
+import { startOfDayInTimezone, endOfDayInTimezone, getUserTimezoneById } from '@/lib/timezone'
 
 const entrySchema = z.object({
   promptId: z.string().uuid(),
@@ -10,11 +11,9 @@ const entrySchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 })
 
-// Match existing saveJournalResponse() pattern: uses server-local day boundaries.
-function dayBounds(dateStr: string) {
-  const [year, month, day] = dateStr.split('-').map(Number)
-  const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0)
-  const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999)
+function dayBoundsForTimezone(dateStr: string, timezone: string) {
+  const startOfDay = startOfDayInTimezone(dateStr, timezone)
+  const endOfDay = endOfDayInTimezone(dateStr, timezone)
   return { startOfDay, endOfDay }
 }
 
@@ -23,6 +22,8 @@ export async function GET(request: NextRequest) {
   if ('error' in auth) return apiError('UNAUTHORIZED', auth.error, auth.status)
 
   const { userId } = auth.payload
+  const timezone = request.headers.get('x-timezone')
+    || await getUserTimezoneById(userId)
   const { searchParams } = new URL(request.url)
   const date = searchParams.get('date')
   const from = searchParams.get('from')
@@ -32,11 +33,11 @@ export async function GET(request: NextRequest) {
     let where: Record<string, unknown> = { userId }
 
     if (date) {
-      const { startOfDay, endOfDay } = dayBounds(date)
+      const { startOfDay, endOfDay } = dayBoundsForTimezone(date, timezone)
       where.createdAt = { gte: startOfDay, lte: endOfDay }
     } else if (from && to) {
-      const { startOfDay } = dayBounds(from)
-      const { endOfDay } = dayBounds(to)
+      const { startOfDay } = dayBoundsForTimezone(from, timezone)
+      const { endOfDay } = dayBoundsForTimezone(to, timezone)
       where.createdAt = { gte: startOfDay, lte: endOfDay }
     }
 
@@ -80,9 +81,11 @@ export async function POST(request: NextRequest) {
     }
 
     const { userId } = auth.payload
+    const timezone = request.headers.get('x-timezone')
+      || await getUserTimezoneById(userId)
     const { promptId, answer, date } = parsed.data
 
-    const { startOfDay, endOfDay } = dayBounds(date)
+    const { startOfDay, endOfDay } = dayBoundsForTimezone(date, timezone)
 
     const existing = await prisma.journalEntry.findFirst({
       where: {

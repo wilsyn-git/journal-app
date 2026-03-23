@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { authenticateRequest } from '@/lib/api/apiAuth'
 import { apiSuccess, apiError } from '@/lib/api/apiResponse'
 import { prisma } from '@/lib/prisma'
-import { DEFAULT_TIMEZONE } from '@/lib/timezone'
+import { getUserTimezoneById } from '@/lib/timezone'
 import { calculateStreaks } from '@/lib/streaks'
 
 export async function GET(request: NextRequest) {
@@ -11,7 +11,8 @@ export async function GET(request: NextRequest) {
 
   try {
     const { userId } = auth.payload
-    const timezone = request.headers.get('x-timezone') || DEFAULT_TIMEZONE
+    const timezone = request.headers.get('x-timezone')
+      || await getUserTimezoneById(userId)
 
     const entries = await prisma.journalEntry.findMany({
       where: { userId },
