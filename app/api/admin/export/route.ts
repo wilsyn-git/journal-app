@@ -12,15 +12,14 @@ export async function GET() {
     try {
         // 1. Security Check
         const session = await auth()
-        // Force type assertion or check properties safely since NextAuth types can be tricky
-        const user = session?.user as any
+        const user = session?.user
 
         if (!user || user.role !== 'ADMIN') {
             return new NextResponse("Unauthorized", { status: 401 })
         }
 
         // 2. Data Fetching
-        const organizationId = user.organizationId as string
+        const organizationId = user.organizationId
 
         const organizations = await prisma.organization.findMany({
             where: { id: organizationId }

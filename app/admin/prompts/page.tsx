@@ -16,7 +16,7 @@ type Props = {
 export default async function AdminPromptsPage({ searchParams }: Props) {
     const session = await auth();
 
-    if (!session?.user || (session.user as any).role !== 'ADMIN') {
+    if (!session?.user || session.user.role !== 'ADMIN') {
         redirect("/dashboard")
     }
 

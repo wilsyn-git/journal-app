@@ -35,7 +35,7 @@ type RestoreReport = {
 export async function restoreSystemData(formData: FormData) {
     // 1. Auth Check
     const session = await auth()
-    const user = session?.user as any
+    const user = session?.user
     if (!user || user.role !== 'ADMIN') {
         return { error: "Unauthorized" }
     }

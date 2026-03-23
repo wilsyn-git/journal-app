@@ -7,8 +7,7 @@ import { ensureAdmin } from './helpers'
 // Enhanced createGroup to handle initial profile and users
 export async function createGroup(formData: FormData) {
     const session = await ensureAdmin();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const organizationId = (session?.user as any)?.organizationId as string;
+    const organizationId = session.user.organizationId;
 
     const name = formData.get('name') as string;
     const description = formData.get('description') as string;

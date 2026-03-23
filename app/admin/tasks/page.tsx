@@ -14,11 +14,11 @@ type Props = {
 export default async function AdminTasksPage({ searchParams }: Props) {
     const session = await auth();
 
-    if (!session?.user || (session.user as any).role !== 'ADMIN') {
+    if (!session?.user || session.user.role !== 'ADMIN') {
         redirect("/dashboard")
     }
 
-    const orgId = (session?.user as any)?.organizationId;
+    const orgId = session.user.organizationId;
     const params = await searchParams;
     const tab = typeof params.tab === 'string' ? params.tab : 'active';
     const isArchived = tab === 'archived';

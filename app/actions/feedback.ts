@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache"
 export async function toggleEntryLike(entryId: string) {
     try {
         const session = await auth()
-        const user = session?.user as any; // Cast to access role
+        const user = session?.user
         if (!user || user.role !== 'ADMIN') {
             return { error: "Unauthorized" }
         }

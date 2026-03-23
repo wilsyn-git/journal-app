@@ -6,8 +6,7 @@ import { ensureAdmin } from './helpers'
 
 export async function createProfile(formData: FormData) {
     const session = await ensureAdmin();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const organizationId = (session?.user as any)?.organizationId as string;
+    const organizationId = session.user.organizationId;
 
     const name = formData.get('name') as string;
     const description = formData.get('description') as string;
@@ -50,8 +49,7 @@ export async function deleteProfile(id: string) {
 
 export async function addProfileRule(profileId: string, formData: FormData) {
     const session = await ensureAdmin();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const organizationId = (session?.user as any)?.organizationId as string;
+    const organizationId = session.user.organizationId;
 
     const categoryId = formData.get('categoryId') as string;
     // Fallback or legacy support
@@ -113,8 +111,7 @@ export async function addProfileRule(profileId: string, formData: FormData) {
 
 export async function updateProfileRule(ruleId: string, profileId: string, formData: FormData) {
     const session = await ensureAdmin();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const organizationId = (session?.user as any)?.organizationId as string;
+    const organizationId = session.user.organizationId;
 
     const categoryId = formData.get('categoryId') as string;
     const categoryString = formData.get('categoryString') as string; // Legacy fallback

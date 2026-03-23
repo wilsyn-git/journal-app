@@ -8,8 +8,7 @@ import { ensureAdmin } from './helpers'
 
 export async function createPromptCategory(formData: FormData) {
     const session = await ensureAdmin();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const organizationId = (session?.user as any)?.organizationId as string;
+    const organizationId = session.user.organizationId;
     const name = formData.get('name') as string;
 
     if (!name) return { error: 'Name required' };
@@ -30,8 +29,7 @@ export async function createPromptCategory(formData: FormData) {
 
 export async function deletePromptCategory(id: string) {
     const session = await ensureAdmin();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const organizationId = (session?.user as any)?.organizationId as string;
+    const organizationId = session.user.organizationId;
 
     try {
         // Find or create the _archived category for this org
@@ -82,8 +80,7 @@ export async function deletePromptCategory(id: string) {
 
 export async function createPrompt(formData: FormData) {
     const session = await ensureAdmin();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const organizationId = (session?.user as any)?.organizationId as string;
+    const organizationId = session.user.organizationId;
 
     const content = formData.get('content') as string;
     const type = formData.get('type') as string; // 'TEXT', 'RADIO', 'CHECKBOX'
@@ -149,8 +146,7 @@ export async function createPrompt(formData: FormData) {
 
 export async function updatePrompt(id: string, formData: FormData) {
     const session = await ensureAdmin();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const organizationId = (session?.user as any)?.organizationId as string;
+    const organizationId = session.user.organizationId;
 
     const content = formData.get('content') as string;
     const type = formData.get('type') as string;
@@ -256,8 +252,7 @@ export async function reorderPrompts(items: { id: string; sortOrder: number }[])
 
 export async function importPrompts(formData: FormData) {
     const session = await ensureAdmin();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const organizationId = (session?.user as any)?.organizationId as string;
+    const organizationId = session.user.organizationId;
 
     const file = formData.get('file') as File | null;
     if (!file) return { error: "No file provided" };
