@@ -70,7 +70,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         isAdmin
             ? prisma.user.findMany({ select: { id: true, email: true, name: true }, orderBy: { email: 'asc' } })
             : Promise.resolve([] as { id: string, email: string, name: string | null }[]),
-        getUserTimezone(),
+        getUserTimezone(targetUserId),
         prisma.user.findUnique({
             where: { id: currentUserId },
             select: { organization: true }
