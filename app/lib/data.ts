@@ -197,10 +197,10 @@ export async function getActivePrompts(
                 // Build pool from pre-fetched data, excluding already-selected prompts
                 let pool: typeof allCandidatePrompts = [];
 
-                if (rule.categoryString) {
-                    pool = [...(promptsByCategoryString.get(rule.categoryString) || [])];
-                } else if (rule.categoryId) {
+                if (rule.categoryId) {
                     pool = [...(promptsByCategoryId.get(rule.categoryId) || [])];
+                } else if (rule.categoryString) {
+                    pool = [...(promptsByCategoryString.get(rule.categoryString) || [])];
                 } else {
                     continue;
                 }
