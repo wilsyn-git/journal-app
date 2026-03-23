@@ -7,14 +7,29 @@ export const authConfig = {
     callbacks: {
         authorized({ auth, request: { nextUrl } }) {
             const isLoggedIn = !!auth?.user;
-            const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
-            if (isOnDashboard) {
-                if (isLoggedIn) return true;
-                return false; // Redirect unauthenticated users to login page
-            } else if (isLoggedIn && nextUrl.pathname === '/login') {
-                // Optionally redirect to dashboard if already logged in visiting login page
-                return Response.redirect(new URL('/dashboard', nextUrl));
+            const pathname = nextUrl.pathname;
+
+            // Public routes that don't require authentication
+            const publicPaths = [
+                '/login',
+                '/forgot-password',
+                '/reset-password',
+            ];
+            const isPublicPath = publicPaths.some(p => pathname === p || pathname.startsWith(p + '/'));
+            const isPublicApi = pathname.startsWith('/api/v1/');
+            const isStaticAsset = ['/icon.png', '/manifest.webmanifest', '/robots.txt', '/sitemap.xml'].includes(pathname);
+
+            // Allow public routes
+            if (isPublicPath || isPublicApi || isStaticAsset) {
+                // Redirect logged-in users away from login page
+                if (isLoggedIn && pathname === '/login') {
+                    return Response.redirect(new URL('/dashboard', nextUrl));
+                }
+                return true;
             }
+
+            // Everything else requires authentication
+            if (!isLoggedIn) return false;
             return true;
         },
     },

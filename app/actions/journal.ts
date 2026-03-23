@@ -67,6 +67,7 @@ export async function submitEntry(formData: FormData) {
     // Save entries
     try {
         for (const entry of entries) {
+            if (entry.answer.length > 10000) continue
             await prisma.journalEntry.create({
                 data: {
                     userId: entry.userId,
@@ -84,6 +85,10 @@ export async function submitEntry(formData: FormData) {
 }
 
 export async function saveJournalResponse(promptId: string, answer: string) {
+    if (answer.length > 10000) {
+        return { error: "Answer exceeds maximum length" }
+    }
+
     const session = await auth()
     if (!session?.user?.email) throw new Error("Unauthorized")
 
