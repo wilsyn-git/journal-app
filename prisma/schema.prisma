@@ -78,6 +78,7 @@ model User {
   taskAssignments TaskAssignment[] @relation("TaskAssignments")
   deviceSessions DeviceSession[]
   bio       String?
+  timezone  String?
   resetToken     String?   @unique
   resetTokenExpiry DateTime?
   lastLogin      DateTime?
