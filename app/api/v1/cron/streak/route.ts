@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendPushNotification } from '@/lib/api/pushNotifications'
 import { apiSuccess, apiError } from '@/lib/api/apiResponse'
+import { startOfDayInTimezone, getTodayForUser } from '@/lib/timezone'
+import { DEFAULT_TIMEZONE } from '@/lib/timezone'
 
 export async function POST(request: NextRequest) {
     // Simple shared secret auth for cron endpoints
@@ -23,6 +25,7 @@ export async function POST(request: NextRequest) {
             },
             select: {
                 id: true,
+                timezone: true,
                 deviceSessions: {
                     where: { deviceToken: { not: null }, revokedAt: null },
                     select: { deviceToken: true },
@@ -32,13 +35,14 @@ export async function POST(request: NextRequest) {
 
         for (const user of usersWithDevices) {
             // Check if user has entries today
-            const now = new Date()
-            const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0)
+            const timezone = user.timezone || DEFAULT_TIMEZONE
+            const todayStr = getTodayForUser(timezone)
+            const todayStart = startOfDayInTimezone(todayStr, timezone)
 
             const todayEntries = await prisma.journalEntry.count({
                 where: {
                     userId: user.id,
-                    createdAt: { gte: startOfDay },
+                    createdAt: { gte: todayStart },
                 },
             })
 
@@ -54,15 +58,15 @@ export async function POST(request: NextRequest) {
 
             const uniqueDays = new Set(
                 recentEntries.map((e) =>
-                    e.createdAt.toISOString().split('T')[0]
+                    new Date(e.createdAt).toLocaleDateString('en-CA', { timeZone: timezone })
                 )
             )
             const sortedDays = Array.from(uniqueDays).sort().reverse()
 
             // Check yesterday
-            const yesterday = new Date(now)
-            yesterday.setDate(yesterday.getDate() - 1)
-            const yesterdayStr = yesterday.toISOString().split('T')[0]
+            const yesterdayDate = new Date(todayStr + 'T12:00:00Z')
+            yesterdayDate.setDate(yesterdayDate.getDate() - 1)
+            const yesterdayStr = yesterdayDate.toISOString().split('T')[0]
 
             if (!sortedDays.includes(yesterdayStr)) continue
 
