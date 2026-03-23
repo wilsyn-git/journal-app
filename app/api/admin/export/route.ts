@@ -20,9 +20,14 @@ export async function GET() {
         }
 
         // 2. Data Fetching
-        const organizations = await prisma.organization.findMany()
+        const organizationId = user.organizationId as string
+
+        const organizations = await prisma.organization.findMany({
+            where: { id: organizationId }
+        })
 
         const users = await prisma.user.findMany({
+            where: { organizationId },
             omit: {
                 password: true,
                 resetToken: true,
@@ -35,17 +40,35 @@ export async function GET() {
         })
 
         const profiles = await prisma.profile.findMany({
+            where: { organizationId },
             include: {
                 groups: { select: { id: true } }
             }
         })
 
-        const groups = await prisma.userGroup.findMany() // Relations likely captured on the other side or symmetric
-        const prompts = await prisma.prompt.findMany()
-        const categories = await prisma.promptCategory.findMany()
-        const rules = await prisma.profileRule.findMany()
-        const entries = await prisma.journalEntry.findMany()
-        const avatars = await prisma.userAvatar.findMany()
+        const groups = await prisma.userGroup.findMany({
+            where: { organizationId }
+        })
+
+        const prompts = await prisma.prompt.findMany({
+            where: { organizationId }
+        })
+
+        const categories = await prisma.promptCategory.findMany({
+            where: { organizationId }
+        })
+
+        const rules = await prisma.profileRule.findMany({
+            where: { profile: { organizationId } }
+        })
+
+        const entries = await prisma.journalEntry.findMany({
+            where: { user: { organizationId } }
+        })
+
+        const avatars = await prisma.userAvatar.findMany({
+            where: { user: { organizationId } }
+        })
 
         // 3. Process Binary Data
         const publicDir = join(process.cwd(), 'public')

@@ -66,16 +66,18 @@ export async function submitEntry(formData: FormData) {
 
     // Save entries
     try {
-        for (const entry of entries) {
-            if (entry.answer.length > 10000) continue
-            await prisma.journalEntry.create({
-                data: {
-                    userId: entry.userId,
-                    promptId: entry.promptId,
-                    answer: entry.answer
-                }
-            })
-        }
+        const validEntries = entries.filter(e => e.answer.length <= 10000)
+        await prisma.$transaction(
+            validEntries.map(entry =>
+                prisma.journalEntry.create({
+                    data: {
+                        userId: entry.userId,
+                        promptId: entry.promptId,
+                        answer: entry.answer
+                    }
+                })
+            )
+        )
         revalidatePath('/dashboard')
         return { success: true }
     } catch (e) {

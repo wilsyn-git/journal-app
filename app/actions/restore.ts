@@ -9,6 +9,18 @@ import { promisify } from "util"
 
 const gunzipAsync = promisify(gunzip)
 
+const FIELD_ALLOWLISTS: Record<string, string[]> = {
+    organization: ['id', 'name', 'code', 'createdAt', 'updatedAt', 'siteName', 'logoUrl'],
+    userGroup: ['id', 'name', 'description', 'organizationId', 'createdAt', 'updatedAt'],
+    profile: ['id', 'name', 'description', 'organizationId', 'createdAt', 'updatedAt'],
+    promptCategory: ['id', 'name', 'description', 'organizationId', 'createdAt', 'updatedAt'],
+    prompt: ['id', 'content', 'type', 'options', 'isActive', 'createdAt', 'updatedAt', 'organizationId', 'isGlobal', 'categoryId', 'categoryString', 'sortOrder'],
+    user: ['id', 'email', 'name', 'password', 'role', 'createdAt', 'updatedAt', 'organizationId', 'bio', 'timezone', 'lastLogin', 'excludeFromStats'],
+    userAvatar: ['id', 'userId', 'url', 'isActive', 'createdAt', 'updatedAt'],
+    profileRule: ['id', 'profileId', 'categoryId', 'categoryString', 'minCount', 'maxCount', 'includeAll', 'sortOrder', 'createdAt', 'updatedAt'],
+    journalEntry: ['id', 'userId', 'promptId', 'answer', 'isLiked', 'date', 'createdAt', 'updatedAt'],
+}
+
 type RestoreStats = {
     created: number
     updated: number
@@ -77,11 +89,17 @@ export async function restoreSystemData(formData: FormData) {
                     // Clean up non-DB fields
                     const { base64Data, ...dbItem } = item
 
+                    const allowedFields = FIELD_ALLOWLISTS[model]
+                    if (!allowedFields) {
+                        console.warn(`No allowlist defined for model: ${model}`)
+                        report[reportKey].errors++
+                        continue
+                    }
+
                     const cleanItem: any = {}
-                    for (const key in dbItem) {
-                        const val = dbItem[key]
-                        if (val === null || typeof val !== 'object' || key === 'createdAt' || key === 'updatedAt') {
-                            cleanItem[key] = val
+                    for (const key of allowedFields) {
+                        if (key in dbItem) {
+                            cleanItem[key] = dbItem[key]
                         }
                     }
 

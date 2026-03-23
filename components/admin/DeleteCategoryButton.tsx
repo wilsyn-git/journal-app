@@ -26,10 +26,10 @@ export function DeleteCategoryButton({ categoryId, categoryName }: Props) {
             // Show global toast that persists
             addToast('success', (
                 <div>
-                    <strong className="block mb-1">Deleted {res.details.categoryName}</strong>
+                    <strong className="block mb-1">Deleted {res.details.categoryDeleted}</strong>
                     <ul className="text-xs opacity-90 space-y-0.5">
-                        <li>🗑️ {res.details.promptsDeleted} Prompts removed</li>
-                        <li>🧹 {res.details.rulesDeleted} Profile Rules updated</li>
+                        <li>📦 {res.details.promptsArchived} Prompts archived</li>
+                        <li>🧹 {res.details.rulesRemoved} Profile Rules removed</li>
                     </ul>
                 </div>
             ), 5000)
