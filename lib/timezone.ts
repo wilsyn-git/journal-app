@@ -86,8 +86,14 @@ export function startOfDayInTimezone(dateStr: string, timezone: string): Date {
 /**
  * Returns a UTC Date representing 23:59:59.999 in the given timezone
  * for the given YYYY-MM-DD date string.
+ *
+ * Uses next-day-start-minus-1ms to correctly handle DST transitions
+ * (spring-forward 23h days and fall-back 25h days).
  */
 export function endOfDayInTimezone(dateStr: string, timezone: string): Date {
-    const start = startOfDayInTimezone(dateStr, timezone)
-    return new Date(start.getTime() + 24 * 60 * 60 * 1000 - 1)
+    const [year, month, day] = dateStr.split('-').map(Number)
+    const nextDate = new Date(Date.UTC(year, month - 1, day + 1))
+    const nextDateStr = nextDate.toISOString().split('T')[0]
+    const nextDayStart = startOfDayInTimezone(nextDateStr, timezone)
+    return new Date(nextDayStart.getTime() - 1)
 }
