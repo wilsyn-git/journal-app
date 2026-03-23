@@ -91,3 +91,55 @@ export async function updateProfile(userId: string, formData: FormData) {
     revalidatePath("/settings")
     return { success: true }
 }
+
+export async function setUserTimezone(timezone: string) {
+    const session = await auth()
+    if (!session?.user) throw new Error("Unauthorized")
+
+    const userId = await resolveUserId(session)
+    if (!userId) throw new Error("User not found")
+
+    // Validate timezone is a real IANA timezone
+    try {
+        Intl.DateTimeFormat(undefined, { timeZone: timezone })
+    } catch {
+        throw new Error("Invalid timezone")
+    }
+
+    await prisma.user.update({
+        where: { id: userId },
+        data: { timezone }
+    })
+
+    revalidatePath("/dashboard")
+    revalidatePath("/settings")
+    return { success: true }
+}
+
+export async function autoDetectTimezone(timezone: string) {
+    const session = await auth()
+    if (!session?.user) return // Silently return if not authenticated
+
+    const userId = await resolveUserId(session)
+    if (!userId) return
+
+    // Only set if user hasn't set one yet
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { timezone: true }
+    })
+
+    if (user?.timezone) return // Already set, don't overwrite
+
+    // Validate
+    try {
+        Intl.DateTimeFormat(undefined, { timeZone: timezone })
+    } catch {
+        return // Invalid timezone, silently ignore
+    }
+
+    await prisma.user.update({
+        where: { id: userId },
+        data: { timezone }
+    })
+}
