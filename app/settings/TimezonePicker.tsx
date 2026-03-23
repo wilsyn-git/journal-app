@@ -40,12 +40,28 @@ export function TimezonePicker({ currentTimezone }: Props) {
         }
     }, [])
 
+    const commonTimezones = [
+        'America/New_York',
+        'America/Chicago',
+        'America/Denver',
+        'America/Los_Angeles',
+        'America/Anchorage',
+        'Pacific/Honolulu',
+        'America/Phoenix',
+        'America/Toronto',
+        'America/Vancouver',
+        'Europe/London',
+        'Europe/Paris',
+        'Europe/Berlin',
+        'Asia/Tokyo',
+        'Asia/Shanghai',
+        'Australia/Sydney',
+    ]
+
     const filtered = useMemo(() => {
-        if (!search) return allTimezones.slice(0, 20)
+        if (!search) return commonTimezones.filter(tz => allTimezones.includes(tz))
         const lower = search.toLowerCase().replace(/\s+/g, '_')
-        return allTimezones
-            .filter(tz => tz.toLowerCase().includes(lower))
-            .slice(0, 20)
+        return allTimezones.filter(tz => tz.toLowerCase().includes(lower)).slice(0, 30)
     }, [search, allTimezones])
 
     useEffect(() => {
@@ -97,7 +113,7 @@ export function TimezonePicker({ currentTimezone }: Props) {
             </div>
 
             {isOpen && (
-                <div className="absolute z-50 mt-1 w-full bg-[#1a1a1c] border border-white/10 rounded-lg shadow-xl max-h-64 overflow-hidden">
+                <div className="absolute z-50 mt-1 w-full bg-[#1a1a1c] border border-white/10 rounded-lg shadow-xl max-h-96 overflow-hidden">
                     <div className="p-2 border-b border-white/10">
                         <input
                             ref={inputRef}
@@ -108,7 +124,7 @@ export function TimezonePicker({ currentTimezone }: Props) {
                             className="w-full bg-black/40 border border-white/10 rounded px-3 py-1.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
                         />
                     </div>
-                    <div className="overflow-y-auto max-h-48">
+                    <div className="overflow-y-auto max-h-80">
                         {filtered.length === 0 ? (
                             <div className="px-4 py-3 text-sm text-gray-500">No timezones found</div>
                         ) : (
