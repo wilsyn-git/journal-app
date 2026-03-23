@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { resolveUserId } from "@/lib/auth-helpers"
 import { revalidatePath } from "next/cache"
 import { writeFile, unlink } from "fs/promises"
+import { existsSync, mkdirSync } from "fs"
 import { join } from "path"
 import { randomUUID } from 'crypto'
 
@@ -44,11 +45,10 @@ export async function updateProfile(userId: string, formData: FormData) {
         const url = `/uploads/avatars/${filename}`
 
         // Ensure directory exists (node fs/promises doesn't have ensureDir, assume public exists or we create it?)
-        // Let's assume public/uploads/avatars exists for now or user manual creation? 
+        // Let's assume public/uploads/avatars exists for now or user manual creation?
         // Better: try to mkdir
-        const fs = require('fs')
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
+        if (!existsSync(uploadDir)) {
+            mkdirSync(uploadDir, { recursive: true });
         }
 
         // Write file
@@ -69,7 +69,7 @@ export async function updateProfile(userId: string, formData: FormData) {
             // Delete old file
             try {
                 const oldPath = join(process.cwd(), "public", oldAvatar.url)
-                if (fs.existsSync(oldPath)) {
+                if (existsSync(oldPath)) {
                     await unlink(oldPath)
                 }
             } catch (e) {
