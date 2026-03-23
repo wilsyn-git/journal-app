@@ -8,6 +8,7 @@ import Image from "next/image"
 import { SidebarHeader } from "@/components/SidebarHeader"
 import { ProfileForm } from "./ProfileForm"
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog"
+import { TimezonePicker } from "./TimezonePicker"
 
 export const metadata: Metadata = {
     title: 'Settings | myJournal',
@@ -73,6 +74,14 @@ export default async function SettingsPage() {
                             initialEmail={user.email}
                             initialBio={user.bio}
                         />
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-8">
+                        <h2 className="text-xl font-semibold mb-4 text-gray-200">Preferences</h2>
+                        <TimezonePicker currentTimezone={user.timezone} />
+                        <p className="text-xs text-gray-500 mt-2">
+                            Used to determine your journal day boundaries. Auto-detected on first visit.
+                        </p>
                     </div>
 
                     <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-8">
