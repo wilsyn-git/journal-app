@@ -11,9 +11,10 @@ type Props = {
     children: React.ReactNode
     streak: number
     freezeCount?: number
+    shieldCount?: number
 }
 
-export function DashboardShell({ sidebar, children, streak, freezeCount }: Props) {
+export function DashboardShell({ sidebar, children, streak, freezeCount, shieldCount }: Props) {
     const [isSidebarOpen, setSidebarOpen] = useState(false)
     const { siteName, logoUrl } = useBranding()
 
@@ -72,7 +73,7 @@ export function DashboardShell({ sidebar, children, streak, freezeCount }: Props
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <StreakBadge streak={streak} freezeCount={freezeCount} />
+                        <StreakBadge streak={streak} freezeCount={freezeCount} shieldCount={shieldCount} />
                     </div>
                 </header>
 

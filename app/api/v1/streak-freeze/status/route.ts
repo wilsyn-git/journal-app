@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
       sortedDays,
       todayStr,
       inventory.freezeCount,
+      inventory.shieldCount,
       new Set(frozenDates)
     )
 
