@@ -6,6 +6,7 @@ import { getInventory, getFrozenDates } from '@/app/lib/inventoryData'
 import { getActiveOrganization } from '@/app/lib/data'
 import Link from 'next/link'
 import { SidebarHeader } from '@/components/SidebarHeader'
+import { StreakFreezeItem } from '@/components/StreakFreezeItem'
 
 export const metadata: Metadata = {
     title: 'Inventory | myJournal',
@@ -24,10 +25,6 @@ export default async function InventoryPage() {
         getActiveOrganization(),
     ])
 
-    const progressPercent = Math.round((inventory.earningCounter / inventory.earningInterval) * 100)
-    const daysUntilNext = inventory.earningInterval - inventory.earningCounter
-
-    // Sort frozen dates descending for usage history
     const sortedFrozenDates = [...frozenDates].sort().reverse()
 
     return (
@@ -59,49 +56,13 @@ export default async function InventoryPage() {
                 <div className="max-w-2xl mx-auto">
                     <h1 className="text-4xl font-bold text-white mb-8">Inventory</h1>
 
-                    {/* Streak Freezes */}
-                    <div className="glass-card p-5 rounded-xl border border-white/10 mb-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-3">
-                                <span className="text-2xl">🧊</span>
-                                <span className="text-lg font-bold text-white">Streak Freezes</span>
-                            </div>
-                            <div className="flex items-baseline gap-1">
-                                <span className="text-3xl font-bold text-sky-400">{inventory.freezeCount}</span>
-                                <span className="text-sm text-gray-500">/ {inventory.maxQuantity}</span>
-                            </div>
-                        </div>
-
-                        <div className="flex justify-between text-xs text-gray-400 mb-1">
-                            <span>Next freeze</span>
-                            <span className="text-sky-300">{inventory.earningCounter} / {inventory.earningInterval}</span>
-                        </div>
-                        <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-sky-500 rounded-full transition-all duration-500"
-                                style={{ width: `${progressPercent}%` }}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Usage History */}
-                    {sortedFrozenDates.length > 0 && (
-                        <div className="glass-card p-5 rounded-xl border border-white/10">
-                            <h3 className="text-sm font-medium text-gray-400 mb-3">Used</h3>
-                            <div className="space-y-1">
-                                {sortedFrozenDates.map((date) => (
-                                    <div key={date} className="flex items-center gap-2 py-1.5 text-sm text-gray-300">
-                                        <span className="text-xs">🧊</span>
-                                        {new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', {
-                                            month: 'short',
-                                            day: 'numeric',
-                                            year: 'numeric',
-                                        })}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                    <StreakFreezeItem
+                        freezeCount={inventory.freezeCount}
+                        maxQuantity={inventory.maxQuantity}
+                        earningCounter={inventory.earningCounter}
+                        earningInterval={inventory.earningInterval}
+                        usageHistory={sortedFrozenDates}
+                    />
                 </div>
             </main>
         </div>
