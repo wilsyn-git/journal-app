@@ -4,6 +4,7 @@ import { apiSuccess, apiError } from '@/lib/api/apiResponse'
 import { prisma } from '@/lib/prisma'
 import { getUserTimezoneById } from '@/lib/timezone'
 import { calculateStreaks } from '@/lib/streaks'
+import { getInventory, getFrozenDates } from '@/app/actions/inventory'
 
 export async function GET(request: NextRequest) {
   const auth = await authenticateRequest(request)
@@ -11,6 +12,12 @@ export async function GET(request: NextRequest) {
 
   try {
     const { userId } = auth.payload
+    const [inventory, frozenDates] = await Promise.all([
+      getInventory(userId),
+      getFrozenDates(userId),
+    ])
+    const frozenSet = new Set(frozenDates)
+
     const timezone = request.headers.get('x-timezone')
       || await getUserTimezoneById(userId)
 
@@ -63,7 +70,7 @@ export async function GET(request: NextRequest) {
 
     // Streaks
     const sortedDays = Object.keys(heatmap).sort().reverse()
-    const { current, max } = calculateStreaks(sortedDays, todayStr)
+    const { current, max } = calculateStreaks(sortedDays, todayStr, frozenSet)
 
     // Avg words
     const textEntries = entries.filter((e) => e.prompt.type === 'TEXT')
@@ -147,6 +154,11 @@ export async function GET(request: NextRequest) {
       heatmap,
       badges,
       taskStats,
+      freezes: {
+        count: inventory.freezeCount,
+        earningProgress: inventory.earningCounter,
+        earningTarget: inventory.earningInterval,
+      },
     })
   } catch (error) {
     console.error('Stats error:', error)
