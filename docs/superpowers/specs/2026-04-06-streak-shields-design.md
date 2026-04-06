@@ -57,7 +57,9 @@ Identical pattern to freezes. On each new journaling day:
 
 Both the freeze and shield earning counters increment on the same journal submission — they're independent tracks. A single journal day advances both counters.
 
-**Streak broken without recovery:** If the user's streak breaks and they don't use freezes or shields, both earning counters reset to 1 on their next journal day.
+**Counter resets are scoped to their own item type.** Using a freeze resets only the freeze earning counter. Using a shield resets only the shield earning counter. They don't affect each other.
+
+**Streak broken without recovery:** If the user's streak breaks and they don't use freezes or shields, both earning counters reset to 1 on their next journal day — the streak is gone, earning starts fresh for both.
 
 ---
 
