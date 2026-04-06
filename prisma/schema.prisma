@@ -79,6 +79,7 @@ model User {
   deviceSessions    DeviceSession[]
   inventory         UserInventory[]
   streakFreezeUsage StreakFreezeUsage[]
+  achievements      UserAchievement[]
   bio       String?
   timezone  String?
   resetToken     String?   @unique
@@ -252,5 +253,20 @@ model StreakFreezeUsage {
   createdAt  DateTime @default(now())
 
   @@unique([userId, frozenDate])
+  @@index([userId])
+}
+
+model UserAchievement {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  tierLevel     Int
+  earnedAt      DateTime  @default(now())
+  notifiedAt    DateTime?
+  rewardGranted String?
+  createdAt     DateTime  @default(now())
+
+  @@unique([userId, achievementId, tierLevel])
   @@index([userId])
 }
