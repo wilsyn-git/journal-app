@@ -90,6 +90,16 @@ async function main() {
     })
     console.log('Created inventory: 2 streak freezes, earning counter at 6/14')
 
+    await prisma.userInventory.create({
+        data: {
+            userId: user.id,
+            itemType: 'STREAK_SHIELD',
+            quantity: 1,
+            metadata: JSON.stringify({ earningCounter: 15 }),
+        },
+    })
+    console.log('Created inventory: 1 streak shield, earning counter at 15/30')
+
     // Assign user to a profile/group so they see prompts
     const profile = await prisma.profile.findFirst({
         where: { organizationId: org.id },
@@ -116,7 +126,7 @@ async function main() {
     console.log('\n--- Test Scenario Ready ---')
     console.log(`Login: freezetest@example.com / testfreeze123`)
     console.log(`Expected: Dashboard shows freeze banner for 1 missed day (yesterday)`)
-    console.log(`Expected: Streak badge shows ~20 with freeze count of 2`)
+    console.log(`Expected: Streak badge shows ~20 with freeze count of 2 and shield count of 1`)
     console.log(`Expected: Calendar shows 20 consecutive green days ending 2 days ago`)
 }
 
