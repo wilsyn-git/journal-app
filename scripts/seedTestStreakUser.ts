@@ -100,6 +100,19 @@ async function main() {
     })
     console.log('Created inventory: 1 streak shield, earning counter at 15/30')
 
+    // Create a pre-earned achievement so the stats page has something to show
+    await prisma.userAchievement.deleteMany({ where: { userId: user.id } })
+    await prisma.userAchievement.create({
+        data: {
+            userId: user.id,
+            achievementId: 'streak',
+            tierLevel: 1,
+            rewardGranted: JSON.stringify({ itemType: 'STREAK_FREEZE', quantity: 1 }),
+            notifiedAt: new Date(), // Already notified so it doesn't toast on login
+        },
+    })
+    console.log('Created achievement: On a Roll tier 1 (7-day streak)')
+
     // Assign user to a profile/group so they see prompts
     const profile = await prisma.profile.findFirst({
         where: { organizationId: org.id },
@@ -128,6 +141,7 @@ async function main() {
     console.log(`Expected: Dashboard shows freeze banner for 1 missed day (yesterday)`)
     console.log(`Expected: Streak badge shows ~20 with freeze count of 2 and shield count of 1`)
     console.log(`Expected: Calendar shows 20 consecutive green days ending 2 days ago`)
+    console.log(`Expected: Stats page shows On a Roll tier 1 earned, tier 2 progress`)
 }
 
 main()
