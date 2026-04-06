@@ -1,6 +1,6 @@
 export const STREAK_FREEZE = {
   itemType: 'STREAK_FREEZE',
-  maxQuantity: 3,
+  maxQuantity: 5,
   earningInterval: 14,
   graceWindowDays: 2,
 } as const
