@@ -3,6 +3,7 @@ import { cache } from "react"
 import { prisma } from "@/lib/prisma"
 import { getUserTimezone } from "@/lib/timezone"
 import { calculateStreaks } from "@/lib/streaks"
+import { getFrozenDates } from "@/app/actions/inventory"
 
 const STOP_WORDS = new Set([
     'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at',
@@ -113,7 +114,9 @@ export const getUserStats = cache(async function getUserStats(userId: string) {
     // Global Streak Logic
     const uniqueDays = new Set(Object.keys(heatmap));
     const sortedDays = Array.from(uniqueDays).sort().reverse();
-    const { current, max } = calculateStreaks(sortedDays, todayStr);
+    const frozenDates = await getFrozenDates(userId)
+    const frozenSet = new Set(frozenDates)
+    const { current, max } = calculateStreaks(sortedDays, todayStr, frozenSet);
 
     // Calc Avg Words
     const textEntries = entries.filter(e => e.prompt.type === 'TEXT');
