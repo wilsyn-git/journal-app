@@ -109,6 +109,7 @@ export default async function DashboardPage({ searchParams }: Props) {
             Object.keys(userStats.heatmap).sort().reverse(),
             getTodayForUser(timezone),
             inventoryData.freezeCount,
+            inventoryData.shieldCount,
             new Set(frozenDates)
           )
         : null
@@ -279,14 +280,14 @@ export default async function DashboardPage({ searchParams }: Props) {
     );
 
     return (
-        <DashboardShell sidebar={SidebarContent} streak={userStats.streak} freezeCount={isViewingSelf ? inventoryData.freezeCount : undefined}>
+        <DashboardShell sidebar={SidebarContent} streak={userStats.streak} freezeCount={isViewingSelf ? inventoryData.freezeCount : undefined} shieldCount={isViewingSelf ? inventoryData.shieldCount : undefined}>
             {/* Desktop Header / Stats Bar */}
             <div className="hidden md:flex flex-col p-6 px-10 border-b border-white/5 gap-4">
                 <div className="flex justify-between items-center">
                     <div className="text-sm text-gray-400">
                         {isViewingSelf ? 'Your Journal' : `Viewing: ${targetUserEmail}`}
                     </div>
-                    <StreakBadge streak={userStats.streak} freezeCount={isViewingSelf ? inventoryData.freezeCount : undefined} />
+                    <StreakBadge streak={userStats.streak} freezeCount={isViewingSelf ? inventoryData.freezeCount : undefined} shieldCount={isViewingSelf ? inventoryData.shieldCount : undefined} />
                 </div>
 
                 {/* Heatmap Section */}
@@ -301,7 +302,7 @@ export default async function DashboardPage({ searchParams }: Props) {
                         <StreakFreezeBanner
                             missedDays={recoveryStatus.missedDays}
                             freezesCost={recoveryStatus.freezesCost}
-                            freezesAvailable={recoveryStatus.freezesAvailable}
+                            shieldsCost={recoveryStatus.shieldsCost}
                             streakAtRisk={recoveryStatus.streakAtRisk}
                         />
                     )}
