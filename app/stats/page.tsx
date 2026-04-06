@@ -14,7 +14,8 @@ import { SidebarHeader } from "@/components/SidebarHeader"
 import { ContributionHeatmap } from "@/components/ContributionHeatmap"
 import { TimeOfDayChart } from "@/components/stats/TimeOfDayChart"
 import { WordCloud } from "@/components/stats/WordCloud"
-import { BadgeGrid } from "@/components/stats/BadgeGrid"
+import { AchievementGrid } from "@/components/stats/AchievementGrid"
+import { getAchievementState } from '@/lib/achievementEvaluator'
 import { TrendChart } from "@/components/stats/TrendChart"
 
 type Props = {
@@ -50,6 +51,8 @@ export default async function StatsPage({ searchParams }: Props) {
             : Promise.resolve([] as any[]),
         isViewingSelf ? getInventory(targetUserId) : Promise.resolve(null),
     ]);
+
+    const achievementState = await getAchievementState(targetUserId, stats.achievementMetrics)
 
     const targetUserEmail = !isViewingSelf ? (targetUserInfo?.email || 'Unknown') : session.user.email;
     const targetUserName = !isViewingSelf ? targetUserInfo?.name : session.user.name;
@@ -158,10 +161,10 @@ export default async function StatsPage({ searchParams }: Props) {
                         </div>
                     )}
 
-                    {/* Badges */}
+                    {/* Achievements */}
                     <div className="mb-12">
                         <h2 className="text-xl font-bold text-white mb-4">Achievements</h2>
-                        <BadgeGrid badges={stats.badges} />
+                        <AchievementGrid achievements={achievementState} />
                         {isViewingSelf && inventoryData && (
                             <>
                             <div className="mt-4 glass-card p-4 rounded-xl border border-white/10 flex items-center gap-3">
