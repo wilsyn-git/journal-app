@@ -7,9 +7,10 @@ import { useSearchParams } from 'next/navigation'
 
 type Props = {
     completedDates: { date: string, hasLike: boolean }[] // YYYY-MM-DD + Status
+    frozenDates?: string[]
 }
 
-export function CalendarSidebar({ completedDates }: Props) {
+export function CalendarSidebar({ completedDates, frozenDates = [] }: Props) {
     const searchParams = useSearchParams();
     const activeDateParam = searchParams.get('date');
     const viewUserId = searchParams.get('viewUserId');
@@ -24,6 +25,8 @@ export function CalendarSidebar({ completedDates }: Props) {
 
     const completedMap = new Map<string, boolean>(); // date -> hasLike
     completedDates.forEach(d => completedMap.set(d.date, d.hasLike));
+
+    const frozenSet = new Set(frozenDates)
 
     const year = viewDate.getFullYear();
     const month = viewDate.getMonth(); // 0-indexed
@@ -52,13 +55,13 @@ export function CalendarSidebar({ completedDates }: Props) {
 
     // Check streak length ending at specific date
     const getStreakLength = (dateStr: string) => {
-        if (!completedMap.has(dateStr)) return 0;
+        if (!completedMap.has(dateStr) && !frozenSet.has(dateStr)) return 0;
         let streak = 1;
         const current = new Date(dateStr);
         while (true) {
             current.setDate(current.getDate() - 1);
             const prevStr = current.toISOString().split('T')[0];
-            if (completedMap.has(prevStr)) {
+            if (completedMap.has(prevStr) || frozenSet.has(prevStr)) {
                 streak++;
             } else {
                 break;
@@ -81,6 +84,7 @@ export function CalendarSidebar({ completedDates }: Props) {
             const isLiked = completedMap.get(dateStr);
             const isActive = activeDateParam === dateStr;
             const isToday = dateStr === todayStr;
+            const isFrozen = frozenSet.has(dateStr)
 
             // Visual Logic for connecting bubbles
             const index = startDay + (d - 1);
@@ -113,7 +117,9 @@ export function CalendarSidebar({ completedDates }: Props) {
                         relative w-8 h-8 flex items-center justify-center text-xs font-medium transition-all
                         ${isCompleted
                             ? (isLiked ? 'bg-rose-600 ' : 'bg-primary/80 ') + roundedClass
-                            : 'hover:bg-white/10 rounded-full text-gray-400'
+                            : isFrozen
+                              ? 'bg-sky-500/30 rounded-full text-sky-200'
+                              : 'hover:bg-white/10 rounded-full text-gray-400'
                         }
                         ${isActive ? 'ring-2 ring-white z-10' : ''}
                         ${isToday && !isCompleted ? 'border border-primary/50 text-white' : ''}
@@ -123,6 +129,9 @@ export function CalendarSidebar({ completedDates }: Props) {
                     {d}
                     {showFlame && (
                         <span className="absolute -top-3 -right-2 text-[10px] animate-pulse filter drop-shadow">🔥</span>
+                    )}
+                    {isFrozen && (
+                        <span className="absolute -top-3 -right-2 text-[10px] filter drop-shadow">🧊</span>
                     )}
                 </Link>
             )

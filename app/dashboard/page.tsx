@@ -241,7 +241,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 
                 <TaskSidebar assignments={taskAssignments} />
 
-                <CalendarSidebar completedDates={historyDates} />
+                <CalendarSidebar completedDates={historyDates} frozenDates={frozenDates} />
             </div>
 
             <div className="p-4 border-t border-white/10 bg-black/20">
