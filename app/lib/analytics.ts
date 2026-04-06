@@ -3,7 +3,7 @@ import { cache } from "react"
 import { prisma } from "@/lib/prisma"
 import { getUserTimezone } from "@/lib/timezone"
 import { calculateStreaks } from "@/lib/streaks"
-import { getFrozenDates } from "@/app/actions/inventory"
+import { getFrozenDates } from "@/app/lib/inventoryData"
 
 const STOP_WORDS = new Set([
     'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at',

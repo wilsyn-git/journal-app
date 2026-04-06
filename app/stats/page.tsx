@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma"
 import { resolveUserId } from "@/lib/auth-helpers"
 import { getUserStats } from "@/app/lib/analytics"
 import { getActiveOrganization } from "@/app/lib/data"
-import { getInventory } from '@/app/actions/inventory'
+import { getInventory } from '@/app/lib/inventoryData'
 import { AdminUserSelector } from "@/components/AdminUserSelector"
 import Link from "next/link"
 import Image from "next/image"

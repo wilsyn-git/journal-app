@@ -18,7 +18,7 @@ import { getUserTimezone, getTodayForUser } from "@/lib/timezone"
 import { ContributionHeatmap } from "@/components/ContributionHeatmap"
 import { TaskBanner } from "@/components/TaskBanner"
 import { StreakFreezeBanner } from "@/components/StreakFreezeBanner"
-import { getInventory, getFrozenDates } from "@/app/actions/inventory"
+import { getInventory, getFrozenDates } from "@/app/lib/inventoryData"
 import { detectRecoverableStreak } from "@/lib/streakRecovery"
 
 type Props = {

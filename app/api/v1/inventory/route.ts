@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { authenticateRequest } from '@/lib/api/apiAuth'
 import { apiSuccess, apiError } from '@/lib/api/apiResponse'
-import { getInventory, getFrozenDates } from '@/app/actions/inventory'
+import { getInventory, getFrozenDates } from '@/app/lib/inventoryData'
 
 export async function GET(request: NextRequest) {
   const auth = await authenticateRequest(request)

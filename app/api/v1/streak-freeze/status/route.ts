@@ -3,7 +3,7 @@ import { authenticateRequest } from '@/lib/api/apiAuth'
 import { apiSuccess, apiError } from '@/lib/api/apiResponse'
 import { prisma } from '@/lib/prisma'
 import { getUserTimezoneById, getTodayForUser } from '@/lib/timezone'
-import { getInventory, getFrozenDates } from '@/app/actions/inventory'
+import { getInventory, getFrozenDates } from '@/app/lib/inventoryData'
 import { detectRecoverableStreak } from '@/lib/streakRecovery'
 
 export async function GET(request: NextRequest) {

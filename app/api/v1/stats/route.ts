@@ -4,7 +4,7 @@ import { apiSuccess, apiError } from '@/lib/api/apiResponse'
 import { prisma } from '@/lib/prisma'
 import { getUserTimezoneById } from '@/lib/timezone'
 import { calculateStreaks } from '@/lib/streaks'
-import { getInventory, getFrozenDates } from '@/app/actions/inventory'
+import { getInventory, getFrozenDates } from '@/app/lib/inventoryData'
 
 export async function GET(request: NextRequest) {
   const auth = await authenticateRequest(request)
