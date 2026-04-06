@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma'
 import { resolveUserId } from '@/lib/auth-helpers'
 import { getUserTimezoneById, startOfDayInTimezone, endOfDayInTimezone, getTodayForUser } from "@/lib/timezone"
 import { revalidatePath } from 'next/cache'
+import { STREAK_FREEZE, parseStreakFreezeMetadata } from '@/lib/inventory'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function authenticate(prevState: any, formData: FormData) {
@@ -78,6 +79,65 @@ export async function submitEntry(formData: FormData) {
                 })
             )
         )
+        // Streak freeze earning: increment counter if this is the user's first entry today
+        try {
+            const timezone = await getUserTimezoneById(userId)
+            const todayStr = getTodayForUser(timezone)
+            const startOfDay = startOfDayInTimezone(todayStr, timezone)
+            const endOfDay = endOfDayInTimezone(todayStr, timezone)
+
+            const todayEntryCount = await prisma.journalEntry.count({
+                where: {
+                    userId,
+                    createdAt: { gte: startOfDay, lte: endOfDay },
+                },
+            })
+
+            // Only increment on first entry of the day (the ones we just created count,
+            // so if count equals the number we just inserted, this is the first batch)
+            if (todayEntryCount <= validEntries.length) {
+                const inventory = await prisma.userInventory.upsert({
+                    where: { userId_itemType: { userId, itemType: STREAK_FREEZE.itemType } },
+                    create: {
+                        userId,
+                        itemType: STREAK_FREEZE.itemType,
+                        quantity: 0,
+                        metadata: JSON.stringify({ earningCounter: 1 }),
+                    },
+                    update: {},
+                    select: { quantity: true, metadata: true },
+                })
+
+                // If row already existed, increment the counter
+                if (todayEntryCount > 0 || inventory.quantity > 0 || inventory.metadata) {
+                    const meta = parseStreakFreezeMetadata(inventory.metadata)
+                    const newCounter = meta.earningCounter + 1
+
+                    if (newCounter >= STREAK_FREEZE.earningInterval) {
+                        // Award a freeze (up to cap)
+                        const newQuantity = Math.min(inventory.quantity + 1, STREAK_FREEZE.maxQuantity)
+                        await prisma.userInventory.update({
+                            where: { userId_itemType: { userId, itemType: STREAK_FREEZE.itemType } },
+                            data: {
+                                quantity: newQuantity,
+                                metadata: JSON.stringify({ earningCounter: 0 }),
+                            },
+                        })
+                    } else {
+                        await prisma.userInventory.update({
+                            where: { userId_itemType: { userId, itemType: STREAK_FREEZE.itemType } },
+                            data: {
+                                metadata: JSON.stringify({ earningCounter: newCounter }),
+                            },
+                        })
+                    }
+                }
+            }
+        } catch (earningError) {
+            // Non-critical — don't fail the journal entry save
+            console.error('Streak freeze earning error:', earningError)
+        }
+
         revalidatePath('/dashboard')
         return { success: true }
     } catch (e) {
