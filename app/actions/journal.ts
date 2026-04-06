@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 import { resolveUserId } from '@/lib/auth-helpers'
 import { getUserTimezoneById, startOfDayInTimezone, endOfDayInTimezone, getTodayForUser } from "@/lib/timezone"
 import { revalidatePath } from 'next/cache'
-import { STREAK_FREEZE, parseStreakFreezeMetadata } from '@/lib/inventory'
+import { STREAK_FREEZE, STREAK_SHIELD, parseStreakFreezeMetadata } from '@/lib/inventory'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function authenticate(prevState: any, formData: FormData) {
@@ -128,6 +128,42 @@ export async function submitEntry(formData: FormData) {
                             where: { userId_itemType: { userId, itemType: STREAK_FREEZE.itemType } },
                             data: {
                                 metadata: JSON.stringify({ earningCounter: newCounter }),
+                            },
+                        })
+                    }
+                }
+
+                // Shield earning: same pattern, independent counter
+                const shieldInventory = await prisma.userInventory.upsert({
+                    where: { userId_itemType: { userId, itemType: STREAK_SHIELD.itemType } },
+                    create: {
+                        userId,
+                        itemType: STREAK_SHIELD.itemType,
+                        quantity: 0,
+                        metadata: JSON.stringify({ earningCounter: 1 }),
+                    },
+                    update: {},
+                    select: { quantity: true, metadata: true },
+                })
+
+                if (todayEntryCount > 0 || shieldInventory.quantity > 0 || shieldInventory.metadata) {
+                    const shieldMeta = parseStreakFreezeMetadata(shieldInventory.metadata)
+                    const newShieldCounter = shieldMeta.earningCounter + 1
+
+                    if (newShieldCounter >= STREAK_SHIELD.earningInterval) {
+                        const newShieldQty = Math.min(shieldInventory.quantity + 1, STREAK_SHIELD.maxQuantity)
+                        await prisma.userInventory.update({
+                            where: { userId_itemType: { userId, itemType: STREAK_SHIELD.itemType } },
+                            data: {
+                                quantity: newShieldQty,
+                                metadata: JSON.stringify({ earningCounter: 0 }),
+                            },
+                        })
+                    } else {
+                        await prisma.userInventory.update({
+                            where: { userId_itemType: { userId, itemType: STREAK_SHIELD.itemType } },
+                            data: {
+                                metadata: JSON.stringify({ earningCounter: newShieldCounter }),
                             },
                         })
                     }
