@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { getUserTimezone } from "@/lib/timezone"
 import { calculateStreaks } from "@/lib/streaks"
 import { getFrozenDates } from "@/app/lib/inventoryData"
+import { AchievementMetrics } from '@/lib/achievementEvaluator'
 
 const STOP_WORDS = new Set([
     'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at',
@@ -124,44 +125,15 @@ export const getUserStats = cache(async function getUserStats(userId: string) {
     textEntries.forEach(e => totalWords += e.answer.trim().split(/\s+/).length);
     const avgWords = textEntries.length > 0 ? Math.round(totalWords / textEntries.length) : 0;
 
-    // Badges Logic
-    const badges = [
-        {
-            id: 'early-bird',
-            name: 'Early Bird',
-            icon: '🌅',
-            description: '5 entries logged between 4AM and 8AM',
-            unlocked: hourCounts.slice(4, 9).reduce((a, b) => a + b, 0) >= 5
-        },
-        {
-            id: 'night-owl',
-            name: 'Night Owl',
-            icon: '🦉',
-            description: '5 entries logged between 10PM and 4AM',
-            unlocked: (hourCounts[22] + hourCounts[23] + hourCounts[0] + hourCounts[1] + hourCounts[2] + hourCounts[3]) >= 5
-        },
-        {
-            id: 'streak-week',
-            name: 'On a Roll',
-            icon: '🔥',
-            description: 'Achieved a 7-day streak',
-            unlocked: max >= 7
-        },
-        {
-            id: 'dedicated',
-            name: 'Dedicated',
-            icon: '✍️',
-            description: 'Logged 100 total answers',
-            unlocked: entries.length >= 100
-        },
-        {
-            id: 'wordsmith',
-            name: 'Wordsmith',
-            icon: '📚',
-            description: 'Average word count over 50',
-            unlocked: avgWords >= 50 && textEntries.length > 5
-        }
-    ];
+    // Achievement metrics
+    const lateNightEntries = hourCounts[22] + hourCounts[23]
+
+    const achievementMetrics: AchievementMetrics = {
+        maxStreak: max,
+        totalDaysJournaled: uniqueDays.size,
+        totalEntries: entries.length,
+        lateNightEntries,
+    }
 
     // Task Stats (Daily Habits)
     const taskMap = new Map<string, { prompt: string, type: string, days: Set<string> }>();
@@ -246,18 +218,17 @@ export const getUserStats = cache(async function getUserStats(userId: string) {
     }
 
     return {
-        streak: current, // Legacy
+        streak: current,
         currentStreak: current,
         maxStreak: max,
         totalEntries: entries.length,
         daysCompleted: uniqueDays.size,
         avgWords,
         taskStats,
-        trendStats, // New Range Data
-        // New Data
-        heatmap,     // { "2024-01-01": 5 }
-        hourCounts,  // [0, 0, 5, ...] 24 items
-        wordCloud: filteredWords, // [{text: "foo", value: 10}]
-        badges
+        trendStats,
+        heatmap,
+        hourCounts,
+        wordCloud: filteredWords,
+        achievementMetrics,
     }
 })
