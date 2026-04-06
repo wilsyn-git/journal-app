@@ -163,6 +163,7 @@ export default async function StatsPage({ searchParams }: Props) {
                         <h2 className="text-xl font-bold text-white mb-4">Achievements</h2>
                         <BadgeGrid badges={stats.badges} />
                         {isViewingSelf && inventoryData && (
+                            <>
                             <div className="mt-4 glass-card p-4 rounded-xl border border-white/10 flex items-center gap-3">
                                 <span className="text-2xl">🧊</span>
                                 <div className="flex-1">
@@ -188,6 +189,32 @@ export default async function StatsPage({ searchParams }: Props) {
                                     View
                                 </Link>
                             </div>
+                            <div className="mt-2 glass-card p-4 rounded-xl border border-white/10 flex items-center gap-3">
+                                <span className="text-2xl">🛡️</span>
+                                <div className="flex-1">
+                                    {inventoryData.shieldCount < inventoryData.shieldMaxQuantity ? (
+                                        <>
+                                            <span className="text-sm text-white font-medium">
+                                                {inventoryData.shieldEarningInterval - inventoryData.shieldEarningCounter} days from +1 Streak Shield
+                                            </span>
+                                            <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden mt-1">
+                                                <div
+                                                    className="h-full bg-amber-500 rounded-full"
+                                                    style={{ width: `${Math.round((inventoryData.shieldEarningCounter / inventoryData.shieldEarningInterval) * 100)}%` }}
+                                                />
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <span className="text-sm text-amber-400">
+                                            Streak Shields at max ({inventoryData.shieldMaxQuantity}/{inventoryData.shieldMaxQuantity})
+                                        </span>
+                                    )}
+                                </div>
+                                <Link href="/inventory" className="text-xs text-amber-400 hover:text-white transition-colors">
+                                    View
+                                </Link>
+                            </div>
+                            </>
                         )}
                     </div>
 
