@@ -7,6 +7,7 @@ import { getActiveOrganization } from '@/app/lib/data'
 import Link from 'next/link'
 import { SidebarHeader } from '@/components/SidebarHeader'
 import { StreakFreezeItem } from '@/components/StreakFreezeItem'
+import { StreakShieldItem } from '@/components/StreakShieldItem'
 
 export const metadata: Metadata = {
     title: 'Inventory | myJournal',
@@ -63,6 +64,15 @@ export default async function InventoryPage() {
                         earningInterval={inventory.earningInterval}
                         usageHistory={sortedFrozenDates}
                     />
+                    <div className="mt-3">
+                        <StreakShieldItem
+                            shieldCount={inventory.shieldCount}
+                            maxQuantity={inventory.shieldMaxQuantity}
+                            earningCounter={inventory.shieldEarningCounter}
+                            earningInterval={inventory.shieldEarningInterval}
+                            usageHistory={[]}
+                        />
+                    </div>
                 </div>
             </main>
         </div>
