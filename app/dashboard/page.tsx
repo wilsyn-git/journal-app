@@ -20,6 +20,8 @@ import { TaskBanner } from "@/components/TaskBanner"
 import { StreakFreezeBanner } from "@/components/StreakFreezeBanner"
 import { getInventory, getFrozenDates } from "@/app/lib/inventoryData"
 import { detectRecoverableStreak } from "@/lib/streakRecovery"
+import { evaluateAchievements, getAndMarkUnnotifiedAchievements } from '@/lib/achievementEvaluator'
+import { AchievementToasts } from '@/components/AchievementToasts'
 
 type Props = {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -113,6 +115,18 @@ export default async function DashboardPage({ searchParams }: Props) {
             new Set(frozenDates)
           )
         : null
+
+    // Achievement evaluation — runs on dashboard load
+    let unnotifiedAchievements: { name: string; icon: string; label: string }[] = []
+    if (isViewingSelf) {
+        await evaluateAchievements(targetUserId, userStats.achievementMetrics)
+        const unnotified = await getAndMarkUnnotifiedAchievements(targetUserId)
+        unnotifiedAchievements = unnotified.map((a) => ({
+            name: a.name,
+            icon: a.icon,
+            label: a.label,
+        }))
+    }
 
     const incompleteTasks = taskAssignments.filter(a => !a.completedAt).length
     const urgentTasks = taskAssignments.filter(a => !a.completedAt && a.task.priority === 0).length
@@ -281,6 +295,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 
     return (
         <DashboardShell sidebar={SidebarContent} streak={userStats.streak} freezeCount={isViewingSelf ? inventoryData.freezeCount : undefined} shieldCount={isViewingSelf ? inventoryData.shieldCount : undefined}>
+            <AchievementToasts achievements={unnotifiedAchievements} />
             {/* Desktop Header / Stats Bar */}
             <div className="hidden md:flex flex-col p-6 px-10 border-b border-white/5 gap-4">
                 <div className="flex justify-between items-center">
