@@ -275,14 +275,14 @@ export default async function DashboardPage({ searchParams }: Props) {
     );
 
     return (
-        <DashboardShell sidebar={SidebarContent} streak={userStats.streak}>
+        <DashboardShell sidebar={SidebarContent} streak={userStats.streak} freezeCount={isViewingSelf ? inventoryData.freezeCount : undefined}>
             {/* Desktop Header / Stats Bar */}
             <div className="hidden md:flex flex-col p-6 px-10 border-b border-white/5 gap-4">
                 <div className="flex justify-between items-center">
                     <div className="text-sm text-gray-400">
                         {isViewingSelf ? 'Your Journal' : `Viewing: ${targetUserEmail}`}
                     </div>
-                    <StreakBadge streak={userStats.streak} />
+                    <StreakBadge streak={userStats.streak} freezeCount={isViewingSelf ? inventoryData.freezeCount : undefined} />
                 </div>
 
                 {/* Heatmap Section */}
