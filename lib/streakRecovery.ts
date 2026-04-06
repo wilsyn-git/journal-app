@@ -3,36 +3,37 @@ import { STREAK_FREEZE } from '@/lib/inventory'
 export type RecoveryStatus = {
   needsRecovery: boolean
   missedDays: string[]
-  freezesAvailable: number
   freezesCost: number
+  shieldsCost: number
+  freezesAvailable: number
+  shieldsAvailable: number
   streakAtRisk: number
 }
 
 /**
  * Determines if a user has a recoverable broken streak.
- *
- * @param sortedJournalDays - Descending sorted YYYY-MM-DD strings of days the user journaled
- * @param todayStr - Today's date as YYYY-MM-DD in the user's timezone
- * @param freezesAvailable - Number of streak freezes the user has
- * @param frozenDates - Set of already-frozen dates
+ * Uses tiered recovery: freezes first (within grace window), shields for the rest.
  */
 export function detectRecoverableStreak(
   sortedJournalDays: string[],
   todayStr: string,
   freezesAvailable: number,
+  shieldsAvailable: number,
   frozenDates: Set<string>
 ): RecoveryStatus {
   const noRecovery: RecoveryStatus = {
     needsRecovery: false,
     missedDays: [],
-    freezesAvailable,
     freezesCost: 0,
+    shieldsCost: 0,
+    freezesAvailable,
+    shieldsAvailable,
     streakAtRisk: 0,
   }
 
-  if (sortedJournalDays.length === 0 || freezesAvailable === 0) return noRecovery
+  if (sortedJournalDays.length === 0) return noRecovery
 
-  // Find the most recent journal day
+  // Find the most recent covered day
   const allCovered = new Set([...sortedJournalDays, ...frozenDates])
   const allSorted = Array.from(allCovered).sort().reverse()
   const lastActiveDay = allSorted[0]
@@ -42,13 +43,9 @@ export function detectRecoverableStreak(
   const lastActive = new Date(lastActiveDay + 'T12:00:00Z')
   const gapDays = Math.round((today.getTime() - lastActive.getTime()) / (1000 * 3600 * 24))
 
-  // No gap or already journaled today
   if (gapDays <= 0) return noRecovery
 
-  // If today is a journal day, check for interior gaps
-  const todayIsJournalDay = sortedJournalDays.includes(todayStr) || frozenDates.has(todayStr)
-
-  // Collect missed days (the gap between last active day and today)
+  // Collect missed days
   const missedDays: string[] = []
   for (let i = 1; i < gapDays; i++) {
     const d = new Date(lastActive.getTime() + i * 24 * 3600 * 1000)
@@ -58,20 +55,27 @@ export function detectRecoverableStreak(
     }
   }
 
-  // Also include today if it's not covered and the gap is within grace window
-  if (!todayIsJournalDay && gapDays <= STREAK_FREEZE.graceWindowDays + 1) {
-    // Today doesn't count as missed — the user is here now.
-    // Only the days between last active and today are missed.
-  }
-
   if (missedDays.length === 0) return noRecovery
-  if (missedDays.length > STREAK_FREEZE.graceWindowDays) return noRecovery
-  if (missedDays.length > freezesAvailable) {
-    return { ...noRecovery, needsRecovery: true, missedDays, freezesCost: missedDays.length }
+
+  // Tiered cost calculation
+  const withinGrace = missedDays.length <= STREAK_FREEZE.graceWindowDays
+  let freezesCost = 0
+  let shieldsCost = 0
+
+  if (withinGrace) {
+    // Prefer freezes, shields cover remainder
+    freezesCost = Math.min(missedDays.length, freezesAvailable)
+    shieldsCost = missedDays.length - freezesCost
+  } else {
+    // Beyond grace window — only shields can help
+    freezesCost = 0
+    shieldsCost = missedDays.length
   }
 
-  // Calculate the streak that would be preserved
-  // Walk backwards from lastActiveDay counting consecutive covered days
+  // Check if we can afford it
+  if (shieldsCost > shieldsAvailable) return noRecovery
+
+  // Calculate the streak at risk
   let streakAtRisk = 1
   for (let i = 0; i < allSorted.length - 1; i++) {
     const d1 = new Date(allSorted[i] + 'T12:00:00Z')
@@ -84,8 +88,10 @@ export function detectRecoverableStreak(
   return {
     needsRecovery: true,
     missedDays,
+    freezesCost,
+    shieldsCost,
     freezesAvailable,
-    freezesCost: missedDays.length,
+    shieldsAvailable,
     streakAtRisk,
   }
 }
