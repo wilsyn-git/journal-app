@@ -17,6 +17,9 @@ import { AdminUserSelector } from "@/components/AdminUserSelector"
 import { getUserTimezone, getTodayForUser } from "@/lib/timezone"
 import { ContributionHeatmap } from "@/components/ContributionHeatmap"
 import { TaskBanner } from "@/components/TaskBanner"
+import { StreakFreezeBanner } from "@/components/StreakFreezeBanner"
+import { getInventory, getFrozenDates } from "@/app/actions/inventory"
+import { detectRecoverableStreak } from "@/lib/streakRecovery"
 
 type Props = {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -62,7 +65,9 @@ export default async function DashboardPage({ searchParams }: Props) {
         userWithOrg,
         targetUserOrg,
         currentUser,
-        taskAssignments
+        taskAssignments,
+        inventoryData,
+        frozenDates,
     ] = await Promise.all([
         getJournalHistory(targetUserId),
         getUserStats(targetUserId),
@@ -94,8 +99,19 @@ export default async function DashboardPage({ searchParams }: Props) {
                 task: { archivedAt: null, organizationId: session.user.organizationId }
             },
             include: { task: true }
-        })
+        }),
+        getInventory(targetUserId),
+        getFrozenDates(targetUserId),
     ]);
+
+    const recoveryStatus = isViewingSelf
+        ? detectRecoverableStreak(
+            Object.keys(userStats.heatmap).sort().reverse(),
+            getTodayForUser(timezone),
+            inventoryData.freezeCount,
+            new Set(frozenDates)
+          )
+        : null
 
     const incompleteTasks = taskAssignments.filter(a => !a.completedAt).length
     const urgentTasks = taskAssignments.filter(a => !a.completedAt && a.task.priority === 0).length
@@ -277,6 +293,14 @@ export default async function DashboardPage({ searchParams }: Props) {
 
             <div className="flex-1 overflow-y-auto p-4 md:p-10 custom-scrollbar">
                 <div className="max-w-7xl mx-auto w-full">
+                    {recoveryStatus?.needsRecovery && (
+                        <StreakFreezeBanner
+                            missedDays={recoveryStatus.missedDays}
+                            freezesCost={recoveryStatus.freezesCost}
+                            freezesAvailable={recoveryStatus.freezesAvailable}
+                            streakAtRisk={recoveryStatus.streakAtRisk}
+                        />
+                    )}
                     <TaskBanner totalTasks={incompleteTasks} urgentCount={urgentTasks} />
                     {ContentComponent}
                 </div>
