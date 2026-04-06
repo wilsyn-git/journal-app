@@ -23,6 +23,14 @@ export async function GET(request: NextRequest) {
           target: inventory.earningInterval,
         },
       },
+      streakShields: {
+        count: inventory.shieldCount,
+        max: inventory.shieldMaxQuantity,
+        earningProgress: {
+          current: inventory.shieldEarningCounter,
+          target: inventory.shieldEarningInterval,
+        },
+      },
       frozenDates,
     })
   } catch (error) {

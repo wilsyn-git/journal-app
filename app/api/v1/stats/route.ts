@@ -159,6 +159,11 @@ export async function GET(request: NextRequest) {
         earningProgress: inventory.earningCounter,
         earningTarget: inventory.earningInterval,
       },
+      shields: {
+        count: inventory.shieldCount,
+        earningProgress: inventory.shieldEarningCounter,
+        earningTarget: inventory.shieldEarningInterval,
+      },
     })
   } catch (error) {
     console.error('Stats error:', error)
