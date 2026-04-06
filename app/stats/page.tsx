@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma"
 import { resolveUserId } from "@/lib/auth-helpers"
 import { getUserStats } from "@/app/lib/analytics"
 import { getActiveOrganization } from "@/app/lib/data"
+import { getInventory } from '@/app/actions/inventory'
 import { AdminUserSelector } from "@/components/AdminUserSelector"
 import Link from "next/link"
 import Image from "next/image"
@@ -38,7 +39,7 @@ export default async function StatsPage({ searchParams }: Props) {
     const isViewingSelf = targetUserId === currentUserId;
 
     // Fetch stats, org, target user info, and admin user list in parallel
-    const [stats, org, targetUserInfo, allUsers] = await Promise.all([
+    const [stats, org, targetUserInfo, allUsers, inventoryData] = await Promise.all([
         getUserStats(targetUserId || ""),
         getActiveOrganization(),
         !isViewingSelf
@@ -47,6 +48,7 @@ export default async function StatsPage({ searchParams }: Props) {
         isAdmin
             ? prisma.user.findMany({ select: { id: true, email: true, name: true }, orderBy: { email: 'asc' } })
             : Promise.resolve([] as any[]),
+        isViewingSelf ? getInventory(targetUserId) : Promise.resolve(null),
     ]);
 
     const targetUserEmail = !isViewingSelf ? (targetUserInfo?.email || 'Unknown') : session.user.email;
@@ -160,6 +162,33 @@ export default async function StatsPage({ searchParams }: Props) {
                     <div className="mb-12">
                         <h2 className="text-xl font-bold text-white mb-4">Achievements</h2>
                         <BadgeGrid badges={stats.badges} />
+                        {isViewingSelf && inventoryData && (
+                            <div className="mt-4 glass-card p-4 rounded-xl border border-white/10 flex items-center gap-3">
+                                <span className="text-2xl">🧊</span>
+                                <div className="flex-1">
+                                    {inventoryData.freezeCount < inventoryData.maxQuantity ? (
+                                        <>
+                                            <span className="text-sm text-white font-medium">
+                                                {inventoryData.earningInterval - inventoryData.earningCounter} days from +1 Streak Freeze
+                                            </span>
+                                            <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden mt-1">
+                                                <div
+                                                    className="h-full bg-sky-500 rounded-full"
+                                                    style={{ width: `${Math.round((inventoryData.earningCounter / inventoryData.earningInterval) * 100)}%` }}
+                                                />
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <span className="text-sm text-sky-400">
+                                            Streak Freezes at max ({inventoryData.maxQuantity}/{inventoryData.maxQuantity})
+                                        </span>
+                                    )}
+                                </div>
+                                <Link href="/inventory" className="text-xs text-sky-400 hover:text-white transition-colors">
+                                    View
+                                </Link>
+                            </div>
+                        )}
                     </div>
 
                     {/* Task Streaks */}
