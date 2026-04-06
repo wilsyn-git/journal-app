@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { getUserTimezoneById } from '@/lib/timezone'
 import { calculateStreaks } from '@/lib/streaks'
 import { getInventory, getFrozenDates } from '@/app/lib/inventoryData'
+import { getAchievementState, AchievementMetrics } from '@/lib/achievementEvaluator'
 
 export async function GET(request: NextRequest) {
   const auth = await authenticateRequest(request)
@@ -78,45 +79,16 @@ export async function GET(request: NextRequest) {
     textEntries.forEach((e) => (totalWords += e.answer.trim().split(/\s+/).length))
     const avgWords = textEntries.length > 0 ? Math.round(totalWords / textEntries.length) : 0
 
-    // Badges
-    const badges = [
-      {
-        id: 'early-bird',
-        name: 'Early Bird',
-        icon: '🌅',
-        description: '5 entries logged between 4AM and 8AM',
-        unlocked: hourCounts.slice(4, 9).reduce((a, b) => a + b, 0) >= 5,
-      },
-      {
-        id: 'night-owl',
-        name: 'Night Owl',
-        icon: '🦉',
-        description: '5 entries logged between 10PM and 4AM',
-        unlocked:
-          hourCounts[22] + hourCounts[23] + hourCounts[0] + hourCounts[1] + hourCounts[2] + hourCounts[3] >= 5,
-      },
-      {
-        id: 'streak-week',
-        name: 'On a Roll',
-        icon: '🔥',
-        description: 'Achieved a 7-day streak',
-        unlocked: max >= 7,
-      },
-      {
-        id: 'dedicated',
-        name: 'Dedicated',
-        icon: '✍️',
-        description: 'Logged 100 total answers',
-        unlocked: entries.length >= 100,
-      },
-      {
-        id: 'wordsmith',
-        name: 'Wordsmith',
-        icon: '📚',
-        description: 'Average word count over 50',
-        unlocked: avgWords >= 50 && textEntries.length > 5,
-      },
-    ]
+    // Achievement metrics
+    const lateNightEntries = hourCounts[22] + hourCounts[23]
+    const achievementMetrics: AchievementMetrics = {
+      maxStreak: current,
+      totalDaysJournaled: new Set(Object.keys(heatmap)).size,
+      totalEntries: entries.length,
+      lateNightEntries,
+    }
+
+    const achievements = await getAchievementState(userId, achievementMetrics)
 
     // Habit stats (CHECKBOX/RADIO)
     const taskMap = new Map<string, { prompt: string; days: Set<string> }>()
@@ -152,7 +124,7 @@ export async function GET(request: NextRequest) {
       daysCompleted: new Set(Object.keys(heatmap)).size,
       avgWords,
       heatmap,
-      badges,
+      achievements,
       taskStats,
       freezes: {
         count: inventory.freezeCount,
