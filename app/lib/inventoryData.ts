@@ -1,18 +1,28 @@
 import { prisma } from '@/lib/prisma'
-import { STREAK_FREEZE, parseStreakFreezeMetadata } from '@/lib/inventory'
+import { STREAK_FREEZE, STREAK_SHIELD, parseItemMetadata } from '@/lib/inventory'
 
 export async function getInventory(userId: string) {
-  const inventory = await prisma.userInventory.findUnique({
-    where: { userId_itemType: { userId, itemType: STREAK_FREEZE.itemType } },
-  })
+  const [freezeRow, shieldRow] = await Promise.all([
+    prisma.userInventory.findUnique({
+      where: { userId_itemType: { userId, itemType: STREAK_FREEZE.itemType } },
+    }),
+    prisma.userInventory.findUnique({
+      where: { userId_itemType: { userId, itemType: STREAK_SHIELD.itemType } },
+    }),
+  ])
 
-  const metadata = parseStreakFreezeMetadata(inventory?.metadata ?? null)
+  const freezeMeta = parseItemMetadata(freezeRow?.metadata ?? null)
+  const shieldMeta = parseItemMetadata(shieldRow?.metadata ?? null)
 
   return {
-    freezeCount: inventory?.quantity ?? 0,
-    earningCounter: metadata.earningCounter,
+    freezeCount: freezeRow?.quantity ?? 0,
+    earningCounter: freezeMeta.earningCounter,
     earningInterval: STREAK_FREEZE.earningInterval,
     maxQuantity: STREAK_FREEZE.maxQuantity,
+    shieldCount: shieldRow?.quantity ?? 0,
+    shieldEarningCounter: shieldMeta.earningCounter,
+    shieldEarningInterval: STREAK_SHIELD.earningInterval,
+    shieldMaxQuantity: STREAK_SHIELD.maxQuantity,
   }
 }
 
