@@ -42,21 +42,31 @@ export async function updateUserGroup(id: string, formData: FormData) {
     const name = formData.get('name') as string;
     const description = formData.get('description') as string;
 
-    await prisma.userGroup.update({
-        where: { id },
-        data: {
-            name,
-            description
-        }
-    })
-    revalidatePath(`/admin/groups/${id}`);
-    revalidatePath('/admin/groups');
+    try {
+        await prisma.userGroup.update({
+            where: { id },
+            data: {
+                name,
+                description
+            }
+        })
+        revalidatePath(`/admin/groups/${id}`);
+        revalidatePath('/admin/groups');
+        return { success: true }
+    } catch (e) {
+        console.error("Update Group Error:", e);
+        return { error: 'Failed to update group' }
+    }
 }
 
 export async function deleteGroup(id: string) {
     await ensureAdmin();
-    await prisma.userGroup.delete({ where: { id } });
-    revalidatePath('/admin/groups');
+    try {
+        await prisma.userGroup.delete({ where: { id } });
+        revalidatePath('/admin/groups');
+    } catch (e) {
+        console.error("Delete Group Error:", e);
+    }
 }
 
 export async function updateGroupProfiles(groupId: string, formData: FormData) {
@@ -90,11 +100,17 @@ export async function updateGroupProfiles(groupId: string, formData: FormData) {
         }
     }
 
-    await prisma.userGroup.update({
-        where: { id: groupId },
-        data: dataToUpdate
-    })
-    revalidatePath(`/admin/groups/${groupId}`);
+    try {
+        await prisma.userGroup.update({
+            where: { id: groupId },
+            data: dataToUpdate
+        })
+        revalidatePath(`/admin/groups/${groupId}`);
+        return { success: true }
+    } catch (e) {
+        console.error("Update Group Profiles Error:", e);
+        return { error: 'Failed to update group profiles' }
+    }
 }
 
 export async function addUserToGroup(groupId: string, formData: FormData) {
@@ -121,13 +137,19 @@ export async function addUserToGroup(groupId: string, formData: FormData) {
 
 export async function removeUserFromGroup(groupId: string, userId: string) {
     await ensureAdmin();
-    await prisma.userGroup.update({
-        where: { id: groupId },
-        data: {
-            users: {
-                disconnect: { id: userId }
+    try {
+        await prisma.userGroup.update({
+            where: { id: groupId },
+            data: {
+                users: {
+                    disconnect: { id: userId }
+                }
             }
-        }
-    })
-    revalidatePath(`/admin/groups/${groupId}`);
+        })
+        revalidatePath(`/admin/groups/${groupId}`);
+        return { success: true }
+    } catch (e) {
+        console.error("Remove User From Group Error:", e);
+        return { error: 'Failed to remove user from group' }
+    }
 }
