@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { PROMPT_TYPES } from '@/lib/promptConstants';
 
 type Prompt = {
     id: string;
@@ -48,7 +49,7 @@ export function PromptCard({ prompt, value = "", onChange, disabled }: PromptCar
         if (onChange) onChange(JSON.stringify(currentValues));
     };
 
-    const isText = prompt.type === 'TEXT';
+    const isText = prompt.type === PROMPT_TYPES.TEXT;
 
     if (isText) {
         return (
@@ -71,7 +72,7 @@ export function PromptCard({ prompt, value = "", onChange, disabled }: PromptCar
     // Fallback options if none provided
     const displayOptions = options.length > 0 ? options : ['Yes', 'No'];
 
-    if (prompt.type === 'RANGE') {
+    if (prompt.type === PROMPT_TYPES.RANGE) {
         const minLabel = options.length >= 2 ? options[0] : 'Low';
         const maxLabel = options.length >= 2 ? options[1] : 'High';
 
@@ -123,7 +124,7 @@ export function PromptCard({ prompt, value = "", onChange, disabled }: PromptCar
             <h3 className="text-base font-medium text-white shrink-0">{prompt.content}</h3>
 
             <div className="flex flex-wrap items-center gap-4">
-                {prompt.type === 'RADIO' && displayOptions.map((option, idx) => (
+                {prompt.type === PROMPT_TYPES.RADIO && displayOptions.map((option, idx) => (
                     <label key={idx} className="flex items-center space-x-2 cursor-pointer group/option">
                         <input
                             type="radio"
@@ -138,7 +139,7 @@ export function PromptCard({ prompt, value = "", onChange, disabled }: PromptCar
                     </label>
                 ))}
 
-                {prompt.type === 'CHECKBOX' && displayOptions.map((option, idx) => {
+                {prompt.type === PROMPT_TYPES.CHECKBOX && displayOptions.map((option, idx) => {
                     let isChecked = false;
                     try {
                         const currentValues = value ? JSON.parse(value) : [];

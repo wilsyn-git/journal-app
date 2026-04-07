@@ -19,15 +19,7 @@ export function JournalEditor({ prompts, initialAnswers = {} }: JournalEditorPro
     const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
-    // Track pending saves to avoid race conditions or use a queue?
-    // Simple debounce per prompt is likely sufficient. 
-    // Actually, we want to debounce the *call* to server.
-
-    // We use a ref to keep track of timeout IDs for each prompt to debounce them individually if user switches between them quickly?
-    // Or just one global saver? 
-    // Let's debounce per prompt ID so editing one doesn't delay saving another if we wanted that, 
-    // but individually is safer.
-
+    // Debounce saves per prompt ID so editing one doesn't delay saving another
     const timeoutRefs = useRef<Record<string, NodeJS.Timeout>>({});
 
     const debouncedSave = useCallback((promptId: string, value: string) => {

@@ -2,6 +2,7 @@
 
 import { createPrompt, updatePrompt } from "@/app/actions/prompts"
 import { useState } from "react"
+import { PROMPT_TYPES } from '@/lib/promptConstants'
 import { useRouter } from "next/navigation"
 
 type Prompt = {
@@ -19,7 +20,7 @@ type Category = {
 
 export function PromptEditor({ prompt, categories, categoryId, mode = 'create' }: { prompt?: Prompt, categories?: Category[], categoryId?: string, mode?: 'create' | 'edit' }) {
     const router = useRouter();
-    const [type, setType] = useState(prompt?.type || 'TEXT');
+    const [type, setType] = useState(prompt?.type || PROMPT_TYPES.TEXT);
 
     // Parse options if editing
     let defaultOptions = '';
@@ -30,7 +31,7 @@ export function PromptEditor({ prompt, categories, categoryId, mode = 'create' }
         try {
             const parsed = JSON.parse(prompt.options);
             if (Array.isArray(parsed)) {
-                if (prompt.type === 'RANGE' && parsed.length >= 2) {
+                if (prompt.type === PROMPT_TYPES.RANGE && parsed.length >= 2) {
                     rangeMinLabel = parsed[0];
                     rangeMaxLabel = parsed[1];
                 } else {
@@ -43,7 +44,7 @@ export function PromptEditor({ prompt, categories, categoryId, mode = 'create' }
     return (
         <form action={async (formData) => {
             // Pre-process options for RANGE before submitting
-            if (type === 'RANGE') {
+            if (type === PROMPT_TYPES.RANGE) {
                 const min = formData.get('rangeMinLabel') as string || 'Low';
                 const max = formData.get('rangeMaxLabel') as string || 'High';
                 formData.set('options', JSON.stringify([min, max]));
@@ -99,7 +100,7 @@ export function PromptEditor({ prompt, categories, categoryId, mode = 'create' }
                 </div>
 
                 {/* Dynamic Options Field based on Type */}
-                {type === 'RANGE' ? (
+                {type === PROMPT_TYPES.RANGE ? (
                     <div className="space-y-2">
                         <label htmlFor="prompt-range-min" className="block text-sm font-medium text-gray-300">Slider Labels</label>
                         <div className="flex gap-2">
@@ -130,11 +131,11 @@ export function PromptEditor({ prompt, categories, categoryId, mode = 'create' }
                             name="options"
                             type="text"
                             defaultValue={defaultOptions}
-                            placeholder={type === 'TEXT' ? "Not applicable" : "Default: Yes, No"}
-                            disabled={type === 'TEXT'}
-                            className={`w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary outline-none ${type === 'TEXT' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            placeholder={type === PROMPT_TYPES.TEXT ? "Not applicable" : "Default: Yes, No"}
+                            disabled={type === PROMPT_TYPES.TEXT}
+                            className={`w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary outline-none ${type === PROMPT_TYPES.TEXT ? 'opacity-50 cursor-not-allowed' : ''}`}
                         />
-                        {(type === 'RADIO' || type === 'CHECKBOX') && (
+                        {(type === PROMPT_TYPES.RADIO || type === PROMPT_TYPES.CHECKBOX) && (
                             <p className="text-xs text-gray-400 mt-1">Leave blank for &quot;Yes, No&quot;. Comma separated.</p>
                         )}
                     </div>

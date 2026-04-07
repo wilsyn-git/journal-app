@@ -52,10 +52,6 @@ export async function submitEntry(formData: FormData) {
 
     const entries = [];
     for (const [promptId, values] of promptAnswers.entries()) {
-        // Join multiple values (checkboxes) with a delimiter or JSON array
-        // Let's use JSON array for multiple values, plain string for single.
-        // OR just JSON stringify everything for consistency if multiple?
-        // Simpler: comma separated for now, or JSON.
         const answer = values.length > 1 ? JSON.stringify(values) : values[0];
 
         entries.push({

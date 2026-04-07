@@ -41,8 +41,6 @@ export function TrendChart({ data, name }: { data: DataPoint[], name: string }) 
     // Generate Path
     const points = validData.map((d, i) => `${getX(i)},${getY(d.value)}`).join(' ');
 
-    // Smooth helper (simple version)
-    // Actually, simple polyline is often clearer for distinct daily points, but let's try a simple fill
     const fillPath = `${points} ${getX(validData.length - 1)},${height - padding} ${padding},${height - padding}`;
 
     return (

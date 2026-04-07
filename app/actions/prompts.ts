@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { ensureAdmin } from './helpers'
+import { PROMPT_TYPES } from '@/lib/promptConstants'
 
 // --- PROMPT CATEGORIES ---
 
@@ -91,11 +92,11 @@ export async function createPrompt(formData: FormData) {
     const categoryString = formData.get('categoryString') as string;
 
     let options = null;
-    if (type === 'RANGE') {
+    if (type === PROMPT_TYPES.RANGE) {
         // Range options are sent as JSON string ["Min", "Max"] from client
         options = optionsRaw;
         if (!options) options = JSON.stringify(["Low", "High"]);
-    } else if ((type === 'RADIO' || type === 'CHECKBOX')) {
+    } else if ((type === PROMPT_TYPES.RADIO || type === PROMPT_TYPES.CHECKBOX)) {
         if (optionsRaw) {
             const arr = optionsRaw.split(',').map(s => s.trim()).filter(Boolean);
             options = JSON.stringify(arr);
@@ -157,10 +158,10 @@ export async function updatePrompt(id: string, formData: FormData) {
     const categoryId = formData.get('categoryId') as string;
 
     let options = null;
-    if (type === 'RANGE') {
+    if (type === PROMPT_TYPES.RANGE) {
         options = optionsRaw;
         if (!options) options = JSON.stringify(["Low", "High"]);
-    } else if ((type === 'RADIO' || type === 'CHECKBOX')) {
+    } else if ((type === PROMPT_TYPES.RADIO || type === PROMPT_TYPES.CHECKBOX)) {
         if (optionsRaw) {
             const arr = optionsRaw.split(',').map(s => s.trim()).filter(Boolean);
             options = JSON.stringify(arr);
@@ -303,7 +304,7 @@ export async function importPrompts(formData: FormData) {
         // --- 2. Process Data ---
 
         // Helper to process a single prompt
-        const processPrompt = async (categoryName: string, promptText: string, type: string = 'TEXT', options: string[] | null = null) => {
+        const processPrompt = async (categoryName: string, promptText: string, type: string = PROMPT_TYPES.TEXT, options: string[] | null = null) => {
             if (!categoryName || !promptText) return;
 
             const categoryNameClean = categoryName.trim();

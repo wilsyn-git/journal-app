@@ -18,9 +18,7 @@ export async function forgotPassword(formData: FormData) {
         })
 
         if (!user) {
-            // Security: Don't reveal if user exists.
-            // But for dev/admin apps, sometimes helpful. 
-            // Let's stick to secure standard: "If that email exists, we sent a link."
+            // Don't reveal whether user exists
             return { success: true, message: "If an account exists, a reset link has been sent." }
         }
 

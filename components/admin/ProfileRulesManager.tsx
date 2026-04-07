@@ -31,17 +31,7 @@ export function ProfileRulesManager({
     const [editingRuleId, setEditingRuleId] = useState<string | null>(null)
     const [error, setError] = useState<string | null>(null)
 
-    // Optimistic UI could be handled here, but server actions with revalidatePath usually suffcie for admin panels.
-
-    // We'll use a controlled form approach for better UX on "Include All" toggle?
-    // Or just simple JS toggle if we want to avoid complex state management for every rule row.
-    // For the "Add" form, we can use local state.
     const [addIncludeAll, setAddIncludeAll] = useState(false);
-
-    // For editing, we might need to rely on the `rule` prop or local state if we want instant feedback.
-    // Since we map over rules, we can use a component per rule or just uncontrolled inputs with some CSS/JS?
-    // Let's make a small helper component for the form fields to reuse logic?
-    // Or just inline it for now.
 
     return (
         <div className="glass-card p-6 border border-white/10 rounded-xl">

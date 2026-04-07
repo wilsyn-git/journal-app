@@ -44,9 +44,6 @@ export async function updateProfile(userId: string, formData: FormData) {
         const filepath = join(uploadDir, filename)
         const url = `/uploads/avatars/${filename}`
 
-        // Ensure directory exists (node fs/promises doesn't have ensureDir, assume public exists or we create it?)
-        // Let's assume public/uploads/avatars exists for now or user manual creation?
-        // Better: try to mkdir
         if (!existsSync(uploadDir)) {
             mkdirSync(uploadDir, { recursive: true });
         }

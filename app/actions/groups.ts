@@ -71,14 +71,7 @@ export async function deleteGroup(id: string) {
 
 export async function updateGroupProfiles(groupId: string, formData: FormData) {
     await ensureAdmin();
-    // The UI will likely now send a single 'profileId' or 'profiles' (HTML select sends one value by default unless multiple)
-    // If we use <select name="profileId"> it sends 'profileId'.
-    // If we use <select name="profiles"> it sends 'profiles' with one value.
-    // Let's support both or just normalize to looking for 'profileId'.
-
     const profileId = formData.get('profileId') as string;
-    // Fallback for legacy Checkbox UI if we haven't updated it yet?
-    // Actually we are updating the UI too. Let's make it robust.
 
     const dataToUpdate: any = {};
 

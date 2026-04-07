@@ -2,6 +2,7 @@
 
 import React, { useOptimistic, useTransition } from 'react'
 import { toggleEntryLike } from '@/app/actions/feedback'
+import { PROMPT_TYPES } from '@/lib/promptConstants'
 
 type EntryWithPrompt = {
     id: string;
@@ -105,7 +106,7 @@ function EntryCard({ entry, isAdmin }: { entry: EntryWithPrompt, isAdmin: boolea
 }
 
 function formatAnswer(answer: string, type: string) {
-    if (type === 'CHECKBOX' || type === 'RADIO') {
+    if (type === PROMPT_TYPES.CHECKBOX || type === PROMPT_TYPES.RADIO) {
         try {
             if (answer.startsWith('[') || answer.startsWith('{')) {
                 const parsed = JSON.parse(answer);

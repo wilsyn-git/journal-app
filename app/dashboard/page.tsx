@@ -7,7 +7,7 @@ import { resolveUserId } from "@/lib/auth-helpers"
 import Link from "next/link"
 import { getEntriesByDate, getJournalHistory, getEffectiveProfileIds, getActivePrompts } from "@/app/lib/data"
 import { revalidatePath } from "next/cache"
-import { DailyJournalForm } from "@/components/DailyJournalForm"
+import { JournalEditor } from "@/components/JournalEditor"
 import { PastJournalView } from "@/components/PastJournalView"
 import { CalendarSidebar } from "@/components/CalendarSidebar"
 import { TaskSidebar } from "@/components/TaskSidebar"
@@ -200,7 +200,7 @@ export default async function DashboardPage({ searchParams }: Props) {
             return acc;
         }, {} as Record<string, string>);
 
-        ContentComponent = <DailyJournalForm prompts={activePrompts} initialAnswers={initialAnswers} />
+        ContentComponent = <JournalEditor prompts={activePrompts} initialAnswers={initialAnswers} />
     }
 
     const userLabel = isAdmin
@@ -294,7 +294,7 @@ export default async function DashboardPage({ searchParams }: Props) {
     );
 
     return (
-        <DashboardShell sidebar={SidebarContent} streak={userStats.streak} freezeCount={isViewingSelf ? inventoryData.freezeCount : undefined} shieldCount={isViewingSelf ? inventoryData.shieldCount : undefined}>
+        <DashboardShell sidebar={SidebarContent} streak={userStats.currentStreak} freezeCount={isViewingSelf ? inventoryData.freezeCount : undefined} shieldCount={isViewingSelf ? inventoryData.shieldCount : undefined}>
             <AchievementToasts achievements={unnotifiedAchievements} />
             {/* Desktop Header / Stats Bar */}
             <div className="hidden md:flex flex-col p-6 px-10 border-b border-white/5 gap-4">
@@ -302,7 +302,7 @@ export default async function DashboardPage({ searchParams }: Props) {
                     <div className="text-sm text-gray-400">
                         {isViewingSelf ? 'Your Journal' : `Viewing: ${targetUserEmail}`}
                     </div>
-                    <StreakBadge streak={userStats.streak} freezeCount={isViewingSelf ? inventoryData.freezeCount : undefined} shieldCount={isViewingSelf ? inventoryData.shieldCount : undefined} />
+                    <StreakBadge streak={userStats.currentStreak} freezeCount={isViewingSelf ? inventoryData.freezeCount : undefined} shieldCount={isViewingSelf ? inventoryData.shieldCount : undefined} />
                 </div>
 
                 {/* Heatmap Section */}

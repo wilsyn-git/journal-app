@@ -6,6 +6,7 @@ import { getUserTimezoneById } from '@/lib/timezone'
 import { calculateStreaks } from '@/lib/streaks'
 import { getInventory, getFrozenDates } from '@/app/lib/inventoryData'
 import { getAchievementState, AchievementMetrics } from '@/lib/achievementEvaluator'
+import { PROMPT_TYPES } from '@/lib/promptConstants'
 
 export async function GET(request: NextRequest) {
   const auth = await authenticateRequest(request)
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest) {
       const hour = parseInt(hourStr) % 24
       if (!isNaN(hour)) hourCounts[hour]++
 
-      if (e.prompt.type === 'TEXT') {
+      if (e.prompt.type === PROMPT_TYPES.TEXT) {
         allTimeDays.add(dayStr)
       }
     })
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest) {
       const date = new Date(e.createdAt)
       const dayStr = date.toLocaleDateString('en-CA', { timeZone: timezone })
 
-      if (e.prompt.type === 'TEXT') {
+      if (e.prompt.type === PROMPT_TYPES.TEXT) {
         const words = e.answer
           .toLowerCase()
           .replace(/[\u2018\u2019]/g, "'")
@@ -91,7 +92,7 @@ export async function GET(request: NextRequest) {
         dayStats[dayStr].entries += 1
       }
 
-      if (['CHECKBOX', 'RADIO'].includes(e.prompt.type)) {
+      if (([PROMPT_TYPES.CHECKBOX, PROMPT_TYPES.RADIO] as string[]).includes(e.prompt.type)) {
         if (!taskMap.has(e.prompt.id)) {
           taskMap.set(e.prompt.id, { prompt: e.prompt.content, days: new Set() })
         }
@@ -107,7 +108,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Avg words (from recent entries)
-    const textEntries = recentEntries.filter((e) => e.prompt.type === 'TEXT')
+    const textEntries = recentEntries.filter((e) => e.prompt.type === PROMPT_TYPES.TEXT)
     let totalWords = 0
     textEntries.forEach((e) => (totalWords += e.answer.trim().split(/\s+/).length))
     const avgWords = textEntries.length > 0 ? Math.round(totalWords / textEntries.length) : 0

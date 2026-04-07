@@ -156,14 +156,6 @@ export async function updateProfileRule(ruleId: string, profileId: string, formD
         return { error: 'Rule for this category already exists' };
     }
 
-    // Prepare update data
-    // Prisma sometimes requires relation syntax for updates if implicit?
-    // Actually, usually scalar writes work. The error suggests otherwise.
-    // Let's safe-guard by using connect/disconnect if ID changes, or just setting scalar.
-    // If 'Unknown argument categoryId', then maybe my local schema didn't generate correctly?
-    // Or I should use `categoryPrompt: { connect: ... }`.
-
-    // Let's try relation syntax which is always safer.
     const updateData: any = {
         categoryString: resolvedCategoryString,
         minCount,

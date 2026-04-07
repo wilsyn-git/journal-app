@@ -39,10 +39,6 @@ export function ContributionHeatmap({ data, weeksHistory = 52, showLegend = true
         for (let w = 0; w < weeksHistory; w++) {
             const weekDays = []
 
-            // Calculate week Start Date for Month Labeling
-            // We use the first day (Sunday) or maybe the majority?
-            // GitHub usually labels the month if the first week of that month appears.
-            // Let's check the date of the FIRST day of the week.
             const weekDate = new Date(startDate)
             weekDate.setDate(weekDate.getDate() + (w * 7))
 
@@ -116,8 +112,7 @@ export function ContributionHeatmap({ data, weeksHistory = 52, showLegend = true
                                     key={i}
                                     className="absolute text-[10px] text-gray-400 font-medium"
                                     style={{
-                                        // Each column is w-3.5 (14px) + gap-1 (4px) => ~18px?
-                                        // Actually: w-3.5 is 0.875rem = 14px. Gap is 3px. Total = 17px.
+                                        // Each column: w-3.5 (14px) + gap (3px) = 17px
                                         left: `${m.index * 17}px`
                                     }}
                                 >

@@ -5,6 +5,7 @@ import { getUserTimezone } from "@/lib/timezone"
 import { calculateStreaks } from "@/lib/streaks"
 import { getFrozenDates } from "@/app/lib/inventoryData"
 import { AchievementMetrics } from '@/lib/achievementEvaluator'
+import { PROMPT_TYPES } from '@/lib/promptConstants'
 
 const STOP_WORDS = new Set([
     'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at',
@@ -59,7 +60,7 @@ export const getUserStats = cache(async function getUserStats(userId: string) {
         const hour = parseInt(hourStr) % 24;
         if (!isNaN(hour)) hourCounts[hour]++;
 
-        if (e.prompt.type === 'TEXT') {
+        if (e.prompt.type === PROMPT_TYPES.TEXT) {
             allTimeDays.add(dayStr);
         }
     });
@@ -81,7 +82,7 @@ export const getUserStats = cache(async function getUserStats(userId: string) {
         const date = new Date(e.createdAt);
         const dayStr = date.toLocaleDateString('en-CA', { timeZone: timezone });
 
-        if (e.prompt.type === 'TEXT') {
+        if (e.prompt.type === PROMPT_TYPES.TEXT) {
             const normalizedAnswer = e.answer.toLowerCase().replace(/[\u2018\u2019]/g, "'");
             const words = normalizedAnswer.split(/[^a-z0-9']+/);
             const validWords = words.filter(w => w.length > 0);
@@ -97,14 +98,14 @@ export const getUserStats = cache(async function getUserStats(userId: string) {
             });
         }
 
-        if (['CHECKBOX', 'RADIO'].includes(e.prompt.type)) {
+        if (([PROMPT_TYPES.CHECKBOX, PROMPT_TYPES.RADIO] as string[]).includes(e.prompt.type)) {
             if (!taskMap.has(e.prompt.id)) {
                 taskMap.set(e.prompt.id, { prompt: e.prompt.content, type: e.prompt.type, days: new Set() });
             }
             taskMap.get(e.prompt.id)!.days.add(dayStr);
         }
 
-        if (e.prompt.type === 'RANGE') {
+        if (e.prompt.type === PROMPT_TYPES.RANGE) {
             if (!rangeMap.has(e.prompt.id)) {
                 rangeMap.set(e.prompt.id, { prompt: e.prompt.content, dateValues: new Map() });
             }
@@ -146,7 +147,7 @@ export const getUserStats = cache(async function getUserStats(userId: string) {
         .forEach(([text, value]) => filteredWords.push({ text, value }));
 
     // Calc Avg Words (from recent entries only)
-    const textEntries = recentEntries.filter(e => e.prompt.type === 'TEXT');
+    const textEntries = recentEntries.filter(e => e.prompt.type === PROMPT_TYPES.TEXT);
     let totalWords = 0;
     textEntries.forEach(e => totalWords += e.answer.trim().split(/\s+/).length);
     const avgWords = textEntries.length > 0 ? Math.round(totalWords / textEntries.length) : 0;
@@ -196,7 +197,6 @@ export const getUserStats = cache(async function getUserStats(userId: string) {
     }
 
     return {
-        streak: current,
         currentStreak: current,
         maxStreak: max,
         totalEntries: allEntries.length,

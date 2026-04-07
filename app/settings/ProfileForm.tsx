@@ -40,16 +40,7 @@ export function ProfileForm({ userId, activeAvatar, initialName, initialEmail, i
             }
             reader.readAsDataURL(resizedFile)
 
-            // We can't easily set the file input value to this new Blob. 
-            // So we'll need to append it manually or intercept the submit.
-            // A pattern: Store the blob in state, and when form submits, use a Client Action wrapper?
-
-            // Actually, we can just use the hidden input trick or DataTransfer if we really want to keep the form simple.
-            // But let's just hold it in a ref/state and handle submission via JS.
-            // Or simpler: We can put the blob into a HIDDEN file input? No, security.
-
-            // Best approach for Server Actions with custom Blobs:
-            // Use `formData.append` in the submit handler.
+            // Store resized blob in ref, append manually on submit
         } catch (err) {
             console.error(err)
             addToast('error', 'Failed to process image')
@@ -105,20 +96,8 @@ export function ProfileForm({ userId, activeAvatar, initialName, initialEmail, i
 
         const formData = new FormData(e.currentTarget)
 
-        // If we have a resized file in our system? 
-        // Let's actually do the resize ON submit if needed, or stick to the "stored blob" plan.
-
-        // Re-implementing the resize flow cleanly:
-        // 1. User picks file.
-        // 2. We resize immediately and store the BLOB in a ref `resizedImageBlob`.
-        // 3. On Submit, we delete the entry for 'avatar' (the original huge file) and append the blob.
-
+        // Use the resized blob instead of the original file
         if (fileInputRef.current?.files?.[0]) {
-            // We have a file selected... let's ensure we use the resized one.
-            // Wait, handleFileChange already acts. Let's make sure we save that blob.
-            // But wait, the standard form action will just grab the hidden input.
-
-            // Let's just do manual FormData construction.
             if (currentResizedBlob.current) {
                 formData.set('avatar', currentResizedBlob.current, 'avatar.jpg')
             }

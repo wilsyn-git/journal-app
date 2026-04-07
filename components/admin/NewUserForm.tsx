@@ -66,9 +66,7 @@ export function NewUserForm() {
                     <input
                         id="new-user-password"
                         name="password"
-                        type="text" // Visible for admin creation convenience? Or password type?
-                        // Let's use text so admin can see what they are typing to tell the user. 
-                        // Or password with a toggle. Let's stick to text for admin convenience "Copy this password".
+                        type="text"
                         required
                         placeholder="Initial Password"
                         className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary outline-none font-mono"

@@ -43,8 +43,7 @@ export async function updateBranding(formData: FormData) {
             await mkdir(uploadDir, { recursive: true })
 
             // Create filename (timestamp to bust cache)
-            const filename = `logo-${Date.now()}.png` // Force PNG extension or detect? simpler to just keep extension or force one.
-            // Let's keep original extension or just use png/jpg. keeping it simple.
+            const filename = `logo-${Date.now()}.png`
             const path = join(uploadDir, filename)
 
             // Write file
