@@ -20,8 +20,8 @@ const STOP_WORDS = new Set([
     "haven't", "hasn't", "hadn't", "doesn't", "that's", "there's", "let's"
 ]);
 
-export const getUserStats = cache(async function getUserStats(userId: string) {
-    const timezone = await getUserTimezone()
+export const getUserStats = cache(async function getUserStats(userId: string, overrideTimezone?: string) {
+    const timezone = overrideTimezone || await getUserTimezone()
 
     // Lightweight all-time query: just dates and types for streaks/totals
     const allEntries = await prisma.journalEntry.findMany({

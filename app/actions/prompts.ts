@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { ensureAdmin } from './helpers'
+import { ensureAdmin, resolveCategory } from './helpers'
 import { PROMPT_TYPES } from '@/lib/promptConstants'
 
 // --- PROMPT CATEGORIES ---
@@ -106,22 +106,8 @@ export async function createPrompt(formData: FormData) {
         }
     }
 
-    // Resolve Category
-    let resolvedCategoryId = categoryId || null;
-    let resolvedCategoryString = 'General';
-
-    if (categoryId) {
-        resolvedCategoryId = categoryId;
-        const cat = await prisma.promptCategory.findUnique({ where: { id: categoryId } });
-        if (cat) resolvedCategoryString = cat.name;
-    } else if (categoryString) {
-        // Fallback legacy behavior
-        resolvedCategoryString = categoryString;
-        const cat = await prisma.promptCategory.findUnique({
-            where: { organizationId_name: { organizationId, name: categoryString } }
-        });
-        if (cat) resolvedCategoryId = cat.id;
-    }
+    const { categoryId: resolvedCategoryId, categoryString: resolvedCategoryString } =
+        await resolveCategory(organizationId, categoryId, categoryString);
 
     try {
         await prisma.prompt.create({
@@ -170,8 +156,6 @@ export async function updatePrompt(id: string, formData: FormData) {
         }
     }
 
-    // Resolve Category (optional update)
-    // If categoryId is provided, we update it.
     let updateData: any = {
         content,
         type,
@@ -179,11 +163,9 @@ export async function updatePrompt(id: string, formData: FormData) {
     };
 
     if (categoryId) {
-        const cat = await prisma.promptCategory.findUnique({ where: { id: categoryId } });
-        if (cat) {
-            updateData.categoryId = categoryId;
-            updateData.categoryString = cat.name;
-        }
+        const resolved = await resolveCategory(organizationId, categoryId);
+        updateData.categoryId = resolved.categoryId;
+        updateData.categoryString = resolved.categoryString;
     }
 
     try {

@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { ensureAdmin } from './helpers'
+import { ensureAdmin, resolveCategory } from './helpers'
 
 export async function createProfile(formData: FormData) {
     const session = await ensureAdmin();
@@ -64,20 +64,8 @@ export async function addProfileRule(profileId: string, formData: FormData) {
         return { error: 'Min count cannot exceed Max count' };
     }
 
-    let resolvedCategoryId = categoryId || null;
-    let resolvedCategoryString = 'General';
-
-    if (categoryId) {
-        resolvedCategoryId = categoryId;
-        const cat = await prisma.promptCategory.findUnique({ where: { id: categoryId } });
-        if (cat) resolvedCategoryString = cat.name;
-    } else if (categoryString) {
-        resolvedCategoryString = categoryString;
-        const cat = await prisma.promptCategory.findUnique({
-            where: { organizationId_name: { organizationId, name: categoryString } }
-        });
-        if (cat) resolvedCategoryId = cat.id;
-    }
+    const { categoryId: resolvedCategoryId, categoryString: resolvedCategoryString } =
+        await resolveCategory(organizationId, categoryId, categoryString);
 
     // Check for existing duplicates
     const existing = await prisma.profileRule.findFirst({
@@ -125,20 +113,8 @@ export async function updateProfileRule(ruleId: string, profileId: string, formD
         return { error: 'Min count cannot exceed Max count' };
     }
 
-    let resolvedCategoryId = categoryId || null;
-    let resolvedCategoryString = 'General';
-
-    if (categoryId) {
-        resolvedCategoryId = categoryId;
-        const cat = await prisma.promptCategory.findUnique({ where: { id: categoryId } });
-        if (cat) resolvedCategoryString = cat.name;
-    } else if (categoryString) {
-        resolvedCategoryString = categoryString;
-        const cat = await prisma.promptCategory.findUnique({
-            where: { organizationId_name: { organizationId, name: categoryString } }
-        });
-        if (cat) resolvedCategoryId = cat.id;
-    }
+    const { categoryId: resolvedCategoryId, categoryString: resolvedCategoryString } =
+        await resolveCategory(organizationId, categoryId, categoryString);
 
     // Check for duplicates (excluding self)
     const existing = await prisma.profileRule.findFirst({
