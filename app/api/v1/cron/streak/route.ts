@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { sendPushNotification } from '@/lib/api/pushNotifications'
 import { apiSuccess, apiError } from '@/lib/api/apiResponse'
 import { startOfDayInTimezone, getTodayForUser, DEFAULT_TIMEZONE } from '@/lib/timezone'
+import { calculateStreaks } from '@/lib/streaks'
+import { getFrozenDates } from '@/app/lib/inventoryData'
 
 export async function POST(request: NextRequest) {
     // Simple shared secret auth for cron endpoints
@@ -61,25 +63,8 @@ export async function POST(request: NextRequest) {
                 )
             )
             const sortedDays = Array.from(uniqueDays).sort().reverse()
-
-            // Check yesterday
-            const yesterdayDate = new Date(todayStr + 'T12:00:00Z')
-            yesterdayDate.setDate(yesterdayDate.getDate() - 1)
-            const yesterdayStr = yesterdayDate.toISOString().split('T')[0]
-
-            if (!sortedDays.includes(yesterdayStr)) continue
-
-            // Count consecutive days ending yesterday
-            let streak = 1
-            for (let i = 0; i < sortedDays.length - 1; i++) {
-                const d1 = new Date(sortedDays[i])
-                const d2 = new Date(sortedDays[i + 1])
-                const diff = Math.round(
-                    (d1.getTime() - d2.getTime()) / (1000 * 3600 * 24)
-                )
-                if (diff === 1) streak++
-                else break
-            }
+            const frozenDates = await getFrozenDates(user.id)
+            const { current: streak } = calculateStreaks(sortedDays, todayStr, new Set(frozenDates))
 
             if (streak > 1) {
                 const tokens = user.deviceSessions
