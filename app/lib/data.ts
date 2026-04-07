@@ -240,10 +240,12 @@ export async function getActivePrompts(
 export async function getJournalHistory(userId: string, timezone?: string) {
     const tz = timezone || await getUserTimezoneById(userId)
 
-    // Group entries by date (YYYY-MM-DD)
-    // We fetch select fields and process in JS for simplicity/compatibility.
+    // Only fetch last 90 days for the dashboard calendar
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - 90)
+
     const entries = await prisma.journalEntry.findMany({
-        where: { userId },
+        where: { userId, createdAt: { gte: cutoff } },
         select: { createdAt: true, isLiked: true },
         orderBy: { createdAt: 'desc' }
     });

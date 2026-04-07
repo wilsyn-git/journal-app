@@ -22,8 +22,22 @@ export async function GET(request: NextRequest) {
     const timezone = request.headers.get('x-timezone')
       || await getUserTimezoneById(userId)
 
-    const entries = await prisma.journalEntry.findMany({
+    // Lightweight all-time query: just dates and types for streaks/totals
+    const allEntries = await prisma.journalEntry.findMany({
       where: { userId },
+      select: {
+        createdAt: true,
+        prompt: { select: { id: true, type: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+
+    // Bounded query: last 365 days with full text for heatmap, habits
+    const textCutoff = new Date()
+    textCutoff.setDate(textCutoff.getDate() - 365)
+
+    const recentEntries = await prisma.journalEntry.findMany({
+      where: { userId, createdAt: { gte: textCutoff } },
       select: {
         createdAt: true,
         answer: true,
@@ -34,11 +48,11 @@ export async function GET(request: NextRequest) {
 
     const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: timezone })
 
-    // Day stats for heatmap
-    const dayStats: Record<string, { words: number; entries: number }> = {}
+    // --- All-time pass: streaks, totals, hour counts ---
+    const allTimeDays = new Set<string>()
     const hourCounts: number[] = new Array(24).fill(0)
 
-    entries.forEach((e) => {
+    allEntries.forEach((e) => {
       const date = new Date(e.createdAt)
       const dayStr = date.toLocaleDateString('en-CA', { timeZone: timezone })
       const hourStr = date.toLocaleTimeString('en-US', {
@@ -48,6 +62,22 @@ export async function GET(request: NextRequest) {
       })
       const hour = parseInt(hourStr) % 24
       if (!isNaN(hour)) hourCounts[hour]++
+
+      if (e.prompt.type === 'TEXT') {
+        allTimeDays.add(dayStr)
+      }
+    })
+
+    const sortedAllDays = Array.from(allTimeDays).sort().reverse()
+    const { current, max } = calculateStreaks(sortedAllDays, todayStr, frozenSet)
+
+    // --- Bounded pass: heatmap, avg words, habits ---
+    const dayStats: Record<string, { words: number; entries: number }> = {}
+    const taskMap = new Map<string, { prompt: string; days: Set<string> }>()
+
+    recentEntries.forEach((e) => {
+      const date = new Date(e.createdAt)
+      const dayStr = date.toLocaleDateString('en-CA', { timeZone: timezone })
 
       if (e.prompt.type === 'TEXT') {
         const words = e.answer
@@ -60,6 +90,13 @@ export async function GET(request: NextRequest) {
         dayStats[dayStr].words += words.length
         dayStats[dayStr].entries += 1
       }
+
+      if (['CHECKBOX', 'RADIO'].includes(e.prompt.type)) {
+        if (!taskMap.has(e.prompt.id)) {
+          taskMap.set(e.prompt.id, { prompt: e.prompt.content, days: new Set() })
+        }
+        taskMap.get(e.prompt.id)!.days.add(dayStr)
+      }
     })
 
     const heatmap: Record<string, number> = {}
@@ -69,12 +106,8 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Streaks
-    const sortedDays = Object.keys(heatmap).sort().reverse()
-    const { current, max } = calculateStreaks(sortedDays, todayStr, frozenSet)
-
-    // Avg words
-    const textEntries = entries.filter((e) => e.prompt.type === 'TEXT')
+    // Avg words (from recent entries)
+    const textEntries = recentEntries.filter((e) => e.prompt.type === 'TEXT')
     let totalWords = 0
     textEntries.forEach((e) => (totalWords += e.answer.trim().split(/\s+/).length))
     const avgWords = textEntries.length > 0 ? Math.round(totalWords / textEntries.length) : 0
@@ -82,28 +115,15 @@ export async function GET(request: NextRequest) {
     // Achievement metrics
     const lateNightEntries = hourCounts[22] + hourCounts[23]
     const achievementMetrics: AchievementMetrics = {
-      maxStreak: current,
-      totalDaysJournaled: new Set(Object.keys(heatmap)).size,
-      totalEntries: entries.length,
+      maxStreak: max,
+      totalDaysJournaled: allTimeDays.size,
+      totalEntries: allEntries.length,
       lateNightEntries,
     }
 
     const achievements = await getAchievementState(userId, achievementMetrics)
 
     // Habit stats (CHECKBOX/RADIO)
-    const taskMap = new Map<string, { prompt: string; days: Set<string> }>()
-
-    entries.forEach((e) => {
-      if (['CHECKBOX', 'RADIO'].includes(e.prompt.type)) {
-        if (!taskMap.has(e.prompt.id)) {
-          taskMap.set(e.prompt.id, { prompt: e.prompt.content, days: new Set() })
-        }
-        taskMap
-          .get(e.prompt.id)!
-          .days.add(new Date(e.createdAt).toLocaleDateString('en-CA', { timeZone: timezone }))
-      }
-    })
-
     const taskStats = []
     for (const [id, data] of taskMap.entries()) {
       const days = Array.from(data.days).sort().reverse()
@@ -120,8 +140,8 @@ export async function GET(request: NextRequest) {
     return apiSuccess({
       currentStreak: current,
       maxStreak: max,
-      totalEntries: entries.length,
-      daysCompleted: new Set(Object.keys(heatmap)).size,
+      totalEntries: allEntries.length,
+      daysCompleted: allTimeDays.size,
       avgWords,
       heatmap,
       achievements,

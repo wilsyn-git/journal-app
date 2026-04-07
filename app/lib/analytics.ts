@@ -20,8 +20,24 @@ const STOP_WORDS = new Set([
 ]);
 
 export const getUserStats = cache(async function getUserStats(userId: string) {
-    const entries = await prisma.journalEntry.findMany({
+    const timezone = await getUserTimezone()
+
+    // Lightweight all-time query: just dates and types for streaks/totals
+    const allEntries = await prisma.journalEntry.findMany({
         where: { userId },
+        select: {
+            createdAt: true,
+            prompt: { select: { id: true, type: true } }
+        },
+        orderBy: { createdAt: 'desc' }
+    })
+
+    // Bounded query: last 365 days with full text for word cloud, heatmap, trends
+    const textCutoff = new Date()
+    textCutoff.setDate(textCutoff.getDate() - 365)
+
+    const recentEntries = await prisma.journalEntry.findMany({
+        where: { userId, createdAt: { gte: textCutoff } },
         select: {
             createdAt: true,
             answer: true,
@@ -30,71 +46,89 @@ export const getUserStats = cache(async function getUserStats(userId: string) {
         orderBy: { createdAt: 'desc' }
     })
 
-    const timezone = await getUserTimezone()
+    const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: timezone });
 
-    const now = new Date();
-    // Use user timezone
-    const todayStr = now.toLocaleDateString('en-CA', { timeZone: timezone });
-    const yesterdayDate = new Date(now);
-    yesterdayDate.setDate(now.getDate() - 1);
-    // This is approximate subtraction, but for "Yesterday String" in a specific timezone,
-    // we should actually subtract 24h from the Moment and then format in Timezone.
-    // Better: 
-    // const today = new Date().toLocaleDateString('en-CA', { timeZone: timezone })
-    // How do we find "Yesterday" string reliably without library?
-    // We can iterate back days? 
-    // Let's just assume 24h subtraction works for 99% of cases, or rely on logic:
-    // If we have a sorted list of days, "Current Streak" logic handles the day adjacency naturally.
-
-    // We actually only need todayStr/yesterdayStr for the "Is streak active?" check.
-    // Let's rely on sortedDays logic in calculateStreaks, we just need to pass the right "current" reference.
-    // Wait, calculateStreaks uses internal new Date()... we need to fix THAT helper too or pass args.
-
-    // Let's fix calculateStreaks signature to accept "referenceDate" (today).
-
-    // Data structures
-    const dayStats: Record<string, { words: number, entries: number }> = {};
-    const heatmap: Record<string, number> = {};
+    // --- All-time pass: streaks, totals, hour counts (lightweight, no text) ---
+    const allTimeDays = new Set<string>()
     const hourCounts: number[] = new Array(24).fill(0);
-    const wordCounts: Record<string, number> = {};
-    const filteredWords: { text: string, value: number }[] = [];
 
-    // Process Entries
-    entries.forEach(e => {
+    allEntries.forEach(e => {
         const date = new Date(e.createdAt);
-        // Use user's timezone for grouping
         const dayStr = date.toLocaleDateString('en-CA', { timeZone: timezone });
-
-        // Time of Day (Hour in user's timezone)
-        // We need to parse the hour relative to that timezone strings.
-        // Intl format { hour: 'numeric', hour12: false, timeZone: timezone }
         const hourStr = date.toLocaleTimeString('en-US', { hour: 'numeric', hour12: false, timeZone: timezone });
-        const hour = parseInt(hourStr) % 24; // Ensure 0-23
-
-        // Heatmap
-        // heatmap[dayStr] = (heatmap[dayStr] || 0) + 1; // Removed in favor of avg words logic
-
-        // Time of Day
+        const hour = parseInt(hourStr) % 24;
         if (!isNaN(hour)) hourCounts[hour]++;
 
-        // Word Cloud (Text only) + Heatmap Stats
         if (e.prompt.type === 'TEXT') {
-            // Normalize smart quotes to standard apostrophes, then split by non-word chars (keeping apostrophes)
+            allTimeDays.add(dayStr);
+        }
+    });
+
+    const frozenDates = await getFrozenDates(userId)
+    const frozenSet = new Set(frozenDates)
+    const sortedAllDays = Array.from(allTimeDays).sort().reverse();
+    const { current, max } = calculateStreaks(sortedAllDays, todayStr, frozenSet);
+
+    // --- Bounded pass (last 365 days): word cloud, heatmap, avg words, habits, trends ---
+    const dayStats: Record<string, { words: number, entries: number }> = {};
+    const heatmap: Record<string, number> = {};
+    const wordCounts: Record<string, number> = {};
+    const filteredWords: { text: string, value: number }[] = [];
+    const taskMap = new Map<string, { prompt: string, type: string, days: Set<string> }>();
+    const rangeMap = new Map<string, { prompt: string, dateValues: Map<string, number[]> }>();
+
+    recentEntries.forEach(e => {
+        const date = new Date(e.createdAt);
+        const dayStr = date.toLocaleDateString('en-CA', { timeZone: timezone });
+
+        if (e.prompt.type === 'TEXT') {
             const normalizedAnswer = e.answer.toLowerCase().replace(/[\u2018\u2019]/g, "'");
             const words = normalizedAnswer.split(/[^a-z0-9']+/);
             const validWords = words.filter(w => w.length > 0);
 
-            // Update Daily Stats
             if (!dayStats[dayStr]) dayStats[dayStr] = { words: 0, entries: 0 };
             dayStats[dayStr].words += validWords.length;
             dayStats[dayStr].entries += 1;
 
-            // Word Freq
             words.forEach(w => {
                 if (w.length > 2 && !STOP_WORDS.has(w)) {
                     wordCounts[w] = (wordCounts[w] || 0) + 1;
                 }
             });
+        }
+
+        if (['CHECKBOX', 'RADIO'].includes(e.prompt.type)) {
+            if (!taskMap.has(e.prompt.id)) {
+                taskMap.set(e.prompt.id, { prompt: e.prompt.content, type: e.prompt.type, days: new Set() });
+            }
+            taskMap.get(e.prompt.id)!.days.add(dayStr);
+        }
+
+        if (e.prompt.type === 'RANGE') {
+            if (!rangeMap.has(e.prompt.id)) {
+                rangeMap.set(e.prompt.id, { prompt: e.prompt.content, dateValues: new Map() });
+            }
+
+            const mapEntry = rangeMap.get(e.prompt.id)!;
+            if (!mapEntry.dateValues.has(dayStr)) {
+                mapEntry.dateValues.set(dayStr, []);
+            }
+
+            let val = 0;
+            const answer = e.answer.trim().toLowerCase();
+
+            if (!isNaN(parseInt(answer))) {
+                val = parseInt(answer);
+            } else if (answer === 'yes' || answer === 'true') {
+                val = 100;
+            } else if (answer === 'no' || answer === 'false') {
+                val = 0;
+            } else {
+                return;
+            }
+
+            val = Math.max(0, Math.min(100, val));
+            mapEntry.dateValues.get(dayStr)!.push(val);
         }
     });
 
@@ -111,16 +145,8 @@ export const getUserStats = cache(async function getUserStats(userId: string) {
         .slice(0, 50)
         .forEach(([text, value]) => filteredWords.push({ text, value }));
 
-
-    // Global Streak Logic
-    const uniqueDays = new Set(Object.keys(heatmap));
-    const sortedDays = Array.from(uniqueDays).sort().reverse();
-    const frozenDates = await getFrozenDates(userId)
-    const frozenSet = new Set(frozenDates)
-    const { current, max } = calculateStreaks(sortedDays, todayStr, frozenSet);
-
-    // Calc Avg Words
-    const textEntries = entries.filter(e => e.prompt.type === 'TEXT');
+    // Calc Avg Words (from recent entries only)
+    const textEntries = recentEntries.filter(e => e.prompt.type === 'TEXT');
     let totalWords = 0;
     textEntries.forEach(e => totalWords += e.answer.trim().split(/\s+/).length);
     const avgWords = textEntries.length > 0 ? Math.round(totalWords / textEntries.length) : 0;
@@ -130,59 +156,12 @@ export const getUserStats = cache(async function getUserStats(userId: string) {
 
     const achievementMetrics: AchievementMetrics = {
         maxStreak: max,
-        totalDaysJournaled: uniqueDays.size,
-        totalEntries: entries.length,
+        totalDaysJournaled: allTimeDays.size,
+        totalEntries: allEntries.length,
         lateNightEntries,
     }
 
     // Task Stats (Daily Habits)
-    const taskMap = new Map<string, { prompt: string, type: string, days: Set<string> }>();
-    const rangeMap = new Map<string, { prompt: string, dateValues: Map<string, number[]> }>();
-
-    entries.forEach(e => {
-        // Habits (Checkboxes / Radio)
-        if (['CHECKBOX', 'RADIO'].includes(e.prompt.type)) {
-            if (!taskMap.has(e.prompt.id)) {
-                taskMap.set(e.prompt.id, { prompt: e.prompt.content, type: e.prompt.type, days: new Set() });
-            }
-            taskMap.get(e.prompt.id)!.days.add(new Date(e.createdAt).toLocaleDateString('en-CA', { timeZone: timezone }));
-        }
-
-        // Trends (Range / Slider)
-        if (e.prompt.type === 'RANGE') {
-            if (!rangeMap.has(e.prompt.id)) {
-                rangeMap.set(e.prompt.id, { prompt: e.prompt.content, dateValues: new Map() });
-            }
-
-            const dayStr = new Date(e.createdAt).toLocaleDateString('en-CA', { timeZone: timezone });
-            const mapEntry = rangeMap.get(e.prompt.id)!;
-            if (!mapEntry.dateValues.has(dayStr)) {
-                mapEntry.dateValues.set(dayStr, []);
-            }
-
-            // Soft Adapter: Parse the value
-            let val = 0;
-            const answer = e.answer.trim().toLowerCase();
-
-            if (!isNaN(parseInt(answer))) {
-                val = parseInt(answer);
-            } else if (answer === 'yes' || answer === 'true') {
-                val = 100;
-            } else if (answer === 'no' || answer === 'false') {
-                val = 0;
-            } else {
-                // Unknown text value, skip or default to 50? 
-                // Let's skip invalid data points to not skew average
-                return;
-            }
-
-            // Clamp 0-100 just in case
-            val = Math.max(0, Math.min(100, val));
-
-            mapEntry.dateValues.get(dayStr)!.push(val);
-        }
-    });
-
     const taskStats = [];
     for (const [id, data] of taskMap.entries()) {
         const days = Array.from(data.days).sort().reverse();
@@ -201,7 +180,6 @@ export const getUserStats = cache(async function getUserStats(userId: string) {
 
     for (const [id, data] of rangeMap.entries()) {
         const seriesData: { date: string, value: number }[] = [];
-        // Sort dates chronologically
         const sortedDates = Array.from(data.dateValues.keys()).sort();
 
         sortedDates.forEach(date => {
@@ -221,8 +199,8 @@ export const getUserStats = cache(async function getUserStats(userId: string) {
         streak: current,
         currentStreak: current,
         maxStreak: max,
-        totalEntries: entries.length,
-        daysCompleted: uniqueDays.size,
+        totalEntries: allEntries.length,
+        daysCompleted: allTimeDays.size,
         avgWords,
         taskStats,
         trendStats,
