@@ -32,6 +32,14 @@ export async function getUserTimezoneById(userId: string): Promise<string> {
     return user?.timezone || DEFAULT_TIMEZONE
 }
 
+/**
+ * Resolve timezone for API routes.
+ * Priority: x-timezone header → DB lookup by userId → DEFAULT_TIMEZONE
+ */
+export async function resolveApiTimezone(request: { headers: { get(name: string): string | null } }, userId: string): Promise<string> {
+    return request.headers.get('x-timezone') || await getUserTimezoneById(userId)
+}
+
 export function toUserDate(date: Date, timezone: string) {
     // Return a string YYYY-MM-DD based on the user's timezone
     return date.toLocaleDateString("en-CA", { timeZone: timezone })

@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { authenticateRequest } from '@/lib/api/apiAuth'
 import { apiSuccess, apiError } from '@/lib/api/apiResponse'
 import { prisma } from '@/lib/prisma'
-import { startOfDayInTimezone, endOfDayInTimezone, getUserTimezoneById } from '@/lib/timezone'
+import { startOfDayInTimezone, endOfDayInTimezone, resolveApiTimezone } from '@/lib/timezone'
 
 const batchSchema = z.object({
   entries: z.array(
@@ -27,8 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { userId } = auth.payload
-    const timezone = request.headers.get('x-timezone')
-      || await getUserTimezoneById(userId)
+    const timezone = await resolveApiTimezone(request, userId)
     const entries = parsed.data.entries
 
     if (entries.length === 0) {

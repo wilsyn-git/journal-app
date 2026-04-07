@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { authenticateRequest } from '@/lib/api/apiAuth'
 import { apiSuccess, apiError } from '@/lib/api/apiResponse'
 import { prisma } from '@/lib/prisma'
-import { startOfDayInTimezone, endOfDayInTimezone, getUserTimezoneById } from '@/lib/timezone'
+import { startOfDayInTimezone, endOfDayInTimezone, resolveApiTimezone } from '@/lib/timezone'
 
 const entrySchema = z.object({
   promptId: z.string().uuid(),
@@ -22,8 +22,7 @@ export async function GET(request: NextRequest) {
   if ('error' in auth) return apiError('UNAUTHORIZED', auth.error, auth.status)
 
   const { userId } = auth.payload
-  const timezone = request.headers.get('x-timezone')
-    || await getUserTimezoneById(userId)
+  const timezone = await resolveApiTimezone(request, userId)
   const { searchParams } = new URL(request.url)
   const date = searchParams.get('date')
   const from = searchParams.get('from')
@@ -81,8 +80,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { userId } = auth.payload
-    const timezone = request.headers.get('x-timezone')
-      || await getUserTimezoneById(userId)
+    const timezone = await resolveApiTimezone(request, userId)
     const { promptId, answer, date } = parsed.data
 
     const { startOfDay, endOfDay } = dayBoundsForTimezone(date, timezone)

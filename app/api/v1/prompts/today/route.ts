@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { authenticateRequest } from '@/lib/api/apiAuth'
 import { apiSuccess, apiError } from '@/lib/api/apiResponse'
 import { getActivePrompts, getEffectiveProfileIds } from '@/app/lib/data'
-import { getUserTimezoneById } from '@/lib/timezone'
+import { resolveApiTimezone } from '@/lib/timezone'
 import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
@@ -11,8 +11,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const { userId, orgId } = auth.payload
-    const timezone = request.headers.get('x-timezone')
-      || await getUserTimezoneById(userId)
+    const timezone = await resolveApiTimezone(request, userId)
     const profileIds = await getEffectiveProfileIds(userId)
     const today = new Date().toLocaleDateString('en-CA', { timeZone: timezone })
     const prompts = await getActivePrompts(userId, orgId, profileIds, today)

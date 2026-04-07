@@ -5,6 +5,20 @@ import { revalidatePath } from 'next/cache'
 import { ensureAdmin, resolveCategory } from './helpers'
 import { PROMPT_TYPES } from '@/lib/promptConstants'
 
+function parsePromptOptions(type: string, optionsRaw: string | null): string | null {
+    if (type === PROMPT_TYPES.RANGE) {
+        return optionsRaw || JSON.stringify(["Low", "High"]);
+    }
+    if (type === PROMPT_TYPES.RADIO || type === PROMPT_TYPES.CHECKBOX) {
+        if (optionsRaw) {
+            const arr = optionsRaw.split(',').map(s => s.trim()).filter(Boolean);
+            return JSON.stringify(arr);
+        }
+        return JSON.stringify(["Yes", "No"]);
+    }
+    return null;
+}
+
 // --- PROMPT CATEGORIES ---
 
 export async function createPromptCategory(formData: FormData) {
@@ -91,20 +105,7 @@ export async function createPrompt(formData: FormData) {
     const categoryId = formData.get('categoryId') as string;
     const categoryString = formData.get('categoryString') as string;
 
-    let options = null;
-    if (type === PROMPT_TYPES.RANGE) {
-        // Range options are sent as JSON string ["Min", "Max"] from client
-        options = optionsRaw;
-        if (!options) options = JSON.stringify(["Low", "High"]);
-    } else if ((type === PROMPT_TYPES.RADIO || type === PROMPT_TYPES.CHECKBOX)) {
-        if (optionsRaw) {
-            const arr = optionsRaw.split(',').map(s => s.trim()).filter(Boolean);
-            options = JSON.stringify(arr);
-        } else {
-            // Default options
-            options = JSON.stringify(["Yes", "No"]);
-        }
-    }
+    const options = parsePromptOptions(type, optionsRaw);
 
     const { categoryId: resolvedCategoryId, categoryString: resolvedCategoryString } =
         await resolveCategory(organizationId, categoryId, categoryString);
@@ -139,22 +140,8 @@ export async function updatePrompt(id: string, formData: FormData) {
     const type = formData.get('type') as string;
     const optionsRaw = formData.get('options') as string;
 
-    // We might not allow changing category here easily without UI support,
-    // but if we do...
     const categoryId = formData.get('categoryId') as string;
-
-    let options = null;
-    if (type === PROMPT_TYPES.RANGE) {
-        options = optionsRaw;
-        if (!options) options = JSON.stringify(["Low", "High"]);
-    } else if ((type === PROMPT_TYPES.RADIO || type === PROMPT_TYPES.CHECKBOX)) {
-        if (optionsRaw) {
-            const arr = optionsRaw.split(',').map(s => s.trim()).filter(Boolean);
-            options = JSON.stringify(arr);
-        } else {
-            options = JSON.stringify(["Yes", "No"]);
-        }
-    }
+    const options = parsePromptOptions(type, optionsRaw);
 
     let updateData: any = {
         content,

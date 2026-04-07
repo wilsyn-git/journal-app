@@ -7,6 +7,43 @@ import { auth } from '@/auth'
 import { resolveUserId } from '@/lib/auth-helpers'
 import { ASSIGNMENT_MODES } from '@/lib/taskConstants'
 
+async function resolveAssignmentUserIds(
+    assignmentMode: string,
+    targetId: string | null,
+    organizationId: string
+): Promise<string[]> {
+    if (assignmentMode === ASSIGNMENT_MODES.USER) {
+        return targetId ? [targetId] : []
+    }
+    if (assignmentMode === ASSIGNMENT_MODES.GROUP) {
+        if (!targetId) return []
+        const group = await prisma.userGroup.findUnique({
+            where: { id: targetId },
+            include: { users: { select: { id: true } } },
+        })
+        return group ? group.users.map((u) => u.id) : []
+    }
+    if (assignmentMode === ASSIGNMENT_MODES.ALL) {
+        const users = await prisma.user.findMany({
+            where: { organizationId },
+            select: { id: true },
+        })
+        return users.map((u) => u.id)
+    }
+    return []
+}
+
+async function verifyAssignmentOwnership(assignmentId: string, userId: string, orgId: string) {
+    const assignment = await prisma.taskAssignment.findUnique({
+        where: { id: assignmentId },
+        include: { task: true },
+    })
+    if (!assignment) return { error: 'Assignment not found' }
+    if (assignment.task.organizationId !== orgId) return { error: 'Unauthorized' }
+    if (assignment.userId !== userId) return { error: 'Unauthorized' }
+    return { assignment }
+}
+
 // --- TASKS ---
 
 export async function createTask(formData: FormData) {
@@ -27,28 +64,7 @@ export async function createTask(formData: FormData) {
     if (!createdById) return { error: 'Could not resolve user' }
 
     try {
-        // Resolve user IDs for assignments
-        let userIds: string[] = []
-
-        if (assignmentMode === ASSIGNMENT_MODES.USER) {
-            if (targetId) userIds = [targetId]
-        } else if (assignmentMode === ASSIGNMENT_MODES.GROUP) {
-            if (targetId) {
-                const group = await prisma.userGroup.findUnique({
-                    where: { id: targetId },
-                    include: { users: { select: { id: true } } },
-                })
-                if (group) {
-                    userIds = group.users.map((u) => u.id)
-                }
-            }
-        } else if (assignmentMode === ASSIGNMENT_MODES.ALL) {
-            const users = await prisma.user.findMany({
-                where: { organizationId },
-                select: { id: true },
-            })
-            userIds = users.map((u) => u.id)
-        }
+        const userIds = await resolveAssignmentUserIds(assignmentMode, targetId, organizationId)
 
         await prisma.$transaction(async (tx) => {
             const task = await tx.task.create({
@@ -126,30 +142,9 @@ export async function updateTask(taskId: string, formData: FormData) {
             return { error: 'Task not found' }
         }
 
-        // Resolve new user IDs if assignment info provided
-        let newUserIds: string[] = []
-
-        if (assignmentMode) {
-            if (assignmentMode === ASSIGNMENT_MODES.USER) {
-                if (targetId) newUserIds = [targetId]
-            } else if (assignmentMode === ASSIGNMENT_MODES.GROUP) {
-                if (targetId) {
-                    const group = await prisma.userGroup.findUnique({
-                        where: { id: targetId },
-                        include: { users: { select: { id: true } } },
-                    })
-                    if (group) {
-                        newUserIds = group.users.map((u) => u.id)
-                    }
-                }
-            } else if (assignmentMode === ASSIGNMENT_MODES.ALL) {
-                const users = await prisma.user.findMany({
-                    where: { organizationId },
-                    select: { id: true },
-                })
-                newUserIds = users.map((u) => u.id)
-            }
-        }
+        const newUserIds = assignmentMode
+            ? await resolveAssignmentUserIds(assignmentMode, targetId, organizationId)
+            : []
 
         await prisma.$transaction(async (tx) => {
             await tx.task.update({
@@ -246,20 +241,8 @@ export async function completeTask(assignmentId: string, notes?: string) {
     if (!userId) return { error: 'Could not resolve user' }
 
     try {
-        const assignment = await prisma.taskAssignment.findUnique({
-            where: { id: assignmentId },
-            include: { task: true },
-        })
-
-        if (!assignment) return { error: 'Assignment not found' }
-
-        const orgId = session.user.organizationId
-        if (assignment.task.organizationId !== orgId) {
-            return { error: 'Unauthorized' }
-        }
-        if (assignment.userId !== userId) {
-            return { error: 'Unauthorized' }
-        }
+        const result = await verifyAssignmentOwnership(assignmentId, userId, session.user.organizationId)
+        if ('error' in result) return result
 
         await prisma.taskAssignment.update({
             where: { id: assignmentId },
@@ -285,20 +268,8 @@ export async function uncompleteTask(assignmentId: string) {
     if (!userId) return { error: 'Could not resolve user' }
 
     try {
-        const assignment = await prisma.taskAssignment.findUnique({
-            where: { id: assignmentId },
-            include: { task: true },
-        })
-
-        if (!assignment) return { error: 'Assignment not found' }
-
-        const orgId = session.user.organizationId
-        if (assignment.task.organizationId !== orgId) {
-            return { error: 'Unauthorized' }
-        }
-        if (assignment.userId !== userId) {
-            return { error: 'Unauthorized' }
-        }
+        const result = await verifyAssignmentOwnership(assignmentId, userId, session.user.organizationId)
+        if ('error' in result) return result
 
         await prisma.taskAssignment.update({
             where: { id: assignmentId },

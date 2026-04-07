@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { authenticateRequest } from '@/lib/api/apiAuth'
 import { apiSuccess, apiError } from '@/lib/api/apiResponse'
-import { getUserTimezoneById } from '@/lib/timezone'
+import { resolveApiTimezone } from '@/lib/timezone'
 import { getInventory } from '@/app/lib/inventoryData'
 import { getAchievementState } from '@/lib/achievementEvaluator'
 import { getUserStats } from '@/app/lib/analytics'
@@ -12,8 +12,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const { userId } = auth.payload
-    const timezone = request.headers.get('x-timezone')
-      || await getUserTimezoneById(userId)
+    const timezone = await resolveApiTimezone(request, userId)
 
     const [stats, inventory] = await Promise.all([
       getUserStats(userId, timezone),
