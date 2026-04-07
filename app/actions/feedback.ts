@@ -1,16 +1,12 @@
 'use server'
 
-import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
+import { ensureAdmin } from './helpers'
 
 export async function toggleEntryLike(entryId: string) {
     try {
-        const session = await auth()
-        const user = session?.user
-        if (!user || user.role !== 'ADMIN') {
-            return { error: "Unauthorized" }
-        }
+        await ensureAdmin()
 
         const entry = await prisma.journalEntry.findUnique({
             where: { id: entryId }

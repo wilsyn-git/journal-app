@@ -13,7 +13,7 @@ type Props = {
 export default async function TaskDetailPage({ params }: Props) {
     const session = await auth()
     const orgId = session?.user?.organizationId
-    if (!session?.user || session.user.role !== 'ADMIN' || !orgId) {
+    if (!orgId) {
         notFound()
     }
 

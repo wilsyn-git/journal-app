@@ -1,7 +1,7 @@
 'use server'
 
-import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
+import { ensureAdmin } from './helpers'
 import path from "path"
 import { writeFile, mkdir } from "fs/promises"
 import { gunzip } from "zlib"
@@ -33,12 +33,7 @@ type RestoreReport = {
 }
 
 export async function restoreSystemData(formData: FormData) {
-    // 1. Auth Check
-    const session = await auth()
-    const user = session?.user
-    if (!user || user.role !== 'ADMIN') {
-        return { error: "Unauthorized" }
-    }
+    await ensureAdmin()
 
     const file = formData.get('file') as File
     const overwrite = formData.get('overwrite') === 'true'

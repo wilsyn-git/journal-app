@@ -1,22 +1,14 @@
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
-import { redirect } from "next/navigation"
 import { BrandingForm } from "@/components/admin/BrandingForm"
 
 export default async function AdminBrandingPage() {
     const session = await auth()
-    if (!session?.user?.email) redirect('/')
+    const orgId = session?.user?.organizationId
 
-    const user = await prisma.user.findUnique({
-        where: { email: session.user.email },
-        select: { role: true, organizationId: true }
-    })
-
-    if (user?.role !== 'ADMIN') redirect('/dashboard')
-
-    const org = await prisma.organization.findUnique({
-        where: { id: user.organizationId }
-    })
+    const org = orgId ? await prisma.organization.findUnique({
+        where: { id: orgId }
+    }) : null
 
     if (!org) return <div>Organization not found</div>
 

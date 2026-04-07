@@ -9,7 +9,7 @@ export default async function NewTaskPage() {
     const session = await auth()
     const orgId = session?.user?.organizationId
 
-    if (!session?.user || session.user.role !== 'ADMIN' || !orgId) {
+    if (!orgId) {
         redirect('/dashboard')
     }
 

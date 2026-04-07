@@ -1,6 +1,5 @@
 
 import { prisma } from "@/lib/prisma"
-import { redirect } from "next/navigation"
 import Link from "next/link"
 import { auth } from "@/auth"
 import { PRIORITY, PRIORITY_LABELS, PRIORITY_COLORS, ASSIGNMENT_MODES } from "@/lib/taskConstants"
@@ -13,12 +12,7 @@ type Props = {
 
 export default async function AdminTasksPage({ searchParams }: Props) {
     const session = await auth();
-
-    if (!session?.user || session.user.role !== 'ADMIN') {
-        redirect("/dashboard")
-    }
-
-    const orgId = session.user.organizationId;
+    const orgId = session?.user?.organizationId;
     const params = await searchParams;
     const tab = typeof params.tab === 'string' ? params.tab : 'active';
     const isArchived = tab === 'archived';

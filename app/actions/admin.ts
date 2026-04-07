@@ -1,25 +1,15 @@
 'use server'
 
-import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { writeFile, unlink } from "fs/promises"
 import { join } from "path"
 import { mkdir } from "fs/promises"
+import { ensureAdmin } from './helpers'
 
 export async function updateBranding(formData: FormData) {
-    const session = await auth()
-    if (!session?.user?.email) return { error: "Not authenticated" }
-
-    // Fetch user with role
-    const user = await prisma.user.findUnique({
-        where: { email: session.user.email },
-        select: { role: true, organizationId: true }
-    })
-
-    if (!user || user.role !== 'ADMIN') {
-        return { error: "Not authorized" }
-    }
+    const session = await ensureAdmin()
+    const user = session.user
 
     const siteName = formData.get("siteName") as string
     const logoFile = formData.get("logo") as File | null

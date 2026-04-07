@@ -1,6 +1,5 @@
 
 import { prisma } from "@/lib/prisma"
-import { redirect } from "next/navigation"
 import Link from "next/link"
 import { togglePrompt, deletePrompt, deletePromptCategory } from "@/app/actions/prompts"
 import { auth } from "@/auth"
@@ -15,11 +14,6 @@ type Props = {
 
 export default async function AdminPromptsPage({ searchParams }: Props) {
     const session = await auth();
-
-    if (!session?.user || session.user.role !== 'ADMIN') {
-        redirect("/dashboard")
-    }
-
     const orgId = session?.user?.organizationId;
     const params = await searchParams;
     const selectedCategoryId = typeof params.cat === 'string' ? params.cat : null;
