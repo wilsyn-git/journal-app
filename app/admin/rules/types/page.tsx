@@ -3,33 +3,8 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { ensureDefaultRuleTypes, createRuleType } from '@/app/actions/rules'
-import { RESET_MODES, DAY_LABELS } from '@/lib/ruleConstants'
 import { RuleTypeForm } from '@/components/admin/RuleTypeForm'
-
-type RuleTypeWithCount = {
-  id: string
-  name: string
-  description: string | null
-  resetMode: string
-  resetDay: number | null
-  resetIntervalDays: number | null
-  sortOrder: number
-  _count: { rules: number }
-}
-
-function formatResetSchedule(ruleType: RuleTypeWithCount): string {
-  if (ruleType.resetMode === RESET_MODES.DAILY) {
-    return 'Resets daily at midnight'
-  }
-  if (ruleType.resetMode === RESET_MODES.WEEKLY) {
-    const dayName = ruleType.resetDay !== null ? DAY_LABELS[ruleType.resetDay] ?? 'Sunday' : 'Sunday'
-    return `Resets weekly on ${dayName} at midnight`
-  }
-  if (ruleType.resetMode === RESET_MODES.INTERVAL) {
-    return `Resets every ${ruleType.resetIntervalDays ?? '?'} day(s)`
-  }
-  return ''
-}
+import { formatResetSchedule } from '@/lib/rules'
 
 export default async function AdminRuleTypesPage() {
   const session = await auth()

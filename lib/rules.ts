@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { RESET_MODES } from '@/lib/ruleConstants'
+import { RESET_MODES, DAY_LABELS } from '@/lib/ruleConstants'
 
 type RuleTypeForPeriod = {
   resetMode: string
@@ -119,6 +119,20 @@ export function getNextResetTime(
 }
 
 /**
+ * Format a rule type's reset schedule as a human-readable description.
+ */
+export function formatResetSchedule(ruleType: { resetMode: string; resetDay: number | null; resetIntervalDays: number | null }): string {
+  if (ruleType.resetMode === RESET_MODES.DAILY) return 'Resets daily at midnight'
+  if (ruleType.resetMode === RESET_MODES.WEEKLY) {
+    return `Resets weekly on ${DAY_LABELS[ruleType.resetDay ?? 0]} at midnight`
+  }
+  if (ruleType.resetMode === RESET_MODES.INTERVAL) {
+    return `Resets every ${ruleType.resetIntervalDays} day${ruleType.resetIntervalDays === 1 ? '' : 's'}`
+  }
+  return 'Unknown schedule'
+}
+
+/**
  * Format milliseconds until reset as a human-readable countdown.
  */
 export function formatResetCountdown(ms: number): string {
@@ -220,6 +234,12 @@ export async function getUserRulesWithStatus(userId: string, timezone: string) {
     },
   })
 
+  // Build sortOrder lookup for O(1) access
+  const sortOrderMap = new Map<string, number>()
+  for (const a of assignments) {
+    sortOrderMap.set(a.rule.id, a.rule.sortOrder)
+  }
+
   // Group by rule type
   const byType = new Map<string, {
     ruleType: typeof assignments[0]['rule']['ruleType']
@@ -231,6 +251,8 @@ export async function getUserRulesWithStatus(userId: string, timezone: string) {
       periodKey: string
       isCompleted: boolean
       completionId: string | null
+      allCompletionKeys: string[]
+      assignmentCreatedAt: Date
     }[]
   }>()
 
@@ -253,16 +275,16 @@ export async function getUserRulesWithStatus(userId: string, timezone: string) {
       periodKey,
       isCompleted: !!completion,
       completionId: completion?.id ?? null,
+      allCompletionKeys: assignment.completions.map(c => c.periodKey),
+      assignmentCreatedAt: assignment.createdAt,
     })
   }
 
   // Sort rules within each type by sort order
   for (const group of byType.values()) {
-    group.rules.sort((a, b) => {
-      const ruleA = assignments.find(x => x.rule.id === a.ruleId)!.rule
-      const ruleB = assignments.find(x => x.rule.id === b.ruleId)!.rule
-      return ruleA.sortOrder - ruleB.sortOrder
-    })
+    group.rules.sort((a, b) =>
+      (sortOrderMap.get(a.ruleId) ?? 0) - (sortOrderMap.get(b.ruleId) ?? 0)
+    )
   }
 
   // Convert to sorted array by type sort order

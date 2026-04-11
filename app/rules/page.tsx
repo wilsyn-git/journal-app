@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { getUserRulesWithStatus, getNextResetTime, formatResetCountdown, generatePeriodKeys, calculateRuleStreak } from '@/lib/rules'
 import { resolveUserId } from '@/lib/auth-helpers'
 import { getUserTimezone } from '@/lib/timezone'
-import { prisma } from '@/lib/prisma'
 import { RuleCheckbox } from '@/components/RuleCheckbox'
 
 export const metadata = {
@@ -43,74 +42,26 @@ export default async function RulesPage() {
     )
   }
 
-  // Fetch streaks for all rules
-  type RuleWithStreak = {
-    assignmentId: string
-    ruleId: string
-    title: string
-    description: string | null
-    periodKey: string
-    isCompleted: boolean
-    completionId: string | null
-    streakCurrent: number
-    streakMax: number
-  }
-
-  type GroupWithStreaks = {
-    ruleType: typeof ruleGroups[0]['ruleType']
-    rules: RuleWithStreak[]
-    perfectStreak: number
-    resetMs: number
-  }
-
-  const groupsWithStreaks: GroupWithStreaks[] = await Promise.all(
-    ruleGroups.map(async (group) => {
-      const rulesWithStreaks: RuleWithStreak[] = await Promise.all(
-        group.rules.map(async (rule) => {
-          // Fetch completions for this assignment
-          const completions = await prisma.ruleCompletion.findMany({
-            where: { ruleAssignmentId: rule.assignmentId },
-            select: { periodKey: true },
-          })
-
-          // Get assignment createdAt for period generation
-          const assignment = await prisma.ruleAssignment.findUnique({
-            where: { id: rule.assignmentId },
-            select: { createdAt: true },
-          })
-
-          const completedKeys = completions.map((c) => c.periodKey)
-          const allKeys = generatePeriodKeys(
-            group.ruleType,
-            timezone,
-            assignment?.createdAt ?? new Date()
-          )
-          const streak = calculateRuleStreak(completedKeys, allKeys)
-
-          return {
-            ...rule,
-            streakCurrent: streak.current,
-            streakMax: streak.max,
-          }
-        })
-      )
-
-      // Perfect streak for this type = minimum current streak across all rules
-      const perfectStreak = rulesWithStreaks.reduce(
-        (min, r) => Math.min(min, r.streakCurrent),
-        rulesWithStreaks[0]?.streakCurrent ?? 0
-      )
-
-      const resetMs = getNextResetTime(group.ruleType, timezone)
-
-      return {
-        ruleType: group.ruleType,
-        rules: rulesWithStreaks,
-        perfectStreak,
-        resetMs,
-      }
+  // Compute streaks from data already loaded by getUserRulesWithStatus (no extra queries)
+  const groupsWithStreaks = ruleGroups.map((group) => {
+    const rulesWithStreaks = group.rules.map((rule) => {
+      const allKeys = generatePeriodKeys(group.ruleType, timezone, rule.assignmentCreatedAt)
+      const streak = calculateRuleStreak(rule.allCompletionKeys, allKeys)
+      return { ...rule, streakCurrent: streak.current, streakMax: streak.max }
     })
-  )
+
+    const perfectStreak = rulesWithStreaks.reduce(
+      (min, r) => Math.min(min, r.streakCurrent),
+      rulesWithStreaks[0]?.streakCurrent ?? 0
+    )
+
+    return {
+      ruleType: group.ruleType,
+      rules: rulesWithStreaks,
+      perfectStreak,
+      resetMs: getNextResetTime(group.ruleType, timezone),
+    }
+  })
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 p-4 md:p-8">
