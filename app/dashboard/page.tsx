@@ -19,10 +19,11 @@ import { ContributionHeatmap } from "@/components/ContributionHeatmap"
 import { TaskBanner } from "@/components/TaskBanner"
 import { StreakFreezeBanner } from "@/components/StreakFreezeBanner"
 import { getInventory, getFrozenDates } from "@/app/lib/inventoryData"
-import { getRuleProgress, getRuleCalendarData } from "@/lib/rules"
+import { getRuleProgress, getRuleCalendarData, getUserRulesWithStatus } from "@/lib/rules"
 import { detectRecoverableStreak } from "@/lib/streakRecovery"
 import { evaluateAchievements, getAndMarkUnnotifiedAchievements } from '@/lib/achievementEvaluator'
 import { AchievementToasts } from '@/components/AchievementToasts'
+import { DailyRulesCard } from '@/components/DailyRulesCard'
 
 type Props = {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -129,10 +130,26 @@ export default async function DashboardPage({ searchParams }: Props) {
         }))
     }
 
-    const [ruleProgress, ruleCalendar] = await Promise.all([
-        getRuleProgress(targetUserId, timezone),
+    const [ruleGroups, ruleCalendar] = await Promise.all([
+        getUserRulesWithStatus(targetUserId, timezone),
         getRuleCalendarData(targetUserId, timezone),
     ])
+
+    // Derive sidebar badge progress from rule groups
+    let ruleProgressTotal = 0
+    let ruleProgressCompleted = 0
+    for (const g of ruleGroups) {
+        for (const r of g.rules) {
+            ruleProgressTotal++
+            if (r.isCompleted) ruleProgressCompleted++
+        }
+    }
+    const ruleProgress = { total: ruleProgressTotal, completed: ruleProgressCompleted }
+
+    // Filter to just daily rules for the dashboard card
+    const dailyRules = ruleGroups
+        .filter(g => g.ruleType.resetMode === 'DAILY')
+        .flatMap(g => g.rules)
 
     const incompleteTasks = taskAssignments.filter(a => !a.completedAt).length
     const urgentTasks = taskAssignments.filter(a => !a.completedAt && a.task.priority === 0).length
@@ -337,6 +354,13 @@ export default async function DashboardPage({ searchParams }: Props) {
                         />
                     )}
                     <TaskBanner totalTasks={incompleteTasks} urgentCount={urgentTasks} />
+                    {isViewingSelf && dailyRules.length > 0 && (
+                        <DailyRulesCard rules={dailyRules.map(r => ({
+                            assignmentId: r.assignmentId,
+                            title: r.title,
+                            isCompleted: r.isCompleted,
+                        }))} />
+                    )}
                     {ContentComponent}
                 </div>
             </div>
