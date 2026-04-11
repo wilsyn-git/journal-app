@@ -57,8 +57,8 @@ export function RulesByUser({ userGroups, typeId, deleteAction }: RulesByUserPro
               className="w-full flex items-center justify-between px-4 py-3 bg-white/5 hover:bg-white/[0.07] transition-colors text-left"
             >
               <div className="flex items-center gap-2">
-                <span className={`text-xs transition-transform ${isCollapsed ? '' : 'rotate-90'}`}>▶</span>
-                <span className="text-white font-medium">{group.userName}</span>
+                <span className={`text-xs transition-transform duration-200 inline-block ${isCollapsed ? '' : 'rotate-90'}`}>▶</span>
+                <span className={`font-medium ${isCollapsed ? 'text-gray-400' : 'text-white'}`}>{group.userName}</span>
                 <span className="text-xs text-gray-500">
                   {group.rules.length} rule{group.rules.length === 1 ? '' : 's'}
                 </span>
