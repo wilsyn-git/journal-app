@@ -1,10 +1,38 @@
 # Journal App — Roadmap
 
-**Last updated:** 2026-03-21
+**Last updated:** 2026-04-11
 
 ---
 
-## Recently Completed (2026-03-21)
+## Recently Completed (2026-04-11)
+
+### Rules (Habit Tracking) Feature
+- RuleType model with configurable reset schedules (Daily, Weekly, Every N Days)
+- Rule model with fan-out assignment (USER/GROUP/ALL), same pattern as tasks
+- User-facing `/rules` page with grouped checklists, per-rule and per-type streaks
+- Admin type-first navigation: `/admin/rules/types` → drill into type → manage rules
+- Rules grouped by user in admin detail view with collapsible sections
+- Dashboard sidebar integration: Rules nav link with progress badge (only when assigned)
+- Implicit reset (no cron) — periods computed at render time using user timezone
+- Completion stats on admin rule detail page
+- See `docs/superpowers/specs/2026-04-11-rules-feature-design.md` for full design
+
+### Achievement Engine
+- Replaced hardcoded badges with tiered achievement system
+- Achievement registry, evaluator, metrics, toast notifications
+- Stats page integration
+
+### Streak Freezes & Inventory
+- User inventory system with streak freeze items
+- Streak shield protection
+
+### Codebase Refactoring
+- Deduplicated task helpers, prompt options, timezone resolution
+- Extracted category helper, consolidated stats
+- Standardized admin authorization pattern
+- Shared prompt type constants, cleanup
+
+## Previously Completed (2026-03-21)
 
 ### Codebase Audit — Phases 1-8
 All 79 findings addressed across 8 phases:
@@ -35,7 +63,14 @@ All 79 findings addressed across 8 phases:
 
 ---
 
-## Upcoming — Task Stats Enhancement
+## Upcoming
+
+### Rules — Follow-up Items
+- **Auto-assign ALL-mode rules to new users** — when a user joins the org, create RuleAssignment records for all ALL-mode rules
+- **Unit tests for period/streak computation** — getPeriodKey, calculateRuleStreak, generatePeriodKeys are pure and highly testable
+- **Delete confirmation for rules** — cascade deletes assignments and completions; add a confirmation dialog
+
+### Task Stats Enhancement
 - Add completion rate card to admin dashboard
 - Add task activity section to user stats page
 - See `docs/exploration-task-stats.md` for details

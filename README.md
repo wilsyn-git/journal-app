@@ -16,6 +16,14 @@ A daily journaling platform with admin-managed prompts, task assignment, analyti
 - **Completion Tracking**: Admin detail page shows per-user status with progress bar
 - **Notification Banner**: Users see a dismissable banner when they have pending tasks
 
+### Rules (Habit Tracking)
+- **Admin-Defined Rule Types**: Create rule categories with configurable reset schedules (Daily, Weekly, or custom N-day intervals)
+- **Flexible Assignment**: Assign rules to individual users, groups, or all users (same fan-out pattern as tasks)
+- **User Check-Off**: Users see a `/rules` page with grouped checklists, checking off rules per period
+- **Streak Tracking**: Per-rule and per-type "perfect" streaks motivate consistent compliance
+- **Implicit Reset**: No cron jobs — period boundaries computed at render time using the user's timezone
+- **Admin Stats**: Per-rule completion rates and per-user breakdown on admin detail pages
+
 ### Analytics
 - **Contribution Heatmap**: GitHub-style journaling history
 - **Word Cloud**: Visual representation of frequent themes
@@ -28,6 +36,7 @@ A daily journaling platform with admin-managed prompts, task assignment, analyti
 - **Prompt Management**: Category-based prompt editor with profile rules (min/max random selection per category)
 - **Groups & Profiles**: Assign users to groups, link profiles with prompt rules
 - **Task Management**: Create, edit, archive tasks with completion matrix view
+- **Rules Management**: Type-first navigation — manage rule types and their reset schedules, then drill in to manage individual rules per type
 - **Branding**: Custom site name and logo per organization
 - **Backup/Restore**: Full system export (gzipped JSON with binary assets) and restore with merge/overwrite modes
 
@@ -102,8 +111,9 @@ A daily journaling platform with admin-managed prompts, task assignment, analyti
 
 ```
 app/
-  actions/          Server actions (journal, tasks, profiles, groups, prompts, users)
-  admin/            Admin pages (dashboard, users, prompts, profiles, groups, tasks, branding, tools)
+  actions/          Server actions (journal, tasks, rules, profiles, groups, prompts, users)
+  admin/            Admin pages (dashboard, users, prompts, profiles, groups, tasks, rules, branding, tools)
+  rules/            User-facing rules check-off page
   dashboard/        User journal dashboard
   stats/            Analytics page
   settings/         User profile settings and timezone preference
@@ -120,6 +130,8 @@ lib/
   timezone.ts       Timezone utilities
   auth-helpers.ts   Session/user resolution
   taskConstants.ts  Task priority and assignment mode constants
+  ruleConstants.ts  Rule reset modes and day labels
+  rules.ts          Period key computation, streak calculation, rule query helpers
 prisma/
   schema.prisma     Database schema
 scripts/
