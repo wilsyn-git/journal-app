@@ -117,6 +117,9 @@ export function AdminSidebar() {
                 <Link href="/admin/tasks" className={linkClass('/admin/tasks')} onClick={() => setIsOpen(false)}>
                     Tasks
                 </Link>
+                <Link href="/admin/rules/types" className={linkClass('/admin/rules')} onClick={() => setIsOpen(false)}>
+                    Rules
+                </Link>
 
                 <div className="h-px bg-white/10 my-2" />
 
