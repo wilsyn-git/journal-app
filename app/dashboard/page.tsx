@@ -19,6 +19,7 @@ import { ContributionHeatmap } from "@/components/ContributionHeatmap"
 import { TaskBanner } from "@/components/TaskBanner"
 import { StreakFreezeBanner } from "@/components/StreakFreezeBanner"
 import { getInventory, getFrozenDates } from "@/app/lib/inventoryData"
+import { getRuleProgress } from "@/lib/rules"
 import { detectRecoverableStreak } from "@/lib/streakRecovery"
 import { evaluateAchievements, getAndMarkUnnotifiedAchievements } from '@/lib/achievementEvaluator'
 import { AchievementToasts } from '@/components/AchievementToasts'
@@ -127,6 +128,8 @@ export default async function DashboardPage({ searchParams }: Props) {
             label: a.label,
         }))
     }
+
+    const ruleProgress = await getRuleProgress(targetUserId, timezone)
 
     const incompleteTasks = taskAssignments.filter(a => !a.completedAt).length
     const urgentTasks = taskAssignments.filter(a => !a.completedAt && a.task.priority === 0).length
@@ -255,6 +258,15 @@ export default async function DashboardPage({ searchParams }: Props) {
                             <span className="text-lg">🧊</span>
                             <span className="font-medium">Inventory</span>
                         </Link>
+                        {ruleProgress.total > 0 && (
+                            <Link href="/rules" className="flex items-center gap-3 px-3 py-2 rounded-lg text-white hover:bg-white/5 transition-colors">
+                                <span className="text-lg">📋</span>
+                                <span className="font-medium">Rules</span>
+                                <span className="ml-auto text-xs bg-purple-500/30 text-purple-300 px-2 py-0.5 rounded-full">
+                                    {ruleProgress.completed}/{ruleProgress.total}
+                                </span>
+                            </Link>
+                        )}
                     </div>
                 )}
 
