@@ -268,8 +268,7 @@ export async function updateRule(ruleId: string, ruleTypeId: string, formData: F
 
     const title = (formData.get('title') as string)?.trim()
     const description = (formData.get('description') as string | null) || null
-    const isActiveRaw = formData.get('isActive') as string | null
-    const isActive = isActiveRaw !== null ? isActiveRaw === 'true' : undefined
+    const isActive = formData.get('isActive') === 'true'
     const assignmentMode = formData.get('assignmentMode') as string | null
     const targetId = formData.get('targetId') as string | null
 
@@ -292,7 +291,7 @@ export async function updateRule(ruleId: string, ruleTypeId: string, formData: F
                 data: {
                     title,
                     description,
-                    ...(isActive !== undefined && { isActive }),
+                    isActive,
                     ...(assignmentMode && {
                         assignmentMode,
                         groupId: assignmentMode === ASSIGNMENT_MODES.GROUP ? targetId : null,
