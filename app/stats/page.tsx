@@ -12,6 +12,8 @@ import Link from "next/link"
 import Image from "next/image"
 import { SidebarHeader } from "@/components/SidebarHeader"
 import { ContributionHeatmap } from "@/components/ContributionHeatmap"
+import { getRuleCalendarData } from "@/lib/rules"
+import { getUserTimezone } from "@/lib/timezone"
 import { TimeOfDayChart } from "@/components/stats/TimeOfDayChart"
 import { WordCloud } from "@/components/stats/WordCloud"
 import { AchievementGrid } from "@/components/stats/AchievementGrid"
@@ -52,7 +54,11 @@ export default async function StatsPage({ searchParams }: Props) {
         isViewingSelf ? getInventory(targetUserId) : Promise.resolve(null),
     ]);
 
-    const achievementState = await getAchievementState(targetUserId, stats.achievementMetrics)
+    const timezone = await getUserTimezone(targetUserId)
+    const [achievementState, ruleCalendar] = await Promise.all([
+        getAchievementState(targetUserId, stats.achievementMetrics),
+        getRuleCalendarData(targetUserId, timezone),
+    ])
 
     const targetUserEmail = !isViewingSelf ? (targetUserInfo?.email || 'Unknown') : session.user.email;
     const targetUserName = !isViewingSelf ? targetUserInfo?.name : session.user.name;
@@ -129,7 +135,7 @@ export default async function StatsPage({ searchParams }: Props) {
                     <div className="mb-12">
                         <h2 className="text-xl font-bold text-white mb-4">Consistency Map</h2>
                         <div className="glass-card p-6 rounded-xl border border-white/10 overflow-x-auto custom-scrollbar min-h-[160px] flex flex-col justify-center">
-                            <ContributionHeatmap data={stats.heatmap} weeksHistory={46} />
+                            <ContributionHeatmap data={stats.heatmap} ruleData={ruleCalendar.dailyStatus} weeksHistory={46} />
                         </div>
                     </div>
 
