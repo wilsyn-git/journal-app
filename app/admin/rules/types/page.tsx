@@ -2,9 +2,9 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { ensureDefaultRuleTypes, createRuleType } from '@/app/actions/rules'
-import { RuleTypeForm } from '@/components/admin/RuleTypeForm'
+import { ensureDefaultRuleTypes } from '@/app/actions/rules'
 import { formatResetSchedule } from '@/lib/rules'
+import { CreateRuleTypeToggle } from '@/components/admin/CreateRuleTypeToggle'
 
 export default async function AdminRuleTypesPage() {
   const session = await auth()
@@ -34,11 +34,14 @@ export default async function AdminRuleTypesPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white">Rule Types</h1>
-        <p className="text-gray-400 text-sm mt-1">
-          Define categories of rules with their own reset schedules.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Rule Types</h1>
+          <p className="text-gray-400 text-sm mt-1">
+            Define categories of rules with their own reset schedules.
+          </p>
+        </div>
+        <CreateRuleTypeToggle />
       </div>
 
       {/* Rule Types List */}
@@ -73,16 +76,6 @@ export default async function AdminRuleTypesPage() {
           ))}
         </div>
       )}
-
-      {/* Create New Type */}
-      <div className="glass-card border border-white/10 rounded-xl p-6">
-        <h2 className="text-lg font-semibold text-white mb-4">Create New Type</h2>
-        <RuleTypeForm
-          action={createRuleType}
-          mode="create"
-          cancelHref="/admin/rules/types"
-        />
-      </div>
     </div>
   )
 }

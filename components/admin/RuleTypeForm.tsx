@@ -18,9 +18,10 @@ type RuleTypeFormProps = {
   }
   mode: 'create' | 'edit'
   cancelHref: string
+  onCancel?: () => void
 }
 
-export function RuleTypeForm({ action, initialData, mode, cancelHref }: RuleTypeFormProps) {
+export function RuleTypeForm({ action, initialData, mode, cancelHref, onCancel }: RuleTypeFormProps) {
   const router = useRouter()
   const { addToast } = useToast()
   const [isPending, startTransition] = useTransition()
@@ -37,7 +38,12 @@ export function RuleTypeForm({ action, initialData, mode, cancelHref }: RuleType
       const result = await action(formData)
       if (result?.success) {
         addToast('success', mode === 'create' ? 'Rule type created' : 'Rule type updated')
-        router.push(cancelHref)
+        if (onCancel) {
+          onCancel()
+          router.refresh()
+        } else {
+          router.push(cancelHref)
+        }
       } else if (result?.error) {
         addToast('error', result.error)
       }
@@ -162,7 +168,7 @@ export function RuleTypeForm({ action, initialData, mode, cancelHref }: RuleType
         </button>
         <button
           type="button"
-          onClick={() => router.push(cancelHref)}
+          onClick={() => onCancel ? onCancel() : router.push(cancelHref)}
           className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5"
         >
           Cancel
