@@ -19,7 +19,7 @@ import { ContributionHeatmap } from "@/components/ContributionHeatmap"
 import { TaskBanner } from "@/components/TaskBanner"
 import { StreakFreezeBanner } from "@/components/StreakFreezeBanner"
 import { getInventory, getFrozenDates } from "@/app/lib/inventoryData"
-import { getRuleProgress } from "@/lib/rules"
+import { getRuleProgress, getRuleCalendarData } from "@/lib/rules"
 import { detectRecoverableStreak } from "@/lib/streakRecovery"
 import { evaluateAchievements, getAndMarkUnnotifiedAchievements } from '@/lib/achievementEvaluator'
 import { AchievementToasts } from '@/components/AchievementToasts'
@@ -129,7 +129,10 @@ export default async function DashboardPage({ searchParams }: Props) {
         }))
     }
 
-    const ruleProgress = await getRuleProgress(targetUserId, timezone)
+    const [ruleProgress, ruleCalendar] = await Promise.all([
+        getRuleProgress(targetUserId, timezone),
+        getRuleCalendarData(targetUserId, timezone),
+    ])
 
     const incompleteTasks = taskAssignments.filter(a => !a.completedAt).length
     const urgentTasks = taskAssignments.filter(a => !a.completedAt && a.task.priority === 0).length
@@ -272,7 +275,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 
                 <TaskSidebar assignments={taskAssignments} />
 
-                <CalendarSidebar completedDates={historyDates} frozenDates={frozenDates} />
+                <CalendarSidebar completedDates={historyDates} frozenDates={frozenDates} ruleCalendar={ruleCalendar} />
             </div>
 
             <div className="p-4 border-t border-white/10 bg-black/20">

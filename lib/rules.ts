@@ -308,3 +308,97 @@ export async function getRuleProgress(userId: string, timezone: string) {
   }
   return { total, completed }
 }
+
+/**
+ * Status of rule completions for a single date/period.
+ * 'none' = no rules completed, 'partial' = some, 'all' = every assigned rule completed.
+ */
+export type RuleCompletionStatus = 'none' | 'partial' | 'all'
+
+/**
+ * Get daily and weekly rule completion status per calendar date for a user.
+ * Used by CalendarSidebar to render check indicators.
+ *
+ * Returns:
+ * - dailyStatus: Map<"YYYY-MM-DD", RuleCompletionStatus>
+ * - weeklyStatus: Map<"YYYY-MM-DD", RuleCompletionStatus> (keyed by the Sunday date of each week)
+ */
+export async function getRuleCalendarData(userId: string, timezone: string) {
+  // Get all active rule assignments grouped by reset mode
+  const assignments = await prisma.ruleAssignment.findMany({
+    where: {
+      userId,
+      rule: { isActive: true },
+    },
+    include: {
+      rule: {
+        include: { ruleType: true },
+      },
+      completions: {
+        select: { periodKey: true },
+      },
+    },
+  })
+
+  const dailyAssignments = assignments.filter(a => a.rule.ruleType.resetMode === 'DAILY')
+  const weeklyAssignments = assignments.filter(a => a.rule.ruleType.resetMode === 'WEEKLY')
+
+  // Daily: periodKey is "YYYY-MM-DD", so group completions by date
+  const dailyStatus = new Map<string, RuleCompletionStatus>()
+  if (dailyAssignments.length > 0) {
+    // Collect all dates that have any completion
+    const allDailyDates = new Set<string>()
+    for (const a of dailyAssignments) {
+      for (const c of a.completions) {
+        // Daily periodKeys are YYYY-MM-DD
+        if (/^\d{4}-\d{2}-\d{2}$/.test(c.periodKey)) {
+          allDailyDates.add(c.periodKey)
+        }
+      }
+    }
+
+    for (const date of allDailyDates) {
+      const completedCount = dailyAssignments.filter(a =>
+        a.completions.some(c => c.periodKey === date)
+      ).length
+      if (completedCount === 0) continue
+      dailyStatus.set(
+        date,
+        completedCount >= dailyAssignments.length ? 'all' : 'partial'
+      )
+    }
+  }
+
+  // Weekly: periodKey is "week-YYYY-MM-DD-R{day}", extract the date portion as the Sunday
+  const weeklyStatus = new Map<string, RuleCompletionStatus>()
+  if (weeklyAssignments.length > 0) {
+    const allWeeklyPeriods = new Set<string>()
+    for (const a of weeklyAssignments) {
+      for (const c of a.completions) {
+        allWeeklyPeriods.add(c.periodKey)
+      }
+    }
+
+    for (const periodKey of allWeeklyPeriods) {
+      const completedCount = weeklyAssignments.filter(a =>
+        a.completions.some(c => c.periodKey === periodKey)
+      ).length
+      if (completedCount === 0) continue
+
+      // Extract the date from "week-YYYY-MM-DD-R0"
+      const match = periodKey.match(/^week-(\d{4}-\d{2}-\d{2})-R\d+$/)
+      if (!match) continue
+      const sundayDate = match[1]
+
+      weeklyStatus.set(
+        sundayDate,
+        completedCount >= weeklyAssignments.length ? 'all' : 'partial'
+      )
+    }
+  }
+
+  return {
+    dailyStatus: Object.fromEntries(dailyStatus),
+    weeklyStatus: Object.fromEntries(weeklyStatus),
+  }
+}

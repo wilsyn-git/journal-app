@@ -5,12 +5,18 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
+import type { RuleCompletionStatus } from '@/lib/rules'
+
 type Props = {
     completedDates: { date: string, hasLike: boolean }[] // YYYY-MM-DD + Status
     frozenDates?: string[]
+    ruleCalendar?: {
+        dailyStatus: Record<string, RuleCompletionStatus>
+        weeklyStatus: Record<string, RuleCompletionStatus>
+    }
 }
 
-export function CalendarSidebar({ completedDates, frozenDates = [] }: Props) {
+export function CalendarSidebar({ completedDates, frozenDates = [], ruleCalendar }: Props) {
     const searchParams = useSearchParams();
     const activeDateParam = searchParams.get('date');
     const viewUserId = searchParams.get('viewUserId');
@@ -110,6 +116,11 @@ export function CalendarSidebar({ completedDates, frozenDates = [] }: Props) {
             const streak = getStreakLength(dateStr);
             const showFlame = isCompleted && streak >= 7;
 
+            // Rule completion indicators
+            const dailyRule = ruleCalendar?.dailyStatus[dateStr]
+            const isSunday = (startDay + d - 1) % 7 === 0
+            const weeklyRule = isSunday ? ruleCalendar?.weeklyStatus[dateStr] : undefined
+
             const cellContent = (
                 <Link
                     href={`/dashboard?date=${dateStr}${viewUserId ? `&viewUserId=${viewUserId}` : ''}`}
@@ -132,6 +143,16 @@ export function CalendarSidebar({ completedDates, frozenDates = [] }: Props) {
                     )}
                     {isFrozen && (
                         <span className="absolute -top-3 -right-2 text-[10px] filter drop-shadow">🧊</span>
+                    )}
+                    {dailyRule && (
+                        <span className={`absolute -bottom-1 -right-1 text-[8px] leading-none ${
+                            dailyRule === 'all' ? 'text-green-400' : 'text-blue-400'
+                        }`}>✓</span>
+                    )}
+                    {weeklyRule && (
+                        <span className={`absolute -top-1 -right-1 text-[8px] leading-none ${
+                            weeklyRule === 'all' ? 'text-yellow-400' : 'text-blue-400'
+                        }`}>✓</span>
                     )}
                 </Link>
             )
