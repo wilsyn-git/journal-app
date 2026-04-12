@@ -24,6 +24,7 @@ import { detectRecoverableStreak } from "@/lib/streakRecovery"
 import { evaluateAchievements, getAndMarkUnnotifiedAchievements } from '@/lib/achievementEvaluator'
 import { AchievementToasts } from '@/components/AchievementToasts'
 import { DailyRulesCard } from '@/components/DailyRulesCard'
+import { AdminRulesCard } from '@/components/AdminRulesCard'
 
 type Props = {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -359,6 +360,21 @@ export default async function DashboardPage({ searchParams }: Props) {
                             assignmentId: r.assignmentId,
                             title: r.title,
                             isCompleted: r.isCompleted,
+                        }))} />
+                    )}
+                    {!isViewingSelf && ruleGroups.length > 0 && (
+                        <AdminRulesCard ruleGroups={ruleGroups.map(g => ({
+                            ruleType: {
+                                name: g.ruleType.name,
+                                resetMode: g.ruleType.resetMode,
+                                resetDay: g.ruleType.resetDay,
+                                resetIntervalDays: g.ruleType.resetIntervalDays,
+                            },
+                            rules: g.rules.map(r => ({
+                                assignmentId: r.assignmentId,
+                                title: r.title,
+                                isCompleted: r.isCompleted,
+                            })),
                         }))} />
                     )}
                     {ContentComponent}
