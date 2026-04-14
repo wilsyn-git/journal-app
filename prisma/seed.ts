@@ -107,6 +107,47 @@ async function main() {
         }
     })
 
+    // Seed rule completions for past days (test data for calendar/rules visibility)
+    const testAssignments = await prisma.ruleAssignment.findMany({
+        where: { user: { email: 'admin@example.com' } },
+        include: { rule: true },
+    })
+
+    if (testAssignments.length > 0) {
+        const today = new Date()
+        // Create completions for the past 7 days with varying patterns
+        for (let daysAgo = 1; daysAgo <= 7; daysAgo++) {
+            const date = new Date(today)
+            date.setDate(date.getDate() - daysAgo)
+            const dateStr = date.toISOString().split('T')[0]
+
+            // Complete some rules (not all) to show partial vs full completion
+            const rulesToComplete = daysAgo % 2 === 0
+                ? testAssignments // even days: all complete
+                : testAssignments.slice(0, Math.ceil(testAssignments.length / 2)) // odd days: partial
+
+            for (const assignment of rulesToComplete) {
+                await prisma.ruleCompletion.upsert({
+                    where: {
+                        ruleAssignmentId_periodKey: {
+                            ruleAssignmentId: assignment.id,
+                            periodKey: dateStr,
+                        },
+                    },
+                    update: {},
+                    create: {
+                        ruleAssignmentId: assignment.id,
+                        userId: assignment.userId,
+                        ruleId: assignment.ruleId,
+                        periodKey: dateStr,
+                        completedAt: date,
+                    },
+                })
+            }
+        }
+        console.log(`Seeded rule completions for ${testAssignments.length} assignments over 7 days.`)
+    }
+
     console.log("Seeding completed successfully.");
 }
 
