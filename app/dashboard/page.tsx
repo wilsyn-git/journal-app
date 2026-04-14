@@ -131,8 +131,13 @@ export default async function DashboardPage({ searchParams }: Props) {
         }))
     }
 
+    const today = getTodayForUser(timezone);
+    const dateParam = typeof params.date === 'string' ? params.date : null;
+    const isPast = dateParam && dateParam !== today;
+    const targetDate = isPast ? dateParam! : today;
+
     const [ruleGroups, ruleCalendar] = await Promise.all([
-        getUserRulesWithStatus(targetUserId, timezone),
+        getUserRulesWithStatus(targetUserId, timezone, targetDate),
         getRuleCalendarData(targetUserId, timezone),
     ])
 
@@ -157,10 +162,6 @@ export default async function DashboardPage({ searchParams }: Props) {
 
     const brandingOrg = userWithOrg?.organization;
     const hasConfiguration = profileIds.length > 0;
-    const today = getTodayForUser(timezone);
-    const dateParam = typeof params.date === 'string' ? params.date : null;
-    const isPast = dateParam && dateParam !== today;
-    const targetDate = isPast ? dateParam! : today;
 
     const activePrompts = await getActivePrompts(
         targetUserId,
@@ -355,14 +356,14 @@ export default async function DashboardPage({ searchParams }: Props) {
                         />
                     )}
                     <TaskBanner totalTasks={incompleteTasks} urgentCount={urgentTasks} />
-                    {isViewingSelf && dailyRules.length > 0 && (
+                    {isViewingSelf && !isPast && dailyRules.length > 0 && (
                         <DailyRulesCard rules={dailyRules.map(r => ({
                             assignmentId: r.assignmentId,
                             title: r.title,
                             isCompleted: r.isCompleted,
                         }))} />
                     )}
-                    {!isViewingSelf && ruleGroups.length > 0 && (
+                    {(isPast || !isViewingSelf) && ruleGroups.length > 0 && (
                         <AdminRulesCard ruleGroups={ruleGroups.map(g => ({
                             ruleType: {
                                 name: g.ruleType.name,
