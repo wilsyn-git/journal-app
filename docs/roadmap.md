@@ -4,7 +4,15 @@
 
 ---
 
-## Recently Completed (2026-04-11)
+## Recently Completed (2026-04-14)
+
+### Calendar & Rules Visibility
+- Replaced invisible 8px checkmark characters with colored dot indicators on calendar days (green=all complete, blue=partial, yellow=weekly all)
+- `getUserRulesWithStatus` now accepts optional date for historical lookups
+- Past days show read-only rule completions via `AdminRulesCard`; interactive toggles only for current user on today
+- Admin inspecting another user always sees read-only rules regardless of date
+
+## Previously Completed (2026-04-11)
 
 ### Rules (Habit Tracking) Feature
 - RuleType model with configurable reset schedules (Daily, Weekly, Every N Days)

@@ -22,6 +22,8 @@ A daily journaling platform with admin-managed prompts, task assignment, analyti
 - **User Check-Off**: Users see a `/rules` page with grouped checklists, checking off rules per period
 - **Streak Tracking**: Per-rule and per-type "perfect" streaks motivate consistent compliance
 - **Implicit Reset**: No cron jobs — period boundaries computed at render time using the user's timezone
+- **Calendar Indicators**: Colored dots on calendar days show daily (green/blue) and weekly (yellow/blue) rule completion at a glance
+- **Historical View**: Clicking a past day shows read-only rule completions for that date; interactive toggles only on today
 - **Admin Stats**: Per-rule completion rates and per-user breakdown on admin detail pages
 
 ### Analytics
