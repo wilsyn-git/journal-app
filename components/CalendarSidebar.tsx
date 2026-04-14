@@ -145,14 +145,14 @@ export function CalendarSidebar({ completedDates, frozenDates = [], ruleCalendar
                         <span className="absolute -top-3 -right-2 text-[10px] filter drop-shadow">🧊</span>
                     )}
                     {dailyRule && (
-                        <span className={`absolute -bottom-1 -right-1 text-[8px] leading-none ${
-                            dailyRule === 'all' ? 'text-green-400' : 'text-blue-400'
-                        }`}>✓</span>
+                        <span className={`absolute -bottom-1 -right-1 w-2 h-2 rounded-full border border-black/50 ${
+                            dailyRule === 'all' ? 'bg-green-400' : 'bg-blue-400'
+                        }`} />
                     )}
                     {weeklyRule && (
-                        <span className={`absolute -top-1 -right-1 text-[8px] leading-none ${
-                            weeklyRule === 'all' ? 'text-yellow-400' : 'text-blue-400'
-                        }`}>✓</span>
+                        <span className={`absolute -top-1 -right-1 w-2 h-2 rounded-full border border-black/50 ${
+                            weeklyRule === 'all' ? 'bg-yellow-400' : 'bg-blue-400'
+                        }`} />
                     )}
                 </Link>
             )
