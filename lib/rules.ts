@@ -220,7 +220,7 @@ export function generatePeriodKeys(
  * Get rule assignments for a user with current period completion status.
  * Groups by rule type for display.
  */
-export async function getUserRulesWithStatus(userId: string, timezone: string) {
+export async function getUserRulesWithStatus(userId: string, timezone: string, dateStr?: string) {
   const assignments = await prisma.ruleAssignment.findMany({
     where: {
       userId,
@@ -259,7 +259,7 @@ export async function getUserRulesWithStatus(userId: string, timezone: string) {
   for (const assignment of assignments) {
     const { rule } = assignment
     const { ruleType } = rule
-    const periodKey = getPeriodKey(ruleType, timezone)
+    const periodKey = getPeriodKey(ruleType, timezone, dateStr ? new Date(dateStr + 'T12:00:00') : undefined)
 
     const completion = assignment.completions.find(c => c.periodKey === periodKey)
 
