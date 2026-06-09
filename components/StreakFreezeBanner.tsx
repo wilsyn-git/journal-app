@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStreakRecovery } from '@/app/actions/inventory'
+import { useToast } from '@/components/providers/ToastProvider'
 
 type Props = {
   missedDays: string[]
@@ -14,6 +15,8 @@ type Props = {
 export function StreakFreezeBanner({ missedDays, freezesCost, shieldsCost, streakAtRisk }: Props) {
   const [dismissed, setDismissed] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const [confirming, setConfirming] = useState(false)
+  const { addToast } = useToast()
   const router = useRouter()
 
   if (dismissed) return null
@@ -36,6 +39,10 @@ export function StreakFreezeBanner({ missedDays, freezesCost, shieldsCost, strea
       const result = await useStreakRecovery(missedDays, freezesCost, shieldsCost)
       if ('success' in result && result.success) {
         router.refresh()
+      } else {
+        const message = ('error' in result && result.error) ? result.error : 'Recovery failed — try again'
+        addToast('error', message)
+        setConfirming(false)
       }
     })
   }
@@ -61,13 +68,31 @@ export function StreakFreezeBanner({ missedDays, freezesCost, shieldsCost, strea
       </div>
 
       <div className="flex items-center gap-2 flex-shrink-0">
-        <button
-          onClick={handleUseRecovery}
-          disabled={isPending}
-          className={`text-[12px] ${buttonClass} transition-colors whitespace-nowrap disabled:opacity-50`}
-        >
-          {isPending ? 'Applying...' : 'Recover'}
-        </button>
+        {confirming ? (
+          <>
+            <button
+              onClick={handleUseRecovery}
+              disabled={isPending}
+              className={`text-[12px] ${buttonClass} transition-colors whitespace-nowrap disabled:opacity-50`}
+            >
+              {isPending ? 'Applying...' : `Confirm: ${costLabel}`}
+            </button>
+            <button
+              onClick={() => setConfirming(false)}
+              disabled={isPending}
+              className="text-[12px] text-gray-400 hover:text-white transition-colors whitespace-nowrap disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={() => setConfirming(true)}
+            className={`text-[12px] ${buttonClass} transition-colors whitespace-nowrap`}
+          >
+            Recover
+          </button>
+        )}
         <button
           onClick={() => setDismissed(true)}
           aria-label="Dismiss streak recovery notification"
