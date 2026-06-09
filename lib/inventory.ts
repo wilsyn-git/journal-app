@@ -13,13 +13,14 @@ export const STREAK_SHIELD = {
 
 export type InventoryItemMetadata = {
   earningCounter: number
+  lastEarnedDay?: string
 }
 
 export function parseItemMetadata(metadata: string | null): InventoryItemMetadata {
   if (!metadata) return { earningCounter: 0 }
   try {
     const parsed = JSON.parse(metadata)
-    return { earningCounter: parsed.earningCounter ?? 0 }
+    return { earningCounter: parsed.earningCounter ?? 0, lastEarnedDay: parsed.lastEarnedDay }
   } catch {
     return { earningCounter: 0 }
   }
