@@ -2,7 +2,8 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { ensureAdmin, resolveCategory } from './helpers'
+import { ensureAdmin } from './helpers'
+import { resolveCategory } from '@/lib/categoryUtils'
 import { requireAdminForPrompts, requireAdminForCategory } from '@/lib/adminGuards'
 import { PROMPT_TYPES } from '@/lib/promptConstants'
 

@@ -2,7 +2,8 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { ensureAdmin, resolveCategory } from './helpers'
+import { ensureAdmin } from './helpers'
+import { resolveCategory } from '@/lib/categoryUtils'
 
 export async function createProfile(formData: FormData) {
     const session = await ensureAdmin();

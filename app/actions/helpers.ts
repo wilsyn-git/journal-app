@@ -9,5 +9,3 @@ export async function ensureAdmin() {
     }
     return session!
 }
-
-export { resolveCategory } from '@/lib/categoryUtils'
