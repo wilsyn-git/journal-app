@@ -27,8 +27,6 @@ export function MidnightRefreshNotice({ timezone, renderedDay }: Props) {
   const notifiedRef = useRef(false)
 
   useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout>
-
     const maybeNotify = () => {
       if (notifiedRef.current) return
       if (dayInTimezone(timezone) === renderedDay) return
@@ -48,7 +46,7 @@ export function MidnightRefreshNotice({ timezone, renderedDay }: Props) {
       )
     }
 
-    timeoutId = setTimeout(maybeNotify, msUntilNextMidnight(timezone))
+    const timeoutId = setTimeout(maybeNotify, msUntilNextMidnight(timezone))
 
     const onVisible = () => {
       if (document.visibilityState === 'visible') maybeNotify()
