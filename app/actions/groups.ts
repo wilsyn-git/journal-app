@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { ensureAdmin } from './helpers'
+import { requireAdminForGroup } from '@/lib/adminGuards'
 
 // Enhanced createGroup to handle initial profile and users
 export async function createGroup(formData: FormData) {
@@ -38,7 +39,7 @@ export async function createGroup(formData: FormData) {
 }
 
 export async function updateUserGroup(id: string, formData: FormData) {
-    await ensureAdmin();
+    await requireAdminForGroup(id);
     const name = formData.get('name') as string;
     const description = formData.get('description') as string;
 
@@ -60,7 +61,7 @@ export async function updateUserGroup(id: string, formData: FormData) {
 }
 
 export async function deleteGroup(id: string) {
-    await ensureAdmin();
+    await requireAdminForGroup(id);
     try {
         await prisma.userGroup.delete({ where: { id } });
         revalidatePath('/admin/groups');
@@ -70,7 +71,7 @@ export async function deleteGroup(id: string) {
 }
 
 export async function updateGroupProfiles(groupId: string, formData: FormData) {
-    await ensureAdmin();
+    await requireAdminForGroup(groupId);
     const profileId = formData.get('profileId') as string;
 
     const dataToUpdate: any = {};
@@ -107,11 +108,17 @@ export async function updateGroupProfiles(groupId: string, formData: FormData) {
 }
 
 export async function addUserToGroup(groupId: string, formData: FormData) {
-    await ensureAdmin();
+    const session = await requireAdminForGroup(groupId);
     const email = formData.get('email') as string;
 
-    // Verify user exists and is in same org
-    // For simplicity, just connect by email
+    const targetUser = await prisma.user.findUnique({
+        where: { email },
+        select: { organizationId: true }
+    });
+    if (!targetUser || targetUser.organizationId !== session.user.organizationId) {
+        return { error: 'User not found' }
+    }
+
     try {
         await prisma.userGroup.update({
             where: { id: groupId },
@@ -129,7 +136,7 @@ export async function addUserToGroup(groupId: string, formData: FormData) {
 }
 
 export async function removeUserFromGroup(groupId: string, userId: string) {
-    await ensureAdmin();
+    await requireAdminForGroup(groupId);
     try {
         await prisma.userGroup.update({
             where: { id: groupId },
