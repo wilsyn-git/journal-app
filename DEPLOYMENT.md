@@ -21,7 +21,7 @@ ssh -i /path/to/key.pem ubuntu@your-server-ip
 sudo apt update && sudo apt upgrade -y
 
 # Install Node.js 18+ (via NVM recommended or Nodesource)
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt install -y nodejs nginx certbot python3-certbot-nginx
 
 # Install Process Manager (PM2)
@@ -58,7 +58,7 @@ NODE_ENV="production"
 AWS_ACCESS_KEY_ID="<your-key>"
 AWS_SECRET_ACCESS_KEY="<your-secret>"
 AWS_REGION="us-east-1"
-SOURCE_EMAIL="no-reply@your-domain.com"
+EMAIL_FROM="no-reply@your-domain.com"
 ```
 
 ## 3. Database Setup
