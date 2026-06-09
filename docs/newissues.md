@@ -122,6 +122,7 @@ The 1-second debounce plus in-flight saves mean closing the tab or navigating ri
 
 ### N3.4 [MED] Rule checkboxes have no optimistic update — ✅ Fixed 2026-06-09 (fix/daily-flow-ux)
 **Resolution:** Added shared client hook `components/hooks/useRuleToggle.ts` (`useOptimistic` + `useTransition` + error toast). `RuleCheckbox` and `DailyRulesCard.RuleRow` now flip the checkbox instantly on tap and auto-revert with an error toast on failure (the `⏳` spinner branch is gone). Covered by `tests/components/ruleCheckbox.test.tsx` and `tests/components/dailyRulesCard.test.tsx`.
+**Follow-up (LOW, open):** `DailyRulesCard`'s aggregate header — the `completed/total` counter, "✓ Complete" badge, and progress-bar width — still derives from the server `rules` prop, so it lags one round-trip behind the optimistic per-row flips (the rows themselves are instant). To make the aggregate instant too, lift optimistic state to the card level (array-level `useOptimistic`) so the count/bar update from the optimistic row states. Deferred deliberately to keep this pass scoped to the shared per-row hook.
 **Where:** `components/RuleCheckbox.tsx:25-35`, `components/DailyRulesCard.tsx:35-50`
 Toggling a rule disables the control until the server round-trip completes; the check doesn't appear immediately. On slow connections it feels like the tap didn't register — and this is the highest-frequency interaction in the app.
 **Fix:** Use `useOptimistic` (the pattern already exists in `PastJournalView.tsx`) and revert with an error toast on failure.
