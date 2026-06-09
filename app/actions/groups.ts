@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { ensureAdmin } from './helpers'
-import { requireAdminForGroup } from '@/lib/adminGuards'
+import { requireAdminForGroup, requireAdminForProfiles } from '@/lib/adminGuards'
 
 // Enhanced createGroup to handle initial profile and users
 export async function createGroup(formData: FormData) {
@@ -77,6 +77,7 @@ export async function updateGroupProfiles(groupId: string, formData: FormData) {
     const dataToUpdate: any = {};
 
     if (profileId) {
+        await requireAdminForProfiles([profileId]);
         dataToUpdate.profiles = {
             set: [{ id: profileId }] // Enforce 1-1 by replacing all with this one
         };
@@ -85,11 +86,12 @@ export async function updateGroupProfiles(groupId: string, formData: FormData) {
         // Or if 'profiles' checkbox array was sent (legacy), handle that?
         const profileIds = formData.getAll('profiles') as string[];
         if (profileIds.length > 0) {
+            await requireAdminForProfiles(profileIds);
             dataToUpdate.profiles = {
                 set: profileIds.map(id => ({ id }))
             };
         } else {
-            // Explicitly clearing
+            // Explicitly clearing — no profile IDs to check
             dataToUpdate.profiles = { set: [] };
         }
     }
