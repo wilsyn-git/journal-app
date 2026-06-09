@@ -1,8 +1,9 @@
+> ⚠️ **This documents ScoringApp — a SEPARATE project — not journal-app.**
+> It is kept only as a cross-reference for reusable patterns. **journal-app uses NextAuth v5 (Credentials)**, NOT Better Auth — see `ARCHITECTURE.md` and `README.md`. Do not treat anything in this file as journal-app's stack, auth, routing, or deployment.
+
 # ScoringApp — Architecture & Design Decisions
 
-> **Note:** This documents the ScoringApp (a separate project), kept here as a cross-reference for reusable patterns. For journal-app specific architecture, see the codebase and spec files in `docs/superpowers/specs/`.
-
-A reference document capturing the patterns, decisions, and rationale behind ScoringApp. Intended for cross-referencing when building or evaluating other projects.
+A reference document capturing the patterns, decisions, and rationale behind ScoringApp. Intended for cross-referencing when building or evaluating other projects. For journal-app architecture, see `ARCHITECTURE.md` and the spec files in `docs/superpowers/specs/`.
 
 ## Tech Stack
 

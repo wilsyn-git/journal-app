@@ -75,3 +75,7 @@ types/                  # TypeScript type definitions
 - **Timezone-aware** operations via lib/timezone.ts
 - **Role-based access** with admin checks in server actions and API routes
 - **Date-aware rules** — `getUserRulesWithStatus` accepts optional date for historical lookups; interactive toggles only for current user on today, read-only view for past days and admin inspection
+
+## Related Docs
+
+> ScoringApp patterns (a separate project, kept for cross-reference) live in [`docs/reference/scoringappPatterns.md`](docs/reference/scoringappPatterns.md).
