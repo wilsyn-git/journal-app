@@ -56,8 +56,11 @@ export default async function DashboardPage({ searchParams }: Props) {
 
     let targetUserEmail = session.user?.email || '';
     if (!isViewingSelf) {
-        const u = await prisma.user.findUnique({ where: { id: targetUserId }, select: { email: true } })
-        targetUserEmail = u?.email || 'Unknown User';
+        const u = await prisma.user.findUnique({ where: { id: targetUserId }, select: { email: true, organizationId: true } })
+        if (!u || u.organizationId !== session.user.organizationId) {
+            redirect('/dashboard')
+        }
+        targetUserEmail = u.email;
     }
 
     // Parallel Group: All queries that only need targetUserId, currentUserId, or isAdmin
