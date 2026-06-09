@@ -114,17 +114,21 @@ On save failure the status flips to 'error' for 2 seconds, then resets to 'idle'
 The 1-second debounce plus in-flight saves mean closing the tab or navigating right after typing loses text, with no `beforeunload` warning and no pending-state check.
 **Fix:** Add a `beforeunload` handler when current text differs from last-saved text or a save is in flight; flush the debounce on `visibilitychange`/blur.
 
-### N3.3 [MED] Dashboard goes stale across midnight
+### N3.3 [MED] Dashboard goes stale across midnight — ✅ Fixed 2026-06-09 (fix/daily-flow-ux)
+**Resolution:** Added `components/MidnightRefreshNotice.tsx` (mount-only, rendered in `app/dashboard/page.tsx`). At the next midnight in the user's timezone — and on `visibilitychange`/`focus`, covering slept-through-midnight tabs — it fires a persistent (`duration: 0`) info toast "New day started — showing yesterday's view" with a Refresh button calling `router.refresh()`. No silent auto-refresh, so an in-progress journal entry is never clobbered. Covered by `tests/components/midnightRefreshNotice.test.tsx` (incl. a cross-timezone America/New_York case).
 **Where:** `app/dashboard/page.tsx:45-65`, `components/CalendarSidebar.tsx`
 "Today" is computed server-side at render. A user with the dashboard open past midnight (common for an evening journaling habit) keeps writing into yesterday's view until they manually refresh.
 **Fix:** Client-side timer that fires at the next midnight in the user's timezone and calls `router.refresh()` (or shows a "New day — refresh" toast).
 
-### N3.4 [MED] Rule checkboxes have no optimistic update
+### N3.4 [MED] Rule checkboxes have no optimistic update — ✅ Fixed 2026-06-09 (fix/daily-flow-ux)
+**Resolution:** Added shared client hook `components/hooks/useRuleToggle.ts` (`useOptimistic` + `useTransition` + error toast). `RuleCheckbox` and `DailyRulesCard.RuleRow` now flip the checkbox instantly on tap and auto-revert with an error toast on failure (the `⏳` spinner branch is gone). Covered by `tests/components/ruleCheckbox.test.tsx` and `tests/components/dailyRulesCard.test.tsx`.
+**Follow-up (LOW, open):** `DailyRulesCard`'s aggregate header — the `completed/total` counter, "✓ Complete" badge, and progress-bar width — still derives from the server `rules` prop, so it lags one round-trip behind the optimistic per-row flips (the rows themselves are instant). To make the aggregate instant too, lift optimistic state to the card level (array-level `useOptimistic`) so the count/bar update from the optimistic row states. Deferred deliberately to keep this pass scoped to the shared per-row hook.
 **Where:** `components/RuleCheckbox.tsx:25-35`, `components/DailyRulesCard.tsx:35-50`
 Toggling a rule disables the control until the server round-trip completes; the check doesn't appear immediately. On slow connections it feels like the tap didn't register — and this is the highest-frequency interaction in the app.
 **Fix:** Use `useOptimistic` (the pattern already exists in `PastJournalView.tsx`) and revert with an error toast on failure.
 
-### N3.5 [MED] Using a streak freeze has no confirmation, and failures offer no retry
+### N3.5 [MED] Using a streak freeze has no confirmation, and failures offer no retry — ✅ Fixed 2026-06-09 (fix/daily-flow-ux)
+**Resolution:** `StreakFreezeBanner` now requires an explicit second tap — the first "Recover" tap reveals a "Confirm: {cost}" button (showing the freeze/shield cost) plus Cancel. Failures, previously a silent no-op, now surface an error toast and revert to the Recover button as the retry path. Covered by `tests/components/streakFreezeBanner.test.tsx`.
 **Where:** `components/StreakFreezeBanner.tsx:40-65`
 "Recover" immediately spends scarce freezes/shields with no confirmation of the cost; if the action fails, the user has no retry path short of reloading.
 **Fix:** Confirm with an explicit cost breakdown ("This uses X freezes and Y shields"); on failure show the error with a "Try again" button.
