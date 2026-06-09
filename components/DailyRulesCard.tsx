@@ -1,8 +1,7 @@
 'use client'
 
-import { useTransition } from 'react'
 import Link from 'next/link'
-import { toggleRuleCompletion } from '@/app/actions/rules'
+import { useRuleToggle } from '@/components/hooks/useRuleToggle'
 
 type DailyRule = {
   assignmentId: string
@@ -53,30 +52,24 @@ export function DailyRulesCard({ rules }: Props) {
 }
 
 function RuleRow({ rule }: { rule: DailyRule }) {
-  const [isPending, startTransition] = useTransition()
-
-  const handleToggle = () => {
-    startTransition(async () => {
-      await toggleRuleCompletion(rule.assignmentId)
-    })
-  }
+  const { completed, isPending, toggle } = useRuleToggle(rule.assignmentId, rule.isCompleted)
 
   return (
     <button
-      onClick={handleToggle}
+      onClick={toggle}
       disabled={isPending}
       className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left text-sm transition-colors ${
         isPending ? 'opacity-50' : ''
       } ${
-        rule.isCompleted
+        completed
           ? 'text-green-300/70'
           : 'text-white hover:bg-white/5'
       }`}
     >
       <span className="text-sm flex-shrink-0">
-        {isPending ? '⏳' : rule.isCompleted ? '✅' : '⬜'}
+        {completed ? '✅' : '⬜'}
       </span>
-      <span className={rule.isCompleted ? 'line-through' : ''}>
+      <span className={completed ? 'line-through' : ''}>
         {rule.title}
       </span>
     </button>
