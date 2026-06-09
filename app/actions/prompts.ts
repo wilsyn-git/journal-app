@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { ensureAdmin, resolveCategory } from './helpers'
+import { requireAdminForPrompts, requireAdminForCategory } from '@/lib/adminGuards'
 import { PROMPT_TYPES } from '@/lib/promptConstants'
 
 function parsePromptOptions(type: string, optionsRaw: string | null): string | null {
@@ -43,7 +44,7 @@ export async function createPromptCategory(formData: FormData) {
 }
 
 export async function deletePromptCategory(id: string) {
-    const session = await ensureAdmin();
+    const session = await requireAdminForCategory(id);
     const organizationId = session.user.organizationId;
 
     try {
@@ -133,7 +134,7 @@ export async function createPrompt(formData: FormData) {
 }
 
 export async function updatePrompt(id: string, formData: FormData) {
-    const session = await ensureAdmin();
+    const session = await requireAdminForPrompts([id]);
     const organizationId = session.user.organizationId;
 
     const content = formData.get('content') as string;
@@ -169,7 +170,7 @@ export async function updatePrompt(id: string, formData: FormData) {
 }
 
 export async function togglePrompt(id: string, currentState: boolean) {
-    await ensureAdmin()
+    await requireAdminForPrompts([id])
     try {
         await prisma.prompt.update({
             where: { id },
@@ -185,7 +186,7 @@ export async function togglePrompt(id: string, currentState: boolean) {
 }
 
 export async function deletePrompt(id: string) {
-    await ensureAdmin()
+    await requireAdminForPrompts([id])
     try {
         await prisma.$transaction([
             prisma.journalEntry.deleteMany({ where: { promptId: id } }),
@@ -202,7 +203,7 @@ export async function deletePrompt(id: string) {
 }
 
 export async function reorderPrompts(items: { id: string; sortOrder: number }[]) {
-    await ensureAdmin();
+    await requireAdminForPrompts(items.map((item) => item.id));
     try {
         await prisma.$transaction(
             items.map((item) =>
