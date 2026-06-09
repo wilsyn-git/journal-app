@@ -1,5 +1,6 @@
 
 import { prisma } from "@/lib/prisma"
+import { auth } from "@/auth"
 import Link from "next/link"
 
 import { NewUserForm } from "@/components/admin/NewUserForm"
@@ -7,7 +8,13 @@ import { ChangePasswordDialog } from "@/components/ChangePasswordDialog"
 import { DeleteUserDialog } from "@/components/admin/DeleteUserDialog"
 
 export default async function AdminUsersPage() {
+    const session = await auth()
+    if (!session?.user?.organizationId) {
+        throw new Error("Unauthorized")
+    }
+
     const users = await prisma.user.findMany({
+        where: { organizationId: session.user.organizationId },
         orderBy: { createdAt: 'desc' },
         include: {
             _count: {
