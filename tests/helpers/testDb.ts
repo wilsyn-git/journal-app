@@ -13,10 +13,15 @@ export function createTestDb(): TestDb {
   const dir = mkdtempSync(join(tmpdir(), 'journalAppTest-'))
   const url = `file:${join(dir, 'test.db')}`
 
-  execSync('npx prisma db push --skip-generate', {
-    env: { ...process.env, DATABASE_URL: url },
-    stdio: 'pipe',
-  })
+  try {
+    execSync('npx prisma db push --skip-generate --accept-data-loss', {
+      env: { ...process.env, DATABASE_URL: url },
+      stdio: 'pipe',
+    })
+  } catch (err) {
+    const stderr = err instanceof Error && 'stderr' in err ? String((err as { stderr: unknown }).stderr) : ''
+    throw new Error(`prisma db push failed:\n${stderr || (err as Error).message}`)
+  }
 
   const prisma = new PrismaClient({ datasources: { db: { url } } })
 
