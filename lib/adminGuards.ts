@@ -52,6 +52,22 @@ export async function requireAdminForPrompts(promptIds: string[]): Promise<Sessi
     return session
 }
 
+/** Throws unless ALL given profiles belong to the admin's organization. */
+export async function requireAdminForProfiles(profileIds: string[]): Promise<Session> {
+    const session = await requireAdminSession()
+    // Dedupe so repeated IDs don't deflate the count below the distinct-rows the
+    // DB returns (which would falsely reject an otherwise-valid request).
+    const uniqueIds = [...new Set(profileIds)]
+    if (uniqueIds.length === 0) return session
+    const count = await prisma.profile.count({
+        where: { id: { in: uniqueIds }, organizationId: session.user.organizationId },
+    })
+    if (count !== uniqueIds.length) {
+        throw new Error('Unauthorized: profile(s) not in your organization')
+    }
+    return session
+}
+
 /** Throws unless the admin and the target prompt category share an organization. */
 export async function requireAdminForCategory(categoryId: string): Promise<Session> {
     const session = await requireAdminSession()
