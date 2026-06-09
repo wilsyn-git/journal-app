@@ -315,6 +315,11 @@ export async function getRuleProgress(userId: string, timezone: string) {
  */
 export type RuleCompletionStatus = 'none' | 'partial' | 'all'
 
+type AssignmentWithCompletions = {
+  rule: { ruleType: { resetMode: string } }
+  completions: { periodKey: string }[]
+}
+
 /**
  * Get daily and weekly rule completion status per calendar date for a user.
  * Used by CalendarSidebar to render check indicators.
@@ -340,65 +345,59 @@ export async function getRuleCalendarData(userId: string, timezone: string) {
     },
   })
 
+  return computeRuleCalendarStatus(assignments)
+}
+
+const WEEKLY_KEY_RE = /^week-(\d{4}-\d{2}-\d{2})-R\d+$/
+
+/**
+ * Pure transform: given an array of rule assignments (each with its completions),
+ * return daily and weekly completion status maps.
+ *
+ * Complexity: O(total completions) — single pass per group to build count maps.
+ *
+ * @internal exported for unit testing only
+ */
+export function computeRuleCalendarStatus(assignments: AssignmentWithCompletions[]): {
+  dailyStatus: Record<string, 'partial' | 'all'>
+  weeklyStatus: Record<string, 'partial' | 'all'>
+} {
   const dailyAssignments = assignments.filter(a => a.rule.ruleType.resetMode === 'DAILY')
   const weeklyAssignments = assignments.filter(a => a.rule.ruleType.resetMode === 'WEEKLY')
 
-  // Daily: periodKey is "YYYY-MM-DD", so group completions by date
-  const dailyStatus = new Map<string, RuleCompletionStatus>()
+  // --- Daily: single pass over all completions to count assignments per date ---
+  const dailyStatus: Record<string, 'partial' | 'all'> = {}
   if (dailyAssignments.length > 0) {
-    // Collect all dates that have any completion
-    const allDailyDates = new Set<string>()
+    const dailyCounts = new Map<string, number>()
     for (const a of dailyAssignments) {
       for (const c of a.completions) {
-        // Daily periodKeys are YYYY-MM-DD
         if (/^\d{4}-\d{2}-\d{2}$/.test(c.periodKey)) {
-          allDailyDates.add(c.periodKey)
+          dailyCounts.set(c.periodKey, (dailyCounts.get(c.periodKey) ?? 0) + 1)
         }
       }
     }
-
-    for (const date of allDailyDates) {
-      const completedCount = dailyAssignments.filter(a =>
-        a.completions.some(c => c.periodKey === date)
-      ).length
-      if (completedCount === 0) continue
-      dailyStatus.set(
-        date,
-        completedCount >= dailyAssignments.length ? 'all' : 'partial'
-      )
+    for (const [date, count] of dailyCounts) {
+      dailyStatus[date] = count >= dailyAssignments.length ? 'all' : 'partial'
     }
   }
 
-  // Weekly: periodKey is "week-YYYY-MM-DD-R{day}", extract the date portion as the Sunday
-  const weeklyStatus = new Map<string, RuleCompletionStatus>()
+  // --- Weekly: single pass over all completions to count assignments per period ---
+  const weeklyStatus: Record<string, 'partial' | 'all'> = {}
   if (weeklyAssignments.length > 0) {
-    const allWeeklyPeriods = new Set<string>()
+    const weeklyCounts = new Map<string, number>()
     for (const a of weeklyAssignments) {
       for (const c of a.completions) {
-        allWeeklyPeriods.add(c.periodKey)
+        if (WEEKLY_KEY_RE.test(c.periodKey)) {
+          weeklyCounts.set(c.periodKey, (weeklyCounts.get(c.periodKey) ?? 0) + 1)
+        }
       }
     }
-
-    for (const periodKey of allWeeklyPeriods) {
-      const completedCount = weeklyAssignments.filter(a =>
-        a.completions.some(c => c.periodKey === periodKey)
-      ).length
-      if (completedCount === 0) continue
-
-      // Extract the date from "week-YYYY-MM-DD-R0"
-      const match = periodKey.match(/^week-(\d{4}-\d{2}-\d{2})-R\d+$/)
-      if (!match) continue
+    for (const [periodKey, count] of weeklyCounts) {
+      const match = WEEKLY_KEY_RE.exec(periodKey)!
       const sundayDate = match[1]
-
-      weeklyStatus.set(
-        sundayDate,
-        completedCount >= weeklyAssignments.length ? 'all' : 'partial'
-      )
+      weeklyStatus[sundayDate] = count >= weeklyAssignments.length ? 'all' : 'partial'
     }
   }
 
-  return {
-    dailyStatus: Object.fromEntries(dailyStatus),
-    weeklyStatus: Object.fromEntries(weeklyStatus),
-  }
+  return { dailyStatus, weeklyStatus }
 }
