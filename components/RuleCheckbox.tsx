@@ -1,7 +1,6 @@
 'use client'
 
-import { useTransition } from 'react'
-import { toggleRuleCompletion } from '@/app/actions/rules'
+import { useRuleToggle } from '@/components/hooks/useRuleToggle'
 
 type RuleCheckboxProps = {
   assignmentId: string
@@ -12,29 +11,23 @@ type RuleCheckboxProps = {
 }
 
 export function RuleCheckbox({ assignmentId, title, description, isCompleted, streakCurrent }: RuleCheckboxProps) {
-  const [isPending, startTransition] = useTransition()
-
-  const handleToggle = () => {
-    startTransition(async () => {
-      await toggleRuleCompletion(assignmentId)
-    })
-  }
+  const { completed, isPending, toggle } = useRuleToggle(assignmentId, isCompleted)
 
   return (
     <button
-      onClick={handleToggle}
+      onClick={toggle}
       disabled={isPending}
       className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left ${
-        isCompleted
+        completed
           ? 'bg-green-500/10 border border-green-500/20'
           : 'bg-white/5 border border-white/10 hover:bg-white/10'
       } ${isPending ? 'opacity-50' : ''}`}
     >
       <span className="text-lg flex-shrink-0">
-        {isPending ? '⏳' : isCompleted ? '✅' : '⬜'}
+        {completed ? '✅' : '⬜'}
       </span>
       <div className="flex-1 min-w-0">
-        <span className={`font-medium ${isCompleted ? 'text-green-300 line-through' : 'text-white'}`}>
+        <span className={`font-medium ${completed ? 'text-green-300 line-through' : 'text-white'}`}>
           {title}
         </span>
         {description && (
