@@ -62,7 +62,8 @@ When an admin views the dashboard or the admin users page, `prisma.user.findMany
 
 ## 2. Performance
 
-### N2.1 [HIGH] `getRuleCalendarData` does O(dates × assignments) filtering
+### N2.1 [HIGH] `getRuleCalendarData` does O(dates × assignments) filtering — ✅ Fixed 2026-06-09 (fix/n2.1-rule-calendar-and-n4.1-docs)
+**Resolution:** Extracted the pure transform into `computeRuleCalendarStatus(assignments)` and replaced the nested per-date `.filter().some()` scans with single-pass `Map<periodKey, count>` builds (daily + weekly), iterated once to classify `'all'`/`'partial'`. Now O(total completions). The `@@unique([ruleAssignmentId, periodKey])` constraint guarantees one completion per (assignment, period), so counting rows is exactly equivalent to the old distinct-assignment count — output is byte-for-byte identical. Weekly keys are validated before counting (symmetric with daily). Covered by `tests/lib/ruleCalendarData.test.ts` (11 cases: all/partial/empty, n=1 boundary, multi-date, malformed daily+weekly keys, mixed buckets).
 **Where:** `lib/rules.ts:361-363`, `383-385`
 For every calendar date, the code re-scans all rule assignments and their completions with nested `.filter()/.some()`. With a year of dates and many rules this is the most expensive computation on dashboard load.
 **Fix:** Build a `Map<periodKey, Set<assignmentId>>` from completions once, then iterate dates with O(1) lookups.
@@ -172,12 +173,14 @@ Notes live in local state and can be lost if the user navigates before blur; exp
 
 ## 4. Documentation Drift & Hygiene
 
-### N4.1 [HIGH] Docs contradict each other on the auth stack
+### N4.1 [HIGH] Docs contradict each other on the auth stack — ✅ Fixed 2026-06-09 (fix/n2.1-rule-calendar-and-n4.1-docs)
+**Resolution:** Root cause was structural, not a wrong claim — the offending file is entirely a ScoringApp reference doc (Better Auth is *correct for ScoringApp*), just mislocated in journal-app's `docs/` with a weak banner. Rewriting it to NextAuth would have falsified a valid reference. Instead relocated it (see N4.2) and added a loud banner stating journal-app uses NextAuth v5. README.md and ARCHITECTURE.md were already correct and unchanged (except a discoverability pointer added to ARCHITECTURE.md).
 **Where:** `README.md:72`, `ARCHITECTURE.md:13` vs `docs/architecture-and-decisions.md`
 README/ARCHITECTURE correctly say NextAuth v5 (Credentials); `architecture-and-decisions.md` describes Better Auth + Prisma adapter (carried over from ScoringApp). Anyone using the latter doc gets the wrong mental model for sessions and route protection.
 **Fix:** Make all docs state NextAuth v5; see N4.2 for the structural fix.
 
-### N4.2 [MED] ScoringApp content dominates a journal-app doc
+### N4.2 [MED] ScoringApp content dominates a journal-app doc — ✅ Fixed 2026-06-09 (fix/n2.1-rule-calendar-and-n4.1-docs)
+**Resolution:** `git mv docs/architecture-and-decisions.md → docs/reference/scoringappPatterns.md` (history preserved) with a strong "this is ScoringApp, not journal-app" banner, plus a pointer line in `ARCHITECTURE.md`. Resolved together with N4.1.
 **Where:** `docs/architecture-and-decisions.md`
 Most of the file (tech stack, route protection, accessibility, SEO sections) describes ScoringApp, with only a header note saying it's a cross-reference. It's the source of the N4.1 contradiction.
 **Fix:** Move ScoringApp material to `docs/reference/scoringappPatterns.md` with a clear banner; keep `architecture-and-decisions.md` journal-app-only.
