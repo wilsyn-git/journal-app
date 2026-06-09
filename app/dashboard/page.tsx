@@ -345,7 +345,12 @@ export default async function DashboardPage({ searchParams }: Props) {
 
                 {/* Heatmap Section */}
                 <div className="w-full">
-                    <ContributionHeatmap data={userStats.heatmap} weeksHistory={12} />
+                    <ContributionHeatmap
+                        data={userStats.heatmap}
+                        weeksHistory={12}
+                        scrollable={false}
+                        stats={{ currentStreak: userStats.currentStreak, maxStreak: userStats.maxStreak }}
+                    />
                 </div>
             </div>
 

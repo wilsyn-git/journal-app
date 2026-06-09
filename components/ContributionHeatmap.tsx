@@ -4,11 +4,18 @@ import { useMemo, useRef, useEffect } from 'react'
 
 import type { RuleCompletionStatus } from '@/lib/rules'
 
+type HeatmapStats = {
+    currentStreak: number
+    maxStreak: number
+}
+
 type Props = {
     data: Record<string, number> // Date YYYY-MM-DD -> Value (Avg Words)
     ruleData?: Record<string, RuleCompletionStatus> // Date -> daily rule status
-    weeksHistory?: number // Default 12
+    weeksHistory?: number // Default 52
     showLegend?: boolean
+    scrollable?: boolean // Horizontal scroll for long histories (stats page). Off = fits container.
+    stats?: HeatmapStats // When provided, renders a motivational stat strip
 }
 
 // Journal color scale
@@ -33,9 +40,9 @@ function getColor(value: number) {
     return getJournalColor(value)
 }
 
-export function ContributionHeatmap({ data, ruleData, weeksHistory = 52, showLegend = true }: Props) {
+export function ContributionHeatmap({ data, ruleData, weeksHistory = 52, showLegend = true, scrollable = true, stats }: Props) {
     // Generate last N weeks (Current + N-1 past)
-    const { weeks, months } = useMemo(() => {
+    const { weeks, months, activeDays } = useMemo(() => {
         const weeksArray = []
         const today = new Date()
 
@@ -49,6 +56,9 @@ export function ContributionHeatmap({ data, ruleData, weeksHistory = 52, showLeg
 
         const monthLabels: { index: number, label: string }[] = []
         let lastMonth = -1
+        let active = 0
+
+        const todayStr = today.toLocaleDateString('en-CA')
 
         // Iterate weeksHistory total
         for (let w = 0; w < weeksHistory; w++) {
@@ -59,7 +69,6 @@ export function ContributionHeatmap({ data, ruleData, weeksHistory = 52, showLeg
 
             const currentMonth = weekDate.getMonth()
             // If month changed, add label at this index
-            // BUT: Don't add if it's too close to end? No, just add.
             if (currentMonth !== lastMonth) {
                 const monthName = weekDate.toLocaleString('default', { month: 'short' })
                 monthLabels.push({ index: w, label: monthName })
@@ -73,33 +82,33 @@ export function ContributionHeatmap({ data, ruleData, weeksHistory = 52, showLeg
                 const dateStr = date.toLocaleDateString('en-CA')
                 const value = data[dateStr] || 0
 
-                // Future Check
-                const todayStr = today.toLocaleDateString('en-CA')
                 const isActuallyFuture = dateStr > todayStr
+                if (!isActuallyFuture && value > 0) active++
 
                 weekDays.push({
                     date: dateStr,
                     value,
                     isFuture: isActuallyFuture,
+                    isToday: dateStr === todayStr,
                     dayIndex: d // 0=Sun, 1=Mon...
                 })
             }
             weeksArray.push(weekDays)
         }
 
-        return { weeks: weeksArray, months: monthLabels }
+        return { weeks: weeksArray, months: monthLabels, activeDays: active }
     }, [data, weeksHistory])
 
     const scrollRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
-        if (scrollRef.current) {
+        if (scrollable && scrollRef.current) {
             scrollRef.current.scrollLeft = scrollRef.current.scrollWidth
         }
-    }, [weeks])
+    }, [weeks, scrollable])
 
     return (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
             <div className="flex">
                 {/* Day Labels (Left Column) */}
                 <div className="flex flex-col gap-[3px] pr-2 pt-6 text-[10px] text-gray-400 font-medium leading-[14px]">
@@ -114,10 +123,10 @@ export function ContributionHeatmap({ data, ruleData, weeksHistory = 52, showLeg
                     <div className="h-3.5"></div> {/* Sat */}
                 </div>
 
-                {/* Main Scrollable Area */}
+                {/* Main grid area (scrollable only when explicitly enabled) */}
                 <div
                     ref={scrollRef}
-                    className="overflow-x-auto custom-scrollbar pb-2"
+                    className={scrollable ? 'overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden' : 'overflow-hidden'}
                 >
                     <div className="flex flex-col gap-1 min-w-max">
                         {/* Month Headers */}
@@ -145,6 +154,7 @@ export function ContributionHeatmap({ data, ruleData, weeksHistory = 52, showLeg
                                             return <div key={dIdx} className="w-3.5 h-3.5 invisible" />
                                         }
 
+                                        const todayRing = day.isToday ? ' ring-1 ring-inset ring-white/50' : ''
                                         const ruleStatus = ruleData?.[day.date]
                                         const hasRuleData = ruleData && ruleStatus
 
@@ -153,7 +163,7 @@ export function ContributionHeatmap({ data, ruleData, weeksHistory = 52, showLeg
                                             return (
                                                 <div
                                                     key={dIdx}
-                                                    className="w-3.5 h-3.5 rounded-[2px] relative overflow-hidden"
+                                                    className={`w-3.5 h-3.5 rounded-[2px] relative overflow-hidden${todayRing}`}
                                                     title={`${day.date}: ${day.value} avg words | Rules: ${ruleStatus}`}
                                                 >
                                                     {/* Upper-left triangle: rules */}
@@ -173,7 +183,7 @@ export function ContributionHeatmap({ data, ruleData, weeksHistory = 52, showLeg
                                         return (
                                             <div
                                                 key={dIdx}
-                                                className={`w-3.5 h-3.5 rounded-[2px] transition-colors ${getColor(day.value)}`}
+                                                className={`w-3.5 h-3.5 rounded-[2px] transition-colors ${getColor(day.value)}${todayRing}`}
                                                 title={`${day.date}: ${day.value} avg words`}
                                             />
                                         )
@@ -181,36 +191,59 @@ export function ContributionHeatmap({ data, ruleData, weeksHistory = 52, showLeg
                                 </div>
                             ))}
                         </div>
-
-                        {showLegend && (
-                            <div className="flex flex-wrap justify-end items-center gap-x-4 gap-y-1 mt-2 text-[10px] text-gray-400">
-                                <div className="flex items-center gap-2">
-                                    <span>Journal:</span>
-                                    <span>Less</span>
-                                    <div className="flex gap-1">
-                                        <div className="w-3 h-3 bg-white/5 rounded-sm" />
-                                        <div className="w-3 h-3 bg-green-900/40 rounded-sm" />
-                                        <div className="w-3 h-3 bg-green-600 rounded-sm" />
-                                        <div className="w-3 h-3 bg-green-400 rounded-sm" />
-                                    </div>
-                                    <span>More</span>
-                                </div>
-                                {ruleData && (
-                                    <div className="flex items-center gap-2">
-                                        <span>Rules:</span>
-                                        <div className="flex gap-1">
-                                            <div className="w-3 h-3 bg-white/5 rounded-sm" />
-                                            <div className="w-3 h-3 bg-blue-500/60 rounded-sm" />
-                                            <div className="w-3 h-3 bg-purple-500 rounded-sm" />
-                                        </div>
-                                        <span>All</span>
-                                    </div>
-                                )}
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>
+
+            {/* Footer: stat strip (left) + legend (right) — lives outside the scroll area */}
+            {(stats || showLegend) && (
+                <div className={`flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px] ${stats ? 'justify-between' : 'justify-end'}`}>
+                    {stats && (
+                        <div className="flex items-center gap-x-4 gap-y-1 flex-wrap">
+                            <span className="flex items-center gap-1.5">
+                                <span aria-hidden>🔥</span>
+                                <span className="font-semibold text-white text-xs">{stats.currentStreak}</span>
+                                <span className="text-gray-400">day streak</span>
+                            </span>
+                            <span className="text-gray-600" aria-hidden>·</span>
+                            <span className="flex items-center gap-1.5 text-gray-400">
+                                Best <span className="font-semibold text-white text-xs">{stats.maxStreak}</span>
+                            </span>
+                            <span className="text-gray-600" aria-hidden>·</span>
+                            <span className="flex items-center gap-1.5 text-gray-400">
+                                <span className="font-semibold text-white text-xs">{activeDays}</span> active days
+                            </span>
+                        </div>
+                    )}
+
+                    {showLegend && (
+                        <div className="flex flex-wrap justify-end items-center gap-x-4 gap-y-1 text-gray-400">
+                            <div className="flex items-center gap-2">
+                                <span>Journal:</span>
+                                <span>Less</span>
+                                <div className="flex gap-1">
+                                    <div className="w-3 h-3 bg-white/5 rounded-sm" />
+                                    <div className="w-3 h-3 bg-green-900/40 rounded-sm" />
+                                    <div className="w-3 h-3 bg-green-600 rounded-sm" />
+                                    <div className="w-3 h-3 bg-green-400 rounded-sm" />
+                                </div>
+                                <span>More</span>
+                            </div>
+                            {ruleData && (
+                                <div className="flex items-center gap-2">
+                                    <span>Rules:</span>
+                                    <div className="flex gap-1">
+                                        <div className="w-3 h-3 bg-white/5 rounded-sm" />
+                                        <div className="w-3 h-3 bg-blue-500/60 rounded-sm" />
+                                        <div className="w-3 h-3 bg-purple-500 rounded-sm" />
+                                    </div>
+                                    <span>All</span>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     )
 }
