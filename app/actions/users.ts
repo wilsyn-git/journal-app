@@ -6,6 +6,7 @@ import { sendEmail } from '@/lib/email'
 import { welcomeEmail } from '@/lib/email/templates'
 import bcrypt from 'bcryptjs'
 import { ensureAdmin } from './helpers'
+import { requireAdminForUser } from '@/lib/adminGuards'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createUser(prevState: any, formData: FormData) {
@@ -63,9 +64,7 @@ export async function createUser(prevState: any, formData: FormData) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function updateUser(userId: string, prevState: any, formData: FormData) {
-    await ensureAdmin();
-    // Validate org access? Ideally check if target user is in same org.
-    // For simplicity assuming shared org context or admin super-power properly scoped.
+    await requireAdminForUser(userId);
 
     const email = formData.get('email') as string;
     const name = formData.get('name') as string;
@@ -92,7 +91,7 @@ export async function updateUser(userId: string, prevState: any, formData: FormD
 }
 
 export async function deleteUser(userId: string) {
-    const session = await ensureAdmin();
+    const session = await requireAdminForUser(userId);
 
     // 1. Prevent Self-Deletion
     if (session?.user?.id === userId) {

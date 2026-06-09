@@ -33,6 +33,13 @@ export async function changePassword(
         if (session.user.role !== 'ADMIN') {
             return { error: "Unauthorized: Only admins can reset other users' passwords" }
         }
+        const target = await prisma.user.findUnique({
+            where: { id: targetUserId },
+            select: { organizationId: true }
+        })
+        if (!target || target.organizationId !== session.user.organizationId) {
+            return { error: "Unauthorized: User not found in your organization" }
+        }
         userIdToUpdate = targetUserId
         isAdminOverride = true
     } else {
