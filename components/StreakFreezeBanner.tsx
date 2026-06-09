@@ -34,7 +34,7 @@ export function StreakFreezeBanner({ missedDays, freezesCost, shieldsCost, strea
   const handleUseRecovery = () => {
     startTransition(async () => {
       const result = await useStreakRecovery(missedDays, freezesCost, shieldsCost)
-      if (result.success) {
+      if ('success' in result && result.success) {
         router.refresh()
       }
     })
