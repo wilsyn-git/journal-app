@@ -38,7 +38,7 @@ export function RuleCheckbox({ assignmentId, title, description, isCompleted, st
           {title}
         </span>
         {description && (
-          <p className="text-xs text-gray-400 mt-0.5 truncate">{description}</p>
+          <p className="text-xs text-gray-400 mt-0.5">{description}</p>
         )}
       </div>
       {streakCurrent > 0 && (
