@@ -62,7 +62,6 @@ describe('computeRuleCalendarStatus', () => {
       makeAssignment('DAILY', []),
     ]
     const result = computeRuleCalendarStatus(assignments)
-    expect('2026-06-03' in result.dailyStatus).toBe(false)
     expect(Object.keys(result.dailyStatus)).toHaveLength(0)
   })
 
@@ -121,5 +120,26 @@ describe('computeRuleCalendarStatus', () => {
     ]
     const result = computeRuleCalendarStatus(assignments)
     expect(Object.keys(result.weeklyStatus)).toHaveLength(0)
+  })
+
+  // 9. n=1 boundary: single assignment with one completion → 'all' (guards count >= length)
+  it('daily: single assignment with one completion on a date → "all"', () => {
+    const assignments = [
+      makeAssignment('DAILY', ['2026-06-10']),
+    ]
+    const result = computeRuleCalendarStatus(assignments)
+    expect(result.dailyStatus['2026-06-10']).toBe('all')
+  })
+
+  // 10. Multi-date: single assignment with completions on multiple distinct dates
+  it('daily: completions on multiple distinct dates all appear with correct status', () => {
+    const assignments = [
+      makeAssignment('DAILY', ['2026-06-10', '2026-06-11', '2026-06-12']),
+    ]
+    const result = computeRuleCalendarStatus(assignments)
+    expect(result.dailyStatus['2026-06-10']).toBe('all')
+    expect(result.dailyStatus['2026-06-11']).toBe('all')
+    expect(result.dailyStatus['2026-06-12']).toBe('all')
+    expect(Object.keys(result.dailyStatus)).toHaveLength(3)
   })
 })

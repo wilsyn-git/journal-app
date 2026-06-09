@@ -315,6 +315,11 @@ export async function getRuleProgress(userId: string, timezone: string) {
  */
 export type RuleCompletionStatus = 'none' | 'partial' | 'all'
 
+type AssignmentWithCompletions = {
+  rule: { ruleType: { resetMode: string } }
+  completions: { periodKey: string }[]
+}
+
 /**
  * Get daily and weekly rule completion status per calendar date for a user.
  * Used by CalendarSidebar to render check indicators.
@@ -343,10 +348,7 @@ export async function getRuleCalendarData(userId: string, timezone: string) {
   return computeRuleCalendarStatus(assignments)
 }
 
-type AssignmentWithCompletions = {
-  rule: { ruleType: { resetMode: string } }
-  completions: { periodKey: string }[]
-}
+const WEEKLY_KEY_RE = /^week-(\d{4}-\d{2}-\d{2})-R\d+$/
 
 /**
  * Pure transform: given an array of rule assignments (each with its completions),
@@ -356,12 +358,15 @@ type AssignmentWithCompletions = {
  *
  * @internal exported for unit testing only
  */
-export function computeRuleCalendarStatus(assignments: AssignmentWithCompletions[]) {
+export function computeRuleCalendarStatus(assignments: AssignmentWithCompletions[]): {
+  dailyStatus: Record<string, 'partial' | 'all'>
+  weeklyStatus: Record<string, 'partial' | 'all'>
+} {
   const dailyAssignments = assignments.filter(a => a.rule.ruleType.resetMode === 'DAILY')
   const weeklyAssignments = assignments.filter(a => a.rule.ruleType.resetMode === 'WEEKLY')
 
   // --- Daily: single pass over all completions to count assignments per date ---
-  const dailyStatus: Record<string, RuleCompletionStatus> = {}
+  const dailyStatus: Record<string, 'partial' | 'all'> = {}
   if (dailyAssignments.length > 0) {
     const dailyCounts = new Map<string, number>()
     for (const a of dailyAssignments) {
@@ -377,17 +382,18 @@ export function computeRuleCalendarStatus(assignments: AssignmentWithCompletions
   }
 
   // --- Weekly: single pass over all completions to count assignments per period ---
-  const weeklyStatus: Record<string, RuleCompletionStatus> = {}
+  const weeklyStatus: Record<string, 'partial' | 'all'> = {}
   if (weeklyAssignments.length > 0) {
     const weeklyCounts = new Map<string, number>()
     for (const a of weeklyAssignments) {
       for (const c of a.completions) {
-        weeklyCounts.set(c.periodKey, (weeklyCounts.get(c.periodKey) ?? 0) + 1)
+        if (WEEKLY_KEY_RE.test(c.periodKey)) {
+          weeklyCounts.set(c.periodKey, (weeklyCounts.get(c.periodKey) ?? 0) + 1)
+        }
       }
     }
     for (const [periodKey, count] of weeklyCounts) {
-      const match = periodKey.match(/^week-(\d{4}-\d{2}-\d{2})-R\d+$/)
-      if (!match) continue
+      const match = WEEKLY_KEY_RE.exec(periodKey)!
       const sundayDate = match[1]
       weeklyStatus[sundayDate] = count >= weeklyAssignments.length ? 'all' : 'partial'
     }
