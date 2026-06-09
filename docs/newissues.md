@@ -58,6 +58,11 @@ When an admin views the dashboard or the admin users page, `prisma.user.findMany
 `JournalEntry` and `RuleCompletion` grow unbounded on a single SQLite file on EC2. Not urgent, but worth a documented plan (and pairs with the existing backup issue 66).
 **Fix:** Document a retention/export approach in `DEPLOYMENT.md` (e.g., yearly export to S3); revisit if the DB file or query times grow.
 
+### N1.9 [LOW] Weekly calendar `'all'` is unreachable when rules have mixed reset days
+**Where:** `lib/rules.ts` `computeRuleCalendarStatus` (weekly branch), threshold `count >= weeklyAssignments.length`
+Weekly completions are keyed `week-<resetDate>-R<resetDay>`, and the calendar buckets them by `<resetDate>` — which is partitioned by reset weekday (a date encodes its weekday, so completions for different reset days never share a bucket). But the `'all'` threshold compares each bucket's count against `weeklyAssignments.length` (the count of **all** weekly rules, across every reset day). So if a user has weekly rules with different reset days (e.g., one Sunday-reset, one Wednesday-reset), no single date bucket can ever reach the total, and the calendar shows `'partial'` even when every rule due on that reset day was completed — `'all'` becomes unreachable. Only affects users who mix weekly reset days; with the default uniform Sunday reset it behaves correctly. **Pre-existing**, not introduced by the N2.1 refactor (the refactor preserved this behavior exactly). NOTE: this is the issue earlier mislabeled a "Sunday collision/overwrite" — there is no overwrite, since distinct keys can never collapse to the same date bucket.
+**Fix:** Compute the threshold per reset-day group: for each date bucket, compare its completed count against the number of weekly assignments sharing that reset day (e.g., group `weeklyAssignments` by `ruleType.resetDay` and size the `'all'` check against the matching group), rather than against the global weekly count.
+
 ---
 
 ## 2. Performance
