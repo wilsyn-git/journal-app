@@ -18,6 +18,7 @@ import { getUserTimezone, getTodayForUser } from "@/lib/timezone"
 import { ContributionHeatmap } from "@/components/ContributionHeatmap"
 import { TaskBanner } from "@/components/TaskBanner"
 import { StreakFreezeBanner } from "@/components/StreakFreezeBanner"
+import { MidnightRefreshNotice } from "@/components/MidnightRefreshNotice"
 import { getInventory, getFrozenDates } from "@/app/lib/inventoryData"
 import { getRuleProgress, getRuleCalendarData, getUserRulesWithStatus } from "@/lib/rules"
 import { detectRecoverableStreak } from "@/lib/streakRecovery"
@@ -336,6 +337,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 
     return (
         <DashboardShell sidebar={SidebarContent} streak={userStats.currentStreak} freezeCount={isViewingSelf ? inventoryData.freezeCount : undefined} shieldCount={isViewingSelf ? inventoryData.shieldCount : undefined}>
+            <MidnightRefreshNotice timezone={timezone} renderedDay={getTodayForUser(timezone)} />
             <AchievementToasts achievements={unnotifiedAchievements} />
             {/* Desktop Header / Stats Bar */}
             <div className="hidden md:flex flex-col p-6 px-10 border-b border-white/5 gap-4">
