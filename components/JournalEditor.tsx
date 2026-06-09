@@ -14,9 +14,13 @@ export function JournalEditor({ prompts, initialAnswers = {} }: JournalEditorPro
     // State to store answers: { [promptId]: answerString }
     const [answers, setAnswers] = useState<Record<string, string>>(initialAnswers);
 
-    // Saving status: 'idle' | 'saving' | 'saved' | 'error'
-    const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+    // Saving status: 'idle' | 'saving' | 'saved'
+    const [status, setStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
+    // Sticky error flag: a save failure persists until a save fully succeeds
+    // (no remaining dirty prompts). A sibling prompt going 'saving'/'saved'
+    // must NOT clear this, so it lives independently of the status enum.
+    const [hasError, setHasError] = useState(false);
 
     // Refs so unload/flush handlers always see current save state:
     // - answersRef: latest values (debounced saves and Retry read from here)
@@ -36,7 +40,7 @@ export function JournalEditor({ prompts, initialAnswers = {} }: JournalEditorPro
         try {
             const result = await saveJournalResponse(promptId, value);
             if (result.error) {
-                setStatus('error');
+                setHasError(true);
                 return;
             }
             // Only mark clean if the value didn't change while the save was in flight
@@ -44,12 +48,13 @@ export function JournalEditor({ prompts, initialAnswers = {} }: JournalEditorPro
                 dirtyRef.current.delete(promptId);
             }
             if (dirtyRef.current.size === 0) {
+                setHasError(false);
                 setStatus('saved');
                 setLastSaved(new Date());
             }
         } catch (e) {
             console.error(e);
-            setStatus('error');
+            setHasError(true);
         } finally {
             inFlightRef.current -= 1;
         }
@@ -135,15 +140,7 @@ export function JournalEditor({ prompts, initialAnswers = {} }: JournalEditorPro
 
                 {/* Status Indicator */}
                 <div role="status" aria-live="polite" className="flex flex-col items-end h-10 justify-center">
-                    {status === 'saving' && (
-                        <span className="text-sm text-yellow-400 animate-pulse">Saving...</span>
-                    )}
-                    {status === 'saved' && lastSaved && (
-                        <span className="text-sm text-green-400">
-                            Saved {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                    )}
-                    {status === 'error' && (
+                    {hasError ? (
                         <span className="text-sm text-red-400 flex items-center gap-2">
                             Save failed — your latest changes are not saved.
                             <button
@@ -153,10 +150,15 @@ export function JournalEditor({ prompts, initialAnswers = {} }: JournalEditorPro
                                 Retry
                             </button>
                         </span>
-                    )}
-                    {status === 'idle' && lastSaved && (
+                    ) : status === 'saving' ? (
+                        <span className="text-sm text-yellow-400 animate-pulse">Saving...</span>
+                    ) : status === 'saved' && lastSaved ? (
+                        <span className="text-sm text-green-400">
+                            Saved {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                    ) : lastSaved ? (
                         <span className="text-xs text-muted-foreground">Last saved {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                    )}
+                    ) : null}
                 </div>
             </div>
 

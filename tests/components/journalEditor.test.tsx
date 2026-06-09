@@ -31,6 +31,11 @@ const prompts = [
   { id: 'p1', content: 'How was your day?' },
 ] as never
 
+const twoPrompts = [
+  { id: 'p1', content: 'How was your day?' },
+  { id: 'p2', content: 'What did you learn?' },
+] as never
+
 function typeIntoPrompt(text: string) {
   fireEvent.change(screen.getByLabelText('How was your day?'), { target: { value: text } })
 }
@@ -110,6 +115,27 @@ describe('JournalEditor save feedback', () => {
     const cleanEvent = new Event('beforeunload', { cancelable: true })
     window.dispatchEvent(cleanEvent)
     expect(cleanEvent.defaultPrevented).toBe(false)
+  })
+
+  it('keeps the persistent error + Retry when one prompt fails while another saves successfully', async () => {
+    saveMock.mockImplementation((promptId: string) =>
+      promptId === 'p1'
+        ? Promise.resolve({ error: 'Failed to auto-save' })
+        : Promise.resolve({ success: true, timestamp: new Date().toISOString() })
+    )
+    render(<JournalEditor prompts={twoPrompts} />)
+
+    fireEvent.change(screen.getByLabelText('How was your day?'), { target: { value: 'p1 text' } })
+    fireEvent.change(screen.getByLabelText('What did you learn?'), { target: { value: 'p2 text' } })
+    await act(async () => { await vi.advanceTimersByTimeAsync(1100) })
+
+    // p2 succeeded, but p1 failed -> error must persist, Retry must remain
+    expect(screen.getByText(/save failed/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument()
+
+    // and it must NOT be stuck showing only "Saving" or showing "Saved"
+    await act(async () => { await vi.advanceTimersByTimeAsync(3000) })
+    expect(screen.getByText(/save failed/i)).toBeInTheDocument()
   })
 
   it('flushes pending debounced saves when the tab becomes hidden', async () => {
