@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { authenticateRequest } from '@/lib/api/apiAuth'
 import { apiSuccess, apiError } from '@/lib/api/apiResponse'
 import { prisma } from '@/lib/prisma'
-import { STREAK_FREEZE, STREAK_SHIELD } from '@/lib/inventory'
+import { spendStreakRecovery } from '@/lib/streakSpend'
 
 export async function POST(request: NextRequest) {
   const auth = await authenticateRequest(request)
@@ -29,47 +29,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const operations = []
+    const result = await spendStreakRecovery(prisma, userId, missedDays, freezesCost, shieldsCost)
 
-    if (freezesCost > 0) {
-      const inv = await prisma.userInventory.findUnique({
-        where: { userId_itemType: { userId, itemType: STREAK_FREEZE.itemType } },
-      })
-      if (!inv || inv.quantity < freezesCost) {
-        return apiError('BAD_REQUEST', 'Not enough streak freezes', 400)
-      }
-      operations.push(
-        prisma.userInventory.update({
-          where: { userId_itemType: { userId, itemType: STREAK_FREEZE.itemType } },
-          data: { quantity: { decrement: freezesCost }, metadata: JSON.stringify({ earningCounter: 0 }) },
-        })
-      )
+    if ('error' in result) {
+      return apiError('BAD_REQUEST', result.error, 400)
     }
 
-    if (shieldsCost > 0) {
-      const inv = await prisma.userInventory.findUnique({
-        where: { userId_itemType: { userId, itemType: STREAK_SHIELD.itemType } },
-      })
-      if (!inv || inv.quantity < shieldsCost) {
-        return apiError('BAD_REQUEST', 'Not enough streak shields', 400)
-      }
-      operations.push(
-        prisma.userInventory.update({
-          where: { userId_itemType: { userId, itemType: STREAK_SHIELD.itemType } },
-          data: { quantity: { decrement: shieldsCost }, metadata: JSON.stringify({ earningCounter: 0 }) },
-        })
-      )
-    }
-
-    operations.push(
-      ...missedDays.map((frozenDate) =>
-        prisma.streakFreezeUsage.create({ data: { userId, frozenDate } })
-      )
-    )
-
-    await prisma.$transaction(operations)
-
-    return apiSuccess({ success: true, freezesUsed: freezesCost, shieldsUsed: shieldsCost })
+    return apiSuccess({ success: true, freezesUsed: result.freezesUsed, shieldsUsed: result.shieldsUsed })
   } catch (error) {
     console.error('Use streak recovery error:', error)
     return apiError('INTERNAL_ERROR', 'Failed to apply streak recovery', 500)
