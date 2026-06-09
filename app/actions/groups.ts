@@ -16,6 +16,10 @@ export async function createGroup(formData: FormData) {
 
     const initialEmails = formData.getAll('initialUsers') as string[];
 
+    if (profileId) {
+        await requireAdminForProfiles([profileId]);
+    }
+
     try {
         await prisma.userGroup.create({
             data: {
