@@ -8,22 +8,32 @@ Severity: **HIGH** = fix soon (data integrity, data loss, or security scoping) �
 
 ## 1. Correctness & Data Integrity (Scale)
 
-### N1.1 [HIGH] Race condition in streak freeze/shield earning
+### N1.1 [HIGH] Race condition in streak freeze/shield earning — ✅ Fixed 2026-06-09 (fix/priority-hardening)
+**Resolution:** Extracted to `lib/inventoryEarning.ts` `processFirstEntryEarning`, running the day-check + both counter updates in one `prisma.$transaction`. Also made idempotent via a `lastEarnedDay` stamp in metadata (guards against double/concurrent earn). Wired into `submitEntry`. Covered by `tests/lib/inventoryEarning.test.ts` (incl. concurrency + same-args-double-call regression tests). Fixed the pre-existing first-day double-count bug as a side effect.
 **Where:** `app/actions/journal.ts:94-166`
 Earning logic is a non-transactional read-modify-write: the code reads the earning counter/quantity, checks it, then updates separately. Two concurrent journal saves can both read the same counter value, causing lost updates or missed rewards. Only the initial creates are wrapped in a transaction.
 **Fix:** Wrap the full earning flow (count check + upsert + conditional update) in `prisma.$transaction()`, or use atomic `{ increment: n }` updates with a conditional `where`.
 
-### N1.2 [HIGH] Race condition in streak recovery inventory spend
+### N1.2 [HIGH] Race condition in streak recovery inventory spend — ✅ Fixed 2026-06-09 (fix/priority-hardening)
+**Resolution:** Extracted to `lib/streakSpend.ts` `spendStreakRecovery`, using a guarded `updateMany` (`quantity: { gte: cost }` in WHERE) + usage-row inserts in one transaction; insufficient balance rolls the whole spend back. Also validates `frozenDate` keys (`YYYY-MM-DD`) and no longer wipes earning metadata on spend (preserves `earningCounter`/`lastEarnedDay`). Wired into `useStreakRecovery`. Covered by `tests/lib/streakSpend.test.ts`.
+**Follow-up:** a SECOND spend path exists at `app/api/v1/inventory/streak-freeze/use/route.ts` with the same overdraft + metadata-wipe pattern — NOT migrated here (out of plan scope). Should route through `spendStreakRecovery` too.
 **Where:** `app/actions/inventory.ts:25-29`
 `useStreakRecovery()` reads inventory quantity, checks availability, then decrements. Concurrent calls can both pass the check and overdraft inventory (negative freezes/shields).
 **Fix:** Use a transaction with a conditional update (`updateMany` with `quantity: { gte: cost }` in the `where`, then verify `count === 1`), or `{ decrement }` guarded the same way.
 
-### N1.3 [HIGH] Admin user queries are not scoped to organization
+### N1.3 [HIGH] Admin user queries are not scoped to organization — ✅ Fixed 2026-06-09 (fix/priority-hardening)
+**Resolution:** Added `where: { organizationId: session.user.organizationId }` to both admin `findMany` queries; `app/admin/users/page.tsx` also gained a session/org auth guard it previously lacked entirely.
+**Follow-up (NOT fixed — same boundary, MEDIUM):** `app/dashboard/page.tsx` still derives `targetUserId` from the `?viewUserId=` query param with NO org check on the target, so an admin can read another org's journal entries/email/stats by hand-crafting a URL. The list is now scoped, but this direct-id read path is not. Recommend validating `targetUser.organizationId === session.user.organizationId` before rendering.
 **Where:** `app/dashboard/page.tsx:81`, `app/admin/users/page.tsx:10`
 When an admin views the dashboard or the admin users page, `prisma.user.findMany()` runs with no `organizationId` filter — it fetches **all** users in the database. Today with one org this is "only" an unbounded query; the moment a second org exists it becomes a cross-tenant data leak.
 **Fix:** Add `where: { organizationId: session.user.organizationId }` to both queries.
 
-### N1.4 [HIGH] Admin mutations don't verify target belongs to the admin's org
+### N1.4 [HIGH] Admin mutations don't verify target belongs to the admin's org — ✅ Mostly fixed 2026-06-09 (fix/priority-hardening)
+**Resolution:** Added `lib/adminGuards.ts` (deliberately NOT `'use server'`) with org-ownership guards `requireAdminForUser/Group/Prompts/Category`, each checking role==='ADMIN' AND target `organizationId` match. Applied to by-id mutations in `users.ts` (updateUser, deleteUser), `auth.ts` (changePassword admin path), `groups.ts` (updateUserGroup, deleteGroup, updateGroupProfiles, addUserToGroup [+ target-user org check], removeUserFromGroup), and `prompts.ts` (deletePromptCategory, updatePrompt, togglePrompt, deletePrompt, reorderPrompts).
+**Known residual cross-org vectors (NOT fixed — out of the entry-guard scope; tracked for a follow-up pass):**
+- `updateGroupProfiles` verifies the group but NOT the connected `profileId`s — an admin could attach another org's profile to their group.
+- `removeUserFromGroup` doesn't org-check the `userId` (low impact: disconnect no-ops on a foreign user).
+- `resolveCategory` (`app/actions/helpers.ts:~20`) does an UNSCOPED category lookup, so `updatePrompt`/`createPrompt` can attach a prompt to a foreign-org category. MEDIUM — recommend org-scoping `resolveCategory`.
 **Where:** `app/actions/users.ts:66-68` (similar patterns in `prompts.ts`, `groups.ts`); root cause in `app/actions/helpers.ts:6-11`
 `ensureAdmin()` only checks the global `role === 'ADMIN'` — mutation actions never verify the target record's `organizationId` matches the admin's. An Org A admin could modify Org B users/prompts/groups by ID. Related to (but distinct from) audit issues 1.4/1.6, which cover missing role checks; this is missing **ownership** checks.
 **Fix:** In each admin mutation, load the target record and reject if `target.organizationId !== session.user.organizationId`. Consider a shared `ensureAdminForOrg(targetOrgId)` helper.
@@ -86,12 +96,14 @@ Production runs SQLite under PM2. SQLite serializes writes globally; with concur
 
 ## 3. Usability
 
-### N3.1 [HIGH] Journal autosave failures are effectively silent
+### N3.1 [HIGH] Journal autosave failures are effectively silent — ✅ Fixed 2026-06-09 (fix/priority-hardening)
+**Resolution:** Rewrote `JournalEditor` with a sticky `hasError` flag: on save failure it shows a persistent "Save failed — your latest changes are not saved." banner + a Retry button (re-saves all dirty prompts) that stays until a save succeeds; "Saved HH:MM" now persists until the next edit. Error survives a sibling prompt's concurrent save (multi-prompt regression test). Covered by `tests/components/journalEditor.test.tsx`.
 **Where:** `components/JournalEditor.tsx:51-60`, `90-100`
 On save failure the status flips to 'error' for 2 seconds, then resets to 'idle'; the error is only `console.error`'d. A user can keep typing for minutes with nothing persisting and never know. Compounding it, the "Saved" confirmation also disappears after 2 seconds, so there's no persistent signal of save state at all.
 **Fix:** Keep the error state visible until a save succeeds, with a "Retry" affordance; persist "Saved · HH:MM" until the next edit instead of clearing to idle.
 
-### N3.2 [HIGH] No unsaved-changes protection on navigation
+### N3.2 [HIGH] No unsaved-changes protection on navigation — ✅ Fixed 2026-06-09 (fix/priority-hardening)
+**Resolution:** Added a `beforeunload` handler that warns while any prompt is dirty or a save is in flight (read via refs so it sees live state), and a `visibilitychange → hidden` flush that immediately persists pending debounced saves. Dirty state tracked per-prompt in a ref, cleared only when the current value's save succeeds. Covered by `tests/components/journalEditor.test.tsx`.
 **Where:** `components/JournalEditor.tsx`
 The 1-second debounce plus in-flight saves mean closing the tab or navigating right after typing loses text, with no `beforeunload` warning and no pending-state check.
 **Fix:** Add a `beforeunload` handler when current text differs from last-saved text or a save is in flight; flush the debounce on `visibilitychange`/blur.
@@ -170,12 +182,14 @@ README/ARCHITECTURE correctly say NextAuth v5 (Credentials); `architecture-and-d
 Most of the file (tech stack, route protection, accessibility, SEO sections) describes ScoringApp, with only a header note saying it's a cross-reference. It's the source of the N4.1 contradiction.
 **Fix:** Move ScoringApp material to `docs/reference/scoringappPatterns.md` with a clear banner; keep `architecture-and-decisions.md` journal-app-only.
 
-### N4.3 [HIGH] DEPLOYMENT.md installs the wrong Node version
+### N4.3 [HIGH] DEPLOYMENT.md installs the wrong Node version — ✅ Fixed 2026-06-09 (fix/priority-hardening)
+**Resolution:** Changed `setup_20.x` → `setup_22.x` to match `package.json` engines (`>=22.0.0 <23.0.0`).
 **Where:** `DEPLOYMENT.md:24` vs `package.json` engines
 The guide installs Node 20 (`setup_20.x`) but `package.json` pins `>=22.0.0 <23.0.0`. A fresh deploy following the guide fails (or runs on an unsupported runtime). **Verified.**
 **Fix:** Change to `setup_22.x`.
 
-### N4.4 [MED] DEPLOYMENT.md documents a nonexistent email env var
+### N4.4 [MED] DEPLOYMENT.md documents a nonexistent email env var — ✅ Fixed 2026-06-09 (fix/priority-hardening)
+**Resolution:** Renamed `SOURCE_EMAIL` → `EMAIL_FROM` in DEPLOYMENT.md (confirmed code reads `EMAIL_FROM`; `SOURCE_EMAIL` referenced nowhere).
 **Where:** `DEPLOYMENT.md:61` vs `lib/email/index.ts:23`
 The guide sets `SOURCE_EMAIL`, but the code reads `EMAIL_FROM` (default `noreply@myjournal.com`) — following the guide means production email silently uses the fallback sender. **Verified.**
 **Fix:** Rename to `EMAIL_FROM` in DEPLOYMENT.md.
