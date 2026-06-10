@@ -185,6 +185,12 @@ Multiple unlocks queue toasts at 800ms intervals with no dismiss control.
 Notes live in local state and can be lost if the user navigates before blur; expanded task collapses on refresh.
 **Fix:** Debounced autosave on note input with a status indicator; optionally persist `expandedId` in URL/localStorage.
 
+### N3.15 [LOW] Heatmap/day-explorer timezone disagree when an admin inspects another user
+**Where:** `app/stats/page.tsx` (`getUserStats(targetUserId)` with no `overrideTimezone`) vs `app/actions/journal.ts` `getDailyJournalDetails`.
+Surfaced while building the heatmap date explorer (`feat/heatmapDateExplorer`, 2026-06-09); pre-existing, not introduced by it. When an admin inspects a *different* user, the heatmap buckets that user's entries in the **viewer's** timezone (`getUserStats` falls back to `getUserTimezone()` → the admin's `user-timezone` cookie), while the new day-detail modal correctly uses the **target user's** stored timezone (`getUserTimezoneById`). When the two timezones differ, a near-midnight entry can fall on a different day in the modal than in the clicked cell. **Self-view (the common case) is unaffected** — the modal is the more-correct of the two.
+**Fix:** Pass the target user's timezone into the heatmap source so both agree, e.g. `getUserStats(targetUserId, await getUserTimezoneById(targetUserId))` in `app/stats/page.tsx`.
+**Also (cosmetic):** the modal's "habits completed" list queries `ruleCompletion` by `userId` + `periodKey` directly, not scoped to currently-active rule assignments (`computeRuleCalendarStatus` in `lib/rules.ts` counts only active DAILY rules). A completion from a since-deactivated/unassigned rule could list in the modal without having colored the cell. Scope the modal's rule query to active assignments to match.
+
 ---
 
 ## 4. Documentation Drift & Hygiene
