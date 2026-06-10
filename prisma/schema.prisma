@@ -129,6 +129,9 @@ model Prompt {
   sortOrder Int      @default(0)
 
   entries   JournalEntry[]
+
+  @@index([organizationId, isActive, isGlobal])
+  @@index([organizationId, isActive, categoryId])
 }
 
 model Profile {

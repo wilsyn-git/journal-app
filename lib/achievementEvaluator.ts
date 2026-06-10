@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import type { PrismaClient, Prisma } from '@prisma/client'
 import { ACHIEVEMENT_REGISTRY, AchievementReward } from '@/lib/achievements'
 
 export type AchievementMetrics = {
@@ -22,6 +23,7 @@ export type NewlyEarnedAchievement = {
  * Returns list of newly earned achievements (for toast notifications).
  */
 export async function evaluateAchievements(
+  prisma: PrismaClient,
   userId: string,
   metrics: AchievementMetrics
 ): Promise<NewlyEarnedAchievement[]> {
@@ -36,6 +38,7 @@ export async function evaluateAchievements(
   )
 
   const newlyEarned: NewlyEarnedAchievement[] = []
+  const writes: Prisma.PrismaPromise<unknown>[] = []
 
   for (const achievement of ACHIEVEMENT_REGISTRY) {
     const metricValue = metrics[achievement.metric as keyof AchievementMetrics]
@@ -46,34 +49,36 @@ export async function evaluateAchievements(
       if (earnedSet.has(key)) continue
       if (metricValue < tier.threshold) break // Tiers are ordered — if this one fails, higher ones will too
 
-      // Earn this tier
       const rewardSnapshot = tier.reward ? JSON.stringify(tier.reward) : null
 
-      await prisma.userAchievement.create({
-        data: {
-          userId,
-          achievementId: achievement.id,
-          tierLevel: tier.level,
-          rewardGranted: rewardSnapshot,
-        },
-      })
-
-      // Grant inventory reward
-      if (tier.reward) {
-        await prisma.userInventory.upsert({
-          where: {
-            userId_itemType: { userId, itemType: tier.reward.itemType },
-          },
-          create: {
+      writes.push(
+        prisma.userAchievement.create({
+          data: {
             userId,
-            itemType: tier.reward.itemType,
-            quantity: tier.reward.quantity,
-            metadata: JSON.stringify({ earningCounter: 0 }),
-          },
-          update: {
-            quantity: { increment: tier.reward.quantity },
+            achievementId: achievement.id,
+            tierLevel: tier.level,
+            rewardGranted: rewardSnapshot,
           },
         })
+      )
+
+      if (tier.reward) {
+        writes.push(
+          prisma.userInventory.upsert({
+            where: {
+              userId_itemType: { userId, itemType: tier.reward.itemType },
+            },
+            create: {
+              userId,
+              itemType: tier.reward.itemType,
+              quantity: tier.reward.quantity,
+              metadata: JSON.stringify({ earningCounter: 0 }),
+            },
+            update: {
+              quantity: { increment: tier.reward.quantity },
+            },
+          })
+        )
       }
 
       newlyEarned.push({
@@ -85,6 +90,12 @@ export async function evaluateAchievements(
         reward: tier.reward,
       })
     }
+  }
+
+  // Single transaction: all-or-nothing, and ordered so repeated upserts to the
+  // same itemType accumulate correctly via { increment }.
+  if (writes.length > 0) {
+    await prisma.$transaction(writes)
   }
 
   return newlyEarned
@@ -131,7 +142,7 @@ export async function getAchievementState(userId: string, metrics: AchievementMe
 /**
  * Returns unnotified achievements and marks them as notified.
  */
-export async function getAndMarkUnnotifiedAchievements(userId: string) {
+export async function getAndMarkUnnotifiedAchievements(prisma: PrismaClient, userId: string) {
   const unnotified = await prisma.userAchievement.findMany({
     where: { userId, notifiedAt: null },
     select: { id: true, achievementId: true, tierLevel: true },

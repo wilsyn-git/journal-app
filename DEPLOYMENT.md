@@ -74,6 +74,17 @@ npx prisma migrate deploy
 npx prisma db seed
 ```
 
+### SQLite tuning (WAL mode)
+
+The app enables `PRAGMA journal_mode=WAL` and `PRAGMA busy_timeout=5000` automatically
+at Prisma client startup (`lib/sqlitePragmas.ts`). WAL allows readers to proceed during
+a write and is a **persistent, file-level** change — once set on `prisma/database.db` it
+sticks across restarts (you'll see `database.db-wal` / `database.db-shm` sidecar files;
+include them in backups). `busy_timeout` is per-connection and re-applied on each boot.
+
+If write latency still grows as concurrent users increase, Postgres is the escape hatch
+(swap the datasource `provider` and `DATABASE_URL`).
+
 ## 4. Build & Start
 
 ### Build Next.js

@@ -11,13 +11,6 @@ type Task = {
   description: string | null
   priority: number
   dueDate: Date | null
-  archivedAt: Date | null
-  organizationId: string
-  createdById: string
-  assignmentMode: string
-  groupId: string | null
-  createdAt: Date
-  updatedAt: Date
 }
 
 type TaskAssignment = {
