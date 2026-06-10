@@ -7,6 +7,8 @@ import { resolveUserId } from '@/lib/auth-helpers'
 import { getUserTimezoneById, startOfDayInTimezone, endOfDayInTimezone, getTodayForUser } from "@/lib/timezone"
 import { revalidatePath } from 'next/cache'
 import { processFirstEntryEarning } from '@/lib/inventoryEarning'
+import { requireAdminForUser } from '@/lib/adminGuards'
+import { buildDayDetails, type DayDetails } from '@/lib/dayDetails'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function authenticate(prevState: any, formData: FormData) {
@@ -146,4 +148,49 @@ export async function saveJournalResponse(promptId: string, answer: string) {
         console.error("Auto-save failed:", error);
         return { error: "Failed to auto-save" };
     }
+}
+
+/**
+ * Returns one day's journal entries, completed daily habits, and a summary for
+ * the heatmap date explorer. Keyed by `createdAt` in the target user's timezone
+ * so the result matches exactly the entries that colored the clicked cell
+ * (see app/lib/analytics.ts bucketing). Org-scoped: inspecting another user
+ * requires an admin in that user's org.
+ */
+export async function getDailyJournalDetails(targetUserId: string, dateStr: string): Promise<DayDetails> {
+    const session = await auth()
+    if (!session?.user) throw new Error("Unauthorized")
+
+    const currentUserId = await resolveUserId(session)
+    if (!currentUserId) throw new Error("User not found")
+
+    let effectiveTargetId = currentUserId
+    if (targetUserId && targetUserId !== currentUserId) {
+        // Throws / redirects unless the session is an admin in the target user's org.
+        await requireAdminForUser(targetUserId)
+        effectiveTargetId = targetUserId
+    }
+
+    const timezone = await getUserTimezoneById(effectiveTargetId)
+    const start = startOfDayInTimezone(dateStr, timezone)
+    const end = endOfDayInTimezone(dateStr, timezone)
+
+    const [entries, ruleCompletions] = await Promise.all([
+        prisma.journalEntry.findMany({
+            where: { userId: effectiveTargetId, createdAt: { gte: start, lte: end } },
+            select: {
+                id: true,
+                answer: true,
+                isLiked: true,
+                prompt: { select: { content: true, type: true } },
+            },
+            orderBy: { createdAt: 'asc' },
+        }),
+        prisma.ruleCompletion.findMany({
+            where: { userId: effectiveTargetId, periodKey: dateStr },
+            select: { rule: { select: { title: true } } },
+        }),
+    ])
+
+    return buildDayDetails(entries, ruleCompletions.map(rc => rc.rule.title), dateStr)
 }
