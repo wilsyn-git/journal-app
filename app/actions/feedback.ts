@@ -3,30 +3,24 @@
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { ensureAdmin } from './helpers'
+import { setDayLike } from '@/lib/dayLike'
 
-export async function toggleEntryLike(entryId: string) {
+/**
+ * Admin-only. Likes/unlikes a whole journal-day by setting isLiked on all of
+ * that day's entries (the entry ids the client is currently displaying). The
+ * desired `liked` value comes from the client's optimistic state — stateless,
+ * no read-modify-write.
+ */
+export async function setJournalDayLike(entryIds: string[], liked: boolean) {
     try {
-        await ensureAdmin()
-
-        const entry = await prisma.journalEntry.findUnique({
-            where: { id: entryId }
-        })
-
-        if (!entry) return { error: "Entry not found" }
-
-        const updated = await prisma.journalEntry.update({
-            where: { id: entryId },
-            data: { isLiked: !entry.isLiked }
-        })
-
-        // Revalidate essential paths
+        const session = await ensureAdmin()
+        await setDayLike(prisma, entryIds, session.user.organizationId, liked)
+        // Revalidates /dashboard regardless of the ?viewUserId= query param,
+        // so the admin's user-view refreshes too.
         revalidatePath('/dashboard')
-        revalidatePath(`/dashboard?viewUserId=${updated.userId}`)
-        // Also revalidate the stats page if we ever show likes there
-
-        return { success: true, isLiked: updated.isLiked }
+        return { success: true as const }
     } catch (e) {
-        console.error("Failed to toggle like:", e)
+        console.error("Failed to set journal day like:", e)
         return { error: "Failed to update" }
     }
 }
