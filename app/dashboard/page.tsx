@@ -24,8 +24,10 @@ import { getRuleProgress, getRuleCalendarData, getUserRulesWithStatus } from "@/
 import { detectRecoverableStreak } from "@/lib/streakRecovery"
 import { evaluateAchievements, getAndMarkUnnotifiedAchievements } from '@/lib/achievementEvaluator'
 import { AchievementToasts } from '@/components/AchievementToasts'
+import { AcknowledgementToasts } from '@/components/AcknowledgementToasts'
 import { DailyRulesCard } from '@/components/DailyRulesCard'
 import { AdminRulesCard } from '@/components/AdminRulesCard'
+import { getAndMarkAcknowledgements } from '@/lib/taskAcknowledgements'
 
 type Props = {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -154,6 +156,10 @@ export default async function DashboardPage({ searchParams }: Props) {
         icon: a.icon,
         label: a.label,
     }))
+
+    const acknowledgementToastItems = isViewingSelf
+        ? await getAndMarkAcknowledgements(prisma, currentUserId)
+        : []
 
     // Derive sidebar badge progress from rule groups
     let ruleProgressTotal = 0
@@ -345,6 +351,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         <DashboardShell sidebar={SidebarContent} streak={userStats.currentStreak} freezeCount={isViewingSelf ? inventoryData.freezeCount : undefined} shieldCount={isViewingSelf ? inventoryData.shieldCount : undefined}>
             <MidnightRefreshNotice timezone={timezone} renderedDay={getTodayForUser(timezone)} />
             <AchievementToasts achievements={unnotifiedAchievements} />
+            <AcknowledgementToasts items={acknowledgementToastItems} />
             {/* Desktop Header / Stats Bar */}
             <div className="hidden md:flex flex-col p-6 px-10 border-b border-white/5 gap-4">
                 <div className="flex justify-between items-center">
