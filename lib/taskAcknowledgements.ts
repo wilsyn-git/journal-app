@@ -39,3 +39,89 @@ export async function acknowledgeCompletion(
 export function canUncomplete(assignment: { acknowledgedAt: Date | null }): boolean {
   return assignment.acknowledgedAt === null
 }
+
+/** Completed assignments awaiting admin acknowledgement, for the admin queue. */
+export async function getPendingAcknowledgements(prisma: PrismaClient, orgId: string) {
+  const pending = await prisma.taskAssignment.findMany({
+    where: {
+      completedAt: { not: null },
+      acknowledgedAt: null,
+      task: { organizationId: orgId, archivedAt: null },
+    },
+    select: {
+      id: true,
+      completedAt: true,
+      task: { select: { id: true, title: true } },
+      user: { select: { name: true, email: true } },
+    },
+    orderBy: { completedAt: 'asc' },
+  })
+  return pending.map((p) => ({
+    assignmentId: p.id,
+    taskId: p.task.id,
+    taskTitle: p.task.title,
+    userName: p.user.name || p.user.email,
+    completedAt: p.completedAt as Date,
+  }))
+}
+
+/** Count of completed-but-unacknowledged assignments, for the nav badge. */
+export async function countPendingAcknowledgements(prisma: PrismaClient, orgId: string): Promise<number> {
+  return prisma.taskAssignment.count({
+    where: {
+      completedAt: { not: null },
+      acknowledgedAt: null,
+      task: { organizationId: orgId, archivedAt: null },
+    },
+  })
+}
+
+export type AcknowledgementToast = {
+  assignmentId: string
+  taskTitle: string
+  note: string | null
+  acknowledgedByName: string
+}
+
+/**
+ * Return this user's acknowledged-but-not-yet-shown confirmations, marking them
+ * notified so each shows exactly once. Mirrors getAndMarkUnnotifiedAchievements.
+ */
+export async function getAndMarkAcknowledgements(
+  prisma: PrismaClient,
+  userId: string
+): Promise<AcknowledgementToast[]> {
+  const items = await prisma.taskAssignment.findMany({
+    where: {
+      userId,
+      acknowledgedAt: { not: null },
+      userNotifiedAt: null,
+      task: { archivedAt: null },
+    },
+    select: {
+      id: true,
+      acknowledgementNote: true,
+      acknowledgedById: true,
+      task: { select: { title: true } },
+    },
+  })
+  if (items.length === 0) return []
+
+  await prisma.taskAssignment.updateMany({
+    where: { id: { in: items.map((i) => i.id) } },
+    data: { userNotifiedAt: new Date() },
+  })
+
+  const adminIds = [...new Set(items.map((i) => i.acknowledgedById).filter((x): x is string => !!x))]
+  const admins = adminIds.length
+    ? await prisma.user.findMany({ where: { id: { in: adminIds } }, select: { id: true, name: true, email: true } })
+    : []
+  const nameById = new Map(admins.map((a) => [a.id, a.name || a.email]))
+
+  return items.map((i) => ({
+    assignmentId: i.id,
+    taskTitle: i.task.title,
+    note: i.acknowledgementNote,
+    acknowledgedByName: i.acknowledgedById ? nameById.get(i.acknowledgedById) || 'An admin' : 'An admin',
+  }))
+}

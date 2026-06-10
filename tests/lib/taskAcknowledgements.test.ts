@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { createTestDb, type TestDb } from '../helpers/testDb'
 import { createUserFixture } from '../helpers/fixtures'
 import { acknowledgeCompletion, canUncomplete } from '@/lib/taskAcknowledgements'
+import { getPendingAcknowledgements, countPendingAcknowledgements, getAndMarkAcknowledgements } from '@/lib/taskAcknowledgements'
 
 describe('acknowledgeCompletion', () => {
   let db: TestDb
@@ -85,5 +86,58 @@ describe('canUncomplete', () => {
   })
   it('blocks uncomplete once acknowledged', () => {
     expect(canUncomplete({ acknowledgedAt: new Date() })).toBe(false)
+  })
+})
+
+describe('pending acknowledgement queries', () => {
+  let db: TestDb
+  beforeAll(() => { db = createTestDb() })
+  afterAll(async () => { await db.cleanup() })
+
+  async function seed() {
+    const { org, user } = await createUserFixture(db.prisma)
+    const admin = await db.prisma.user.create({
+      data: { email: `adm-${Date.now()}@test.local`, password: 'x', organizationId: org.id, name: 'Becca', role: 'ADMIN' },
+    })
+    const t1 = await db.prisma.task.create({ data: { title: 'Completed-unacked', organizationId: org.id, createdById: admin.id } })
+    const a1 = await db.prisma.taskAssignment.create({ data: { taskId: t1.id, userId: user.id, completedAt: new Date() } })
+    const t2 = await db.prisma.task.create({ data: { title: 'Not-completed', organizationId: org.id, createdById: admin.id } })
+    await db.prisma.taskAssignment.create({ data: { taskId: t2.id, userId: user.id } })
+    return { org, user, admin, t1, a1 }
+  }
+
+  it('getPendingAcknowledgements returns only completed-and-unacknowledged items', async () => {
+    const { org, t1 } = await seed()
+    const pending = await getPendingAcknowledgements(db.prisma, org.id)
+    expect(pending).toHaveLength(1)
+    expect(pending[0].taskTitle).toBe('Completed-unacked')
+    expect(pending[0].taskId).toBe(t1.id)
+    expect(pending[0].userName).toBeTruthy()
+  })
+
+  it('countPendingAcknowledgements matches the queue length', async () => {
+    const { org } = await seed()
+    expect(await countPendingAcknowledgements(db.prisma, org.id)).toBe(1)
+  })
+
+  it('count excludes archived tasks', async () => {
+    const { org, t1 } = await seed()
+    await db.prisma.task.update({ where: { id: t1.id }, data: { archivedAt: new Date() } })
+    expect(await countPendingAcknowledgements(db.prisma, org.id)).toBe(0)
+  })
+
+  it('getAndMarkAcknowledgements returns acknowledged-but-unnotified items and stamps userNotifiedAt', async () => {
+    const { org, user, admin, a1 } = await seed()
+    await acknowledgeCompletion(db.prisma, { assignmentId: a1.id, adminId: admin.id, orgId: org.id, note: 'Great job' })
+
+    const first = await getAndMarkAcknowledgements(db.prisma, user.id)
+    expect(first).toHaveLength(1)
+    expect(first[0].taskTitle).toBe('Completed-unacked')
+    expect(first[0].note).toBe('Great job')
+    expect(first[0].acknowledgedByName).toBe('Becca')
+
+    // Second call returns nothing — already notified
+    const second = await getAndMarkAcknowledgements(db.prisma, user.id)
+    expect(second).toHaveLength(0)
   })
 })
