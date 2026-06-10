@@ -3,17 +3,7 @@
 import React, { useOptimistic, useTransition } from 'react'
 import { setJournalDayLike } from '@/app/actions/feedback'
 import { useToast } from '@/components/providers/ToastProvider'
-import { PROMPT_TYPES } from '@/lib/promptConstants'
-
-type EntryWithPrompt = {
-    id: string;
-    answer: string;
-    isLiked: boolean;
-    prompt: {
-        content: string;
-        type: string;
-    }
-}
+import { EntryCard, type EntryWithPrompt } from '@/components/journal/EntryCard'
 
 type Props = {
     entries: EntryWithPrompt[];
@@ -50,20 +40,6 @@ export function PastJournalView({ entries, date, isAdmin = false }: Props) {
                     ? <AdminDayLike dayLiked={dayLiked} entryIds={entryIds} />
                     : (dayLiked ? <ReadOnlyDayLike /> : null)
             )}
-        </div>
-    )
-}
-
-function EntryCard({ entry }: { entry: EntryWithPrompt }) {
-    return (
-        <div className="glass-card p-6 rounded-xl border border-white/10 relative group">
-            <div className="flex justify-between items-start mb-3">
-                <h3 className="text-sm font-medium text-primary uppercase tracking-wide opacity-80">{entry.prompt.content}</h3>
-            </div>
-
-            <div className="text-lg text-gray-200 leading-relaxed whitespace-pre-wrap">
-                {formatAnswer(entry.answer, entry.prompt.type)}
-            </div>
         </div>
     )
 }
@@ -127,19 +103,4 @@ function HeartIcon({ filled }: { filled: boolean }) {
             <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
         </svg>
     )
-}
-
-function formatAnswer(answer: string, type: string) {
-    if (type === PROMPT_TYPES.CHECKBOX || type === PROMPT_TYPES.RADIO) {
-        try {
-            if (answer.startsWith('[') || answer.startsWith('{')) {
-                const parsed = JSON.parse(answer);
-                if (Array.isArray(parsed)) return parsed.join(', ');
-                return parsed;
-            }
-        } catch {
-            // ignore
-        }
-    }
-    return answer;
 }
