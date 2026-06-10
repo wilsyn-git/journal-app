@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
     const accessToken = await signAccessToken({
       userId: session.user.id,
       orgId: session.user.organizationId,
+      sessionId: session.id,
     })
 
     return apiSuccess({

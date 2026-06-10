@@ -5,6 +5,7 @@ import { randomBytes, createHash } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { signAccessToken } from '@/lib/api/jwt'
 import { apiSuccess, apiError } from '@/lib/api/apiResponse'
+import { DUMMY_PASSWORD_HASH } from '@/lib/api/constantTimeAuth'
 
 // In-memory rate limiting by IP (resets on server restart — adequate for small deployment)
 const loginAttempts = new Map<string, { count: number; resetAt: number }>()
@@ -54,31 +55,32 @@ export async function POST(request: NextRequest) {
     const { email, password, deviceName } = parsed.data
 
     const user = await prisma.user.findUnique({ where: { email } })
-    if (!user) {
+    // Always run bcrypt.compare (against a dummy hash when the user is absent)
+    // so the response time is constant regardless of whether the email exists,
+    // closing the user-enumeration timing side-channel (#61).
+    const passwordsMatch = await bcrypt.compare(password, user?.password ?? DUMMY_PASSWORD_HASH)
+    if (!user || !passwordsMatch) {
       return apiError('UNAUTHORIZED', 'Invalid credentials', 401)
     }
-
-    const passwordsMatch = await bcrypt.compare(password, user.password)
-    if (!passwordsMatch) {
-      return apiError('UNAUTHORIZED', 'Invalid credentials', 401)
-    }
-
-    const accessToken = await signAccessToken({
-      userId: user.id,
-      orgId: user.organizationId,
-    })
 
     const rawRefreshToken = randomBytes(32).toString('hex')
     const hashedRefreshToken = createHash('sha256')
       .update(rawRefreshToken)
       .digest('hex')
 
-    await prisma.deviceSession.create({
+    // Create the session first so the access token can be bound to its id (#64).
+    const session = await prisma.deviceSession.create({
       data: {
         userId: user.id,
         refreshToken: hashedRefreshToken,
         deviceName,
       },
+    })
+
+    const accessToken = await signAccessToken({
+      userId: user.id,
+      orgId: user.organizationId,
+      sessionId: session.id,
     })
 
     return apiSuccess({

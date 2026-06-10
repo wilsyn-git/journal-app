@@ -5,6 +5,7 @@ import { prisma } from "./lib/prisma"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
 import { authConfig } from "./auth.config"
+import { DUMMY_PASSWORD_HASH } from "./lib/api/constantTimeAuth"
 
 async function getUser(email: string) {
     try {
@@ -33,10 +34,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 if (parsedCredentials.success) {
                     const { email, password } = parsedCredentials.data;
                     const user = await getUser(email);
-                    if (!user) return null;
-
-                    const passwordsMatch = await bcrypt.compare(password, user.password);
-                    if (passwordsMatch) return user;
+                    // Always run bcrypt.compare (against a dummy hash when the
+                    // user is absent) so the response time is constant whether
+                    // or not the email exists, closing the user-enumeration
+                    // timing side-channel (#61).
+                    const passwordsMatch = await bcrypt.compare(password, user?.password ?? DUMMY_PASSWORD_HASH);
+                    if (user && passwordsMatch) return user;
                 }
 
                 console.log('Invalid credentials');

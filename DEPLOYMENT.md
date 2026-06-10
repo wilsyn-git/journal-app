@@ -70,9 +70,15 @@ npx prisma generate
 # Run Migrations (Creates database.db)
 npx prisma migrate deploy
 
+# Generate a strong admin password and export it before seeding.
+# In production the seed aborts unless ADMIN_PASSWORD is set.
+export ADMIN_PASSWORD="$(openssl rand -base64 24)"
+
 # Seed Initial Data (Admin User/Orgs)
 npx prisma db seed
 ```
+
+> Note the generated `ADMIN_PASSWORD` somewhere safe, then change it after your first login.
 
 ### SQLite tuning (WAL mode)
 

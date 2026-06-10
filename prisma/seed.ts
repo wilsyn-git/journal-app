@@ -6,7 +6,16 @@ import 'dotenv/config'
 const prisma = new PrismaClient()
 
 async function main() {
-    const password = await bcrypt.hash('password123', 10);
+    // Source the admin password from env. The literal default is for local dev only;
+    // production must supply a non-blank ADMIN_PASSWORD (guarded below).
+    const envAdminPassword = process.env.ADMIN_PASSWORD?.trim()
+    const adminPassword = envAdminPassword || 'password123'
+
+    if (process.env.NODE_ENV === 'production' && !envAdminPassword) {
+        throw new Error('ADMIN_PASSWORD must be set (non-blank) when seeding in production')
+    }
+
+    const password = await bcrypt.hash(adminPassword, 10);
 
     // Create Default Organization
     const org = await prisma.organization.upsert({
