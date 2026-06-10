@@ -49,7 +49,7 @@ there — keeping `analytics.ts` focused on journal-entry analytics.
 export async function getDailyHabitStats(
   userId: string,
   timezone: string
-): Promise<{ id: string; content: string; currentStreak: number; maxStreak: number; count: number }[]>
+): Promise<{ id: string; content: string; currentStreak: number; maxStreak: number; count: number; completedDays: string[] }[]>
 ```
 
 Behavior:
@@ -68,7 +68,7 @@ Behavior:
    - `completedKeys = assignment.completions.map(c => c.periodKey)`
    - `{ current, max } = calculateRuleStreak(completedKeys, allPeriodKeys)`
    - `count = completedKeys.length`
-4. Map to `{ id: ruleId, content: rule.title, currentStreak: current, maxStreak: max, count }`.
+4. Map to `{ id: ruleId, content: rule.title, currentStreak: current, maxStreak: max, count, completedDays: completedKeys }`.
 5. Sort by rule `sortOrder` ascending (matches journal ordering).
 
 The returned shape is **identical** to today's `taskStats`, so the stats-page
@@ -100,6 +100,40 @@ RANGE / `trendStats` / Trends logic is **untouched**.
 
 Before removing, grep to confirm `taskStats` has no consumer other than
 `app/stats/page.tsx`.
+
+## Visual design (widget layout)
+
+Each daily habit renders as a card (reusing the existing `glass-card` styling) with
+a **30-day consistency strip** — chosen over a minimal numbers-only card and a
+ring+calendar variant (mockups in `.superpowers/brainstorm/`).
+
+Card anatomy:
+- **Top row:** rule title (left); `Streak` and `Best` numbers (right), green for
+  current streak, grey for best — unchanged from today's card.
+- **Strip:** a row of 30 small rounded cells, one per day, oldest → newest (today
+  rightmost). Cell states:
+  - **Grey** (`rgba(255,255,255,.08)`) — not completed that day.
+  - **Dark green** (`#166534`) — completed, but before the current streak.
+  - **Bright green** (`#4ade80`) — completed and part of the current live streak.
+- **Subtitle:** `Completed {count} times` below the strip.
+
+Data: the strip needs per-day completion booleans for the last 30 days. The
+existing `RuleCompletion.periodKey` values (daily keys are `YYYY-MM-DD`) provide
+this directly — `getDailyHabitStats` returns, per habit, the set of completed
+period keys; the component derives the 30 cells from "today − 29 … today" against
+that set. The bright/dark split is derived from the current-streak boundary already
+computed by `calculateRuleStreak`.
+
+Window is **30 days** (not 90) — keeps cells large and tappable and fits a
+phone-width card without shrinking. No responsive window switch.
+
+### Returned shape (updated)
+
+`getDailyHabitStats` returns per habit:
+`{ id, content, currentStreak, maxStreak, count, completedDays: string[] }`
+where `completedDays` is the list of completed `YYYY-MM-DD` keys (the component
+slices the last 30 for the strip). This is a superset of the old `taskStats`
+shape — the extra `completedDays` field drives the strip.
 
 ## Copy changes
 
