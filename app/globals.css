@@ -58,6 +58,7 @@
 
   --animate-fade-in: fade-in 0.5s ease-out forwards;
   --animate-slide-up: slide-up 0.7s ease-out forwards;
+  --animate-shine: shine 0.7s ease-out;
 
   @keyframes fade-in {
     0% {
@@ -79,6 +80,27 @@
       opacity: 1;
       transform: translateY(0);
     }
+  }
+
+  @keyframes shine {
+    0% {
+      transform: translateX(-120%);
+    }
+
+    100% {
+      transform: translateX(120%);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .achievement-card:hover,
+  .achievement-card:hover .achievement-icon {
+    transform: none !important;
+  }
+
+  .achievement-shine {
+    display: none !important;
   }
 }
 
