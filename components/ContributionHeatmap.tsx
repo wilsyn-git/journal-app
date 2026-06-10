@@ -131,6 +131,17 @@ export function ContributionHeatmap({ data, ruleData, weeksHistory = 52, showLeg
 
     const closeDay = () => { setSelectedDate(null); setDetails(null) }
 
+    const interactiveProps = (clickable: boolean, date: string, label: string) =>
+        clickable ? {
+            role: 'button',
+            tabIndex: 0,
+            'aria-label': label,
+            onClick: () => openDay(date),
+            onKeyDown: (e: React.KeyboardEvent) => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDay(date) }
+            },
+        } : {}
+
     return (
         <div className="flex flex-col gap-3">
             <div className="flex">
@@ -170,7 +181,12 @@ export function ContributionHeatmap({ data, ruleData, weeksHistory = 52, showLeg
                         </div>
 
                         {/* The Grid */}
-                        <div className="flex gap-[3px]" role="img" aria-label="Journal contribution heatmap">
+                        <div
+                            className="flex gap-[3px]"
+                            {...(userId
+                                ? { role: 'group', 'aria-label': 'Journal contribution heatmap — activity days are buttons' }
+                                : { role: 'img', 'aria-label': 'Journal contribution heatmap' })}
+                        >
                             {weeks.map((week, wIdx) => (
                                 <div key={wIdx} className="flex flex-col gap-[3px]">
                                     {week.map((day, dIdx) => {
@@ -182,17 +198,17 @@ export function ContributionHeatmap({ data, ruleData, weeksHistory = 52, showLeg
                                         const ruleStatus = ruleData?.[day.date]
                                         const hasRuleData = ruleData && ruleStatus
 
+                                        const clickable = !!userId && (day.value > 0 || !!hasRuleData)
+                                        const cellLabel = `${day.date}, ${day.value} average words. Open day details.`
+
                                         // Split cell: upper-left = rules, lower-right = journal
                                         if (hasRuleData) {
                                             return (
                                                 <div
                                                     key={dIdx}
-                                                    className={`w-3.5 h-3.5 rounded-[2px] relative overflow-hidden transition-all${todayRing}${userId ? ' cursor-pointer hover:ring-2 hover:ring-white/60' : ''}`}
+                                                    className={`w-3.5 h-3.5 rounded-[2px] relative overflow-hidden transition-all${todayRing}${clickable ? ' cursor-pointer hover:ring-2 hover:ring-white/60' : ''}`}
                                                     title={`${day.date}: ${day.value} avg words | Rules: ${ruleStatus}`}
-                                                    {...(userId ? { role: 'button', tabIndex: 0,
-                                                        onClick: () => openDay(day.date),
-                                                        onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDay(day.date) } },
-                                                    } : {})}
+                                                    {...interactiveProps(clickable, day.date, cellLabel)}
                                                 >
                                                     {/* Upper-left triangle: rules */}
                                                     <div
@@ -208,16 +224,12 @@ export function ContributionHeatmap({ data, ruleData, weeksHistory = 52, showLeg
                                             )
                                         }
 
-                                        const clickable = !!userId && day.value > 0
                                         return (
                                             <div
                                                 key={dIdx}
                                                 className={`w-3.5 h-3.5 rounded-[2px] transition-all ${getColor(day.value)}${todayRing}${clickable ? ' cursor-pointer hover:ring-2 hover:ring-white/60' : ''}`}
                                                 title={`${day.date}: ${day.value} avg words`}
-                                                {...(clickable ? { role: 'button', tabIndex: 0,
-                                                    onClick: () => openDay(day.date),
-                                                    onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDay(day.date) } },
-                                                } : {})}
+                                                {...interactiveProps(clickable, day.date, cellLabel)}
                                             />
                                         )
                                     })}
