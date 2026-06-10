@@ -5,6 +5,7 @@ import { apiSuccess, apiError } from '@/lib/api/apiResponse'
 import { startOfDayInTimezone, getTodayForUser, DEFAULT_TIMEZONE } from '@/lib/timezone'
 import { calculateStreaks } from '@/lib/streaks'
 import { getFrozenDates } from '@/app/lib/inventoryData'
+import { chunk } from '@/lib/chunk'
 
 export async function POST(request: NextRequest) {
     // Simple shared secret auth for cron endpoints
@@ -34,7 +35,9 @@ export async function POST(request: NextRequest) {
             },
         })
 
-        for (const user of usersWithDevices) {
+        const CHUNK_SIZE = 20
+
+        const processUser = async (user: (typeof usersWithDevices)[number]) => {
             // Check if user has entries today
             const timezone = user.timezone || DEFAULT_TIMEZONE
             const todayStr = getTodayForUser(timezone)
@@ -47,7 +50,7 @@ export async function POST(request: NextRequest) {
                 },
             })
 
-            if (todayEntries > 0) continue
+            if (todayEntries > 0) return
 
             // Check if user has an active streak > 1
             const recentEntries = await prisma.journalEntry.findMany({
@@ -78,6 +81,11 @@ export async function POST(request: NextRequest) {
                     { type: 'streak_reminder' }
                 )
             }
+        }
+
+        // Process users in parallel batches (pairs with WAL concurrent reads).
+        for (const group of chunk(usersWithDevices, CHUNK_SIZE)) {
+            await Promise.all(group.map(processUser))
         }
 
         return apiSuccess({ success: true })
