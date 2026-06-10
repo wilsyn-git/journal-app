@@ -67,6 +67,10 @@ export default async function DashboardPage({ searchParams }: Props) {
         targetUserEmail = u.email;
     }
 
+    // Org-wide lazy archive runs on every dashboard load (even when an admin is viewing
+    // another user) — it's org-scoped, not viewer-scoped. The acknowledgement toast below
+    // is deliberately scoped to currentUserId + isViewingSelf so impersonation never burns
+    // another user's one-time notification. Keep these two scopes distinct.
     await archiveAcknowledgedTasks(prisma, session.user.organizationId)
 
     // Parallel Group: All queries that only need targetUserId, currentUserId, or isAdmin
