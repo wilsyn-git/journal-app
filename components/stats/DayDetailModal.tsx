@@ -20,6 +20,8 @@ export function DayDetailModal({ date, details, loading, onClose }: Props) {
     useEffect(() => {
         const previouslyFocused = document.activeElement as HTMLElement | null
         dialogRef.current?.focus()
+        const prevOverflow = document.body.style.overflow
+        document.body.style.overflow = 'hidden'
 
         const onKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') { onCloseRef.current(); return }
@@ -39,6 +41,7 @@ export function DayDetailModal({ date, details, loading, onClose }: Props) {
         return () => {
             window.removeEventListener('keydown', onKeyDown)
             previouslyFocused?.focus?.()
+            document.body.style.overflow = prevOverflow
         }
     }, [])
 

@@ -48,6 +48,14 @@ describe('DayDetailModal', () => {
     expect(dialog).toHaveFocus()
   })
 
+  it('locks body scroll while open and restores it on close', () => {
+    expect(document.body.style.overflow).toBe('')
+    const { unmount } = render(<DayDetailModal date="2026-04-14" details={details} loading={false} onClose={() => {}} />)
+    expect(document.body.style.overflow).toBe('hidden')
+    unmount()
+    expect(document.body.style.overflow).toBe('')
+  })
+
   it('restores focus to the previously focused element on close', () => {
     const trigger = document.createElement('button')
     trigger.textContent = 'trigger'
