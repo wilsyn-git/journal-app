@@ -28,6 +28,7 @@ import { AcknowledgementToasts } from '@/components/AcknowledgementToasts'
 import { DailyRulesCard } from '@/components/DailyRulesCard'
 import { AdminRulesCard } from '@/components/AdminRulesCard'
 import { getAndMarkAcknowledgements } from '@/lib/taskAcknowledgements'
+import { archiveAcknowledgedTasks } from '@/lib/taskArchive'
 
 type Props = {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -65,6 +66,8 @@ export default async function DashboardPage({ searchParams }: Props) {
         }
         targetUserEmail = u.email;
     }
+
+    await archiveAcknowledgedTasks(prisma, session.user.organizationId)
 
     // Parallel Group: All queries that only need targetUserId, currentUserId, or isAdmin
     const [

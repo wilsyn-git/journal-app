@@ -5,6 +5,7 @@ import { auth } from "@/auth"
 import { PRIORITY, PRIORITY_LABELS, PRIORITY_COLORS, ASSIGNMENT_MODES } from "@/lib/taskConstants"
 import { getUserTimezone, getTodayForUser } from "@/lib/timezone"
 import type { PriorityValue } from "@/lib/taskConstants"
+import { archiveAcknowledgedTasks } from "@/lib/taskArchive"
 
 type Props = {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -16,6 +17,10 @@ export default async function AdminTasksPage({ searchParams }: Props) {
     const params = await searchParams;
     const tab = typeof params.tab === 'string' ? params.tab : 'active';
     const isArchived = tab === 'archived';
+
+    if (orgId) {
+        await archiveAcknowledgedTasks(prisma, orgId)
+    }
 
     const timezone = await getUserTimezone();
     const todayStr = getTodayForUser(timezone);
