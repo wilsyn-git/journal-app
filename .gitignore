@@ -43,6 +43,9 @@ next-env.d.ts
 
 /app/generated/prisma
 *.db
+# SQLite WAL sidecar files (created once WAL journal mode is enabled — see lib/sqlitePragmas.ts)
+*.db-wal
+*.db-shm
 .superpowers/
 .backups/
 .worktrees/

@@ -73,27 +73,32 @@ Weekly completions are keyed `week-<resetDate>-R<resetDay>`, and the calendar bu
 For every calendar date, the code re-scans all rule assignments and their completions with nested `.filter()/.some()`. With a year of dates and many rules this is the most expensive computation on dashboard load.
 **Fix:** Build a `Map<periodKey, Set<assignmentId>>` from completions once, then iterate dates with O(1) lookups.
 
-### N2.2 [MED] Dashboard critical path serializes achievement evaluation
+### N2.2 [MED] Dashboard critical path serializes achievement evaluation — ✅ Fixed 2026-06-09 (fix/perf-n2x)
+**Resolution:** Verified there is no data dependency — achievement eval writes `userAchievement`/`userInventory`; the rule/calendar queries read neither. Folded the achievement chain into the existing rules/calendar `Promise.all` as a single async thunk that preserves the required internal order (`evaluateAchievements` → `getAndMarkUnnotifiedAchievements`, the second reads the first's writes), so it now overlaps instead of stacking. Also batched the per-tier `create` + per-reward `upsert` writes into one `prisma.$transaction([...])` and dependency-injected `prisma` into both functions (matching the `spendStreakRecovery` convention). Covered by `tests/lib/achievementEvaluator.test.ts` (grant+persist, idempotency, returns-then-marks).
 **Where:** `app/dashboard/page.tsx:125-142`
 After the first `Promise.all`, achievement evaluation runs serially (two separate `userAchievement.findMany()` calls plus sequential upserts in `lib/achievementEvaluator.ts`) before the second `Promise.all` for rules/calendar data starts. The rule queries don't depend on achievements.
 **Fix:** Run achievement evaluation in parallel with the rule/calendar queries; merge the two achievement fetches into one query partitioned in memory; batch the upserts with `$transaction`.
 
-### N2.3 [MED] Cron streak reminder is N+1 over users
+### N2.3 [MED] Cron streak reminder is N+1 over users — ✅ Fixed 2026-06-09 (fix/perf-n2x)
+**Resolution:** Extracted the per-user body verbatim into `processUser` and replaced the sequential `for` loop with bounded parallelism — `chunk(usersWithDevices, 20)` then `await Promise.all(group.map(processUser))` per chunk (new `lib/chunk.ts`, covered by `tests/lib/chunk.test.ts`). Removes the sequential wall-time and pairs with N2.6 WAL concurrent reads. **Chose parallel-chunks over a single grouped query deliberately:** the streak calc uses the 30 most-recent *entries* per user (`take: 30`), which a grouped `IN (...)` query can't reproduce without a raw SQL window function, and a wider time-window could change streak values for heavy journalers — chunking keeps behavior byte-identical (same queries, same calc, only scheduling changes).
 **Where:** `app/api/v1/cron/streak/route.ts:53-57`
 The cron route iterates all users with active devices and queries each user's recent entries individually. Linear in users per run, all sequential.
 **Fix:** Process users in parallel batches (e.g., chunks of 10–20 with `Promise.all`), or precompute streak status in a single grouped query.
 
-### N2.4 [LOW] Missing indexes on Prompt lookup columns
+### N2.4 [LOW] Missing indexes on Prompt lookup columns — ✅ Fixed 2026-06-09 (fix/perf-n2x)
+**Resolution:** Added `@@index([organizationId, isActive, isGlobal])` (global-prompt path) and `@@index([organizationId, isActive, categoryId])` (category path) to the Prompt model; migration `add_prompt_indexes` is purely additive (two `CREATE INDEX`, no data change). Note: the legacy `categoryString` branch of the category `OR` remains unindexed (acceptable — categoryId is the forward path).
 **Where:** `prisma/schema.prisma` (Prompt model), used by `app/lib/data.ts:152-169`
 `getActivePrompts()` filters by `categoryId` and legacy `categoryString` but the Prompt model has no index on either, so lookups scan the org's prompt table.
 **Fix:** Add `@@index([organizationId, categoryId])` and `@@index([organizationId, categoryString])`.
 
-### N2.5 [LOW] Task assignment query over-fetches task fields
+### N2.5 [LOW] Task assignment query over-fetches task fields — ✅ Fixed 2026-06-09 (fix/perf-n2x)
+**Resolution:** Narrowed the dashboard `taskAssignment.findMany` from `include: { task: true }` to `include: { task: { select: { id, title, description, priority, dueDate } } }` (the 5 fields the sidebar + dashboard actually read), and narrowed `TaskSidebar`'s local `Task` type to match (a tsc-only failure surface). Verified every `.task.*` access is covered by the select.
 **Where:** `app/dashboard/page.tsx:101-107`
 `include: { task: true }` pulls every Task column into the dashboard payload; the sidebar needs only a handful of fields.
 **Fix:** Use `select` for the fields the UI renders.
 
-### N2.6 [LOW] SQLite production settings unverified
+### N2.6 [LOW] SQLite production settings unverified — ✅ Fixed 2026-06-09 (fix/perf-n2x)
+**Resolution:** New `lib/sqlitePragmas.ts` `applySqlitePragmas(client)` runs `PRAGMA journal_mode=WAL` + `PRAGMA busy_timeout=5000` at Prisma client init (fire-and-forget, run-once guard, swallow-and-log); documented in `DEPLOYMENT.md` with the Postgres escape hatch. WAL sidecar files (`*.db-wal`/`*.db-shm`) added to `.gitignore`. Covered by `tests/lib/sqlitePragmas.test.ts` (WAL read-back + busy_timeout=5000). **Residual (LOW):** `busy_timeout` is per-connection — if Prisma opens a SQLite connection pool, the startup PRAGMA may not cover every connection; if `SQLITE_BUSY` ever appears in prod, set `?connection_limit=1` on the SQLite `DATABASE_URL` (WAL is unaffected — it's persistent/file-level).
 **Where:** `prisma/schema.prisma` datasource; `DEPLOYMENT.md`
 Production runs SQLite under PM2. SQLite serializes writes globally; with concurrent server actions (journal autosave + rule toggles), write latency will grow before anything else does.
 **Fix:** Confirm WAL mode and a sensible `busy_timeout` are enabled in production; document in `DEPLOYMENT.md`. Note Postgres as the escape hatch if concurrent users grow.
