@@ -93,6 +93,10 @@
   }
 }
 
+/* Achievement cards: fully suppress the hover end-state (lift/scale/icon-pop) and
+   hide the shine for reduced-motion users. The global reduced-motion block below only
+   collapses transition DURATION, so without this the card would still snap to its
+   transformed state on hover. */
 @media (prefers-reduced-motion: reduce) {
   .achievement-card:hover,
   .achievement-card:hover .achievement-icon {
