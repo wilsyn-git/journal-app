@@ -6,6 +6,7 @@ import { ensureAdmin } from './helpers'
 import { auth } from '@/auth'
 import { resolveUserId } from '@/lib/auth-helpers'
 import { ASSIGNMENT_MODES } from '@/lib/taskConstants'
+import { acknowledgeCompletion as ackCompletion, canUncomplete } from '@/lib/taskAcknowledgements'
 
 async function resolveAssignmentUserIds(
     assignmentMode: string,
@@ -271,6 +272,10 @@ export async function uncompleteTask(assignmentId: string) {
         const result = await verifyAssignmentOwnership(assignmentId, userId, session.user.organizationId)
         if ('error' in result) return result
 
+        if (!canUncomplete(result.assignment)) {
+            return { error: 'This completion has been acknowledged and can no longer be undone' }
+        }
+
         await prisma.taskAssignment.update({
             where: { id: assignmentId },
             data: { completedAt: null },
@@ -282,4 +287,22 @@ export async function uncompleteTask(assignmentId: string) {
         console.error('Uncomplete task error:', e)
         return { error: 'Failed to uncomplete task' }
     }
+}
+
+export async function acknowledgeCompletion(assignmentId: string, note?: string) {
+    const session = await ensureAdmin()
+    const adminId = session.user?.id
+    if (!adminId) return { error: 'Could not resolve user' }
+
+    const result = await ackCompletion(prisma, {
+        assignmentId,
+        adminId,
+        orgId: session.user.organizationId,
+        note,
+    })
+    if ('error' in result) return result
+
+    revalidatePath('/admin')
+    revalidatePath('/admin/tasks')
+    return { success: true }
 }
