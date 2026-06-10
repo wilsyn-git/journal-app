@@ -1,6 +1,13 @@
+import { connection } from "next/server";
 import Link from "next/link";
 
-export default function NotFound() {
+export default async function NotFound() {
+  // Opt into dynamic rendering so the per-request nonce-based CSP (#58) is
+  // stamped onto Next.js's inline hydration scripts. The default /_not-found
+  // route is statically prerendered (no request nonce exists at build time),
+  // so its scripts would ship without a nonce and be blocked by the strict
+  // CSP. `connection()` is the documented mechanism for this. See proxy.ts.
+  await connection();
   return (
     <div className="min-h-screen flex items-center justify-center bg-background text-white px-4">
       <div className="glass-card rounded-2xl p-10 max-w-md w-full text-center">
