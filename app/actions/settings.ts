@@ -8,6 +8,7 @@ import { writeFile, unlink } from "fs/promises"
 import { existsSync, mkdirSync } from "fs"
 import { join } from "path"
 import { randomUUID } from 'crypto'
+import { validateAvatarFile } from "@/lib/avatarValidation"
 
 export async function updateProfile(userId: string, formData: FormData) {
     if (!userId) throw new Error("Unauthorized")
@@ -30,13 +31,8 @@ export async function updateProfile(userId: string, formData: FormData) {
 
     // 2. Handle Avatar Upload if present
     if (file && file.size > 0) {
-        // Validation
-        if (!file.type.startsWith("image/jpeg")) {
-            throw new Error("Only JPG images are allowed")
-        }
-        if (file.size > 2 * 1024 * 1024) {
-            throw new Error("Image must be smaller than 2MB")
-        }
+        const avatarError = validateAvatarFile(file)
+        if (avatarError) return { error: avatarError }
 
         const buffer = Buffer.from(await file.arrayBuffer())
         const filename = `${userId}-${randomUUID()}.jpg`
