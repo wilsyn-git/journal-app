@@ -28,6 +28,7 @@ export function TimezonePicker({ currentTimezone }: Props) {
     const [isOpen, setIsOpen] = useState(false)
     const [selected, setSelected] = useState(currentTimezone || '')
     const [isPending, setIsPending] = useState(false)
+    const [pendingTz, setPendingTz] = useState<string | null>(null)
     const dropdownRef = useRef<HTMLDivElement>(null)
     const inputRef = useRef<HTMLInputElement>(null)
     const { addToast } = useToast()
@@ -75,22 +76,30 @@ export function TimezonePicker({ currentTimezone }: Props) {
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
 
-    const handleSelect = async (tz: string) => {
-        setSelected(tz)
+    const handleSelect = (tz: string) => {
         setIsOpen(false)
         setSearch('')
-        setIsPending(true)
+        if (tz === selected) { setPendingTz(null); return }
+        setPendingTz(tz)
+    }
 
+    const confirmChange = async () => {
+        if (!pendingTz) return
+        setIsPending(true)
         try {
-            await setUserTimezone(tz)
+            await setUserTimezone(pendingTz)
+            setSelected(pendingTz)
             addToast('success', 'Timezone updated')
+            setPendingTz(null)
         } catch {
             addToast('error', 'Failed to update timezone')
-            setSelected(currentTimezone || '')
+            setPendingTz(null)
         } finally {
             setIsPending(false)
         }
     }
+
+    const cancelChange = () => setPendingTz(null)
 
     return (
         <div ref={dropdownRef} className="relative">
@@ -140,6 +149,33 @@ export function TimezonePicker({ currentTimezone }: Props) {
                                 </button>
                             ))
                         )}
+                    </div>
+                </div>
+            )}
+
+            {pendingTz && (
+                <div className="mt-2 rounded-lg border border-white/10 bg-black/40 p-3 text-sm">
+                    <p className="text-gray-300">
+                        Your daily entries will roll over at midnight{' '}
+                        <span className="text-white font-medium">{getTimezoneLabel(pendingTz)}</span>.
+                    </p>
+                    <div className="mt-2 flex gap-2 justify-end">
+                        <button
+                            type="button"
+                            onClick={cancelChange}
+                            disabled={isPending}
+                            className="px-3 py-1.5 rounded-md border border-white/10 text-gray-300 hover:bg-white/5 text-xs disabled:opacity-50"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={confirmChange}
+                            disabled={isPending}
+                            className="px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-xs disabled:opacity-50"
+                        >
+                            {isPending ? 'Saving…' : 'Confirm'}
+                        </button>
                     </div>
                 </div>
             )}

@@ -72,9 +72,9 @@ export function StreakFreezeItem({ freezeCount, maxQuantity, earningCounter, ear
             {/* Info popover */}
             {showInfo && (
                 <div className="border-t border-white/5 px-4 py-3 text-xs text-gray-400 space-y-1.5">
-                    <p>Journal <strong className="text-white">{STREAK_FREEZE.earningInterval} consecutive days</strong> to earn a freeze.</p>
-                    <p>Hold up to <strong className="text-white">{STREAK_FREEZE.maxQuantity}</strong> at a time. Miss a day? Use a freeze to keep your streak.</p>
-                    <p>You have <strong className="text-white">{STREAK_FREEZE.graceWindowDays} days</strong> to decide before a streak is lost.</p>
+                    <p>Earn a freeze for every <strong className="text-white">{STREAK_FREEZE.earningInterval} days you journal</strong> — your first entry each day counts one step. Missing a day pauses progress; it doesn&apos;t reset it.</p>
+                    <p>Hold up to <strong className="text-white">{STREAK_FREEZE.maxQuantity}</strong> at a time.</p>
+                    <p>If you miss a day, a freeze keeps your streak alive. Freezes cover short gaps — <strong className="text-white">up to {STREAK_FREEZE.graceWindowDays} missed days</strong> — and are used first.</p>
                 </div>
             )}
         </div>

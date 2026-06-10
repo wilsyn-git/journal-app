@@ -72,9 +72,9 @@ export function StreakShieldItem({ shieldCount, maxQuantity, earningCounter, ear
             {/* Info popover */}
             {showInfo && (
                 <div className="border-t border-white/5 px-4 py-3 text-xs text-gray-400 space-y-1.5">
-                    <p>Journal <strong className="text-white">{STREAK_SHIELD.earningInterval} consecutive days</strong> to earn a shield.</p>
-                    <p>Hold up to <strong className="text-white">{STREAK_SHIELD.maxQuantity}</strong> at a time. Shields cover missed days with no time limit.</p>
-                    <p>When freezes can&apos;t reach, shields pick up the slack.</p>
+                    <p>Earn a shield for every <strong className="text-white">{STREAK_SHIELD.earningInterval} days you journal</strong> — your first entry each day counts one step. Missing a day pauses progress; it doesn&apos;t reset it.</p>
+                    <p>Hold up to <strong className="text-white">{STREAK_SHIELD.maxQuantity}</strong> at a time.</p>
+                    <p>Shields cover <strong className="text-white">longer gaps that freezes can&apos;t reach, with no time limit</strong> — they&apos;re used after freezes.</p>
                 </div>
             )}
         </div>

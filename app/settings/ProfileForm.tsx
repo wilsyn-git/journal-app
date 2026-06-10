@@ -16,36 +16,8 @@ export function ProfileForm({ userId, activeAvatar, initialName, initialEmail, i
     const [preview, setPreview] = useState<string | null>(activeAvatar || null)
     const [isPending, setIsPending] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
-    const formRef = useRef<HTMLFormElement>(null)
+    const currentResizedBlob = useRef<Blob | null>(null)
     const { addToast } = useToast()
-
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (!file) return
-
-        if (!file.type.startsWith('image/')) {
-            addToast('error', 'Please select an image file')
-            return
-        }
-
-        // Resize Image
-        try {
-            const resizedBlob = await resizeImage(file, 500) // Max 500px
-            const resizedFile = new File([resizedBlob], "avatar.jpg", { type: "image/jpeg" })
-
-            // Create preview
-            const reader = new FileReader()
-            reader.onloadend = () => {
-                setPreview(reader.result as string)
-            }
-            reader.readAsDataURL(resizedFile)
-
-            // Store resized blob in ref, append manually on submit
-        } catch (err) {
-            console.error(err)
-            addToast('error', 'Failed to process image')
-        }
-    }
 
     const resizeImage = (file: File, maxDim: number): Promise<Blob> => {
         return new Promise((resolve, reject) => {
@@ -104,8 +76,12 @@ export function ProfileForm({ userId, activeAvatar, initialName, initialEmail, i
         }
 
         try {
-            await updateProfile(userId, formData)
-            addToast('success', 'Profile updated successfully')
+            const result = await updateProfile(userId, formData)
+            if (result && 'error' in result) {
+                addToast('error', result.error)
+            } else {
+                addToast('success', 'Profile updated successfully')
+            }
         } catch (err) {
             console.error(err)
             addToast('error', 'Update failed')
@@ -114,16 +90,15 @@ export function ProfileForm({ userId, activeAvatar, initialName, initialEmail, i
         }
     }
 
-    // Determine the current blob to send
-    const currentResizedBlob = useRef<Blob | null>(null)
-
-    // Update handleFileChange to store the blob
     const onFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (!file) return
 
-        // Preview immediately (even if big) or wait? 
-        // Resize first.
+        if (!file.type.startsWith('image/')) {
+            addToast('error', 'Please select an image file')
+            return
+        }
+
         const blob = await resizeImage(file, 500)
         currentResizedBlob.current = blob
 
