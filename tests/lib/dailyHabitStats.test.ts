@@ -77,4 +77,13 @@ describe('computeDailyHabitStats', () => {
     expect(computeDailyHabitStats([], 'UTC')).toEqual([])
     expect(computeDailyHabitStats([makeAssignment({ resetMode: 'WEEKLY' })], 'UTC')).toEqual([])
   })
+
+  it('reports currentStreak 0 when the latest completions are not recent', () => {
+    // completions end 2026-06-03, far before today → the streak is broken,
+    // so the current (live) streak is 0 even though maxStreak is 3.
+    const result = computeDailyHabitStats([
+      makeAssignment({ completions: ['2026-06-01', '2026-06-02', '2026-06-03'] }),
+    ], 'UTC')
+    expect(result[0].currentStreak).toBe(0)
+  })
 })
