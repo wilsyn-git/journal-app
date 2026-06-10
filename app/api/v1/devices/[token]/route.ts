@@ -13,9 +13,12 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const { token } = await params
     const { userId } = auth.payload
 
+    // Removing a device genuinely revokes its session(s) — setting revokedAt
+    // invalidates both refresh and live access tokens (#64) — and clears the
+    // push token so we stop sending notifications to it.
     await prisma.deviceSession.updateMany({
       where: { userId, deviceToken: token, revokedAt: null },
-      data: { deviceToken: null },
+      data: { revokedAt: new Date(), deviceToken: null },
     })
 
     return apiSuccess({ success: true })

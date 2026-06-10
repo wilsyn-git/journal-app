@@ -11,6 +11,10 @@ const ACCESS_TOKEN_EXPIRY = '1h'
 export interface AccessTokenPayload {
   userId: string
   orgId: string
+  // Binds the token to a specific DeviceSession so it can be revoked before
+  // its natural expiry. Optional on the returned payload for backward
+  // compatibility with tokens issued before this claim existed (#64).
+  sessionId?: string
 }
 
 export async function signAccessToken(payload: AccessTokenPayload): Promise<string> {
@@ -26,5 +30,7 @@ export async function verifyAccessToken(token: string): Promise<AccessTokenPaylo
   return {
     userId: payload.userId as string,
     orgId: payload.orgId as string,
+    // Read defensively: legacy tokens lack this claim, which yields undefined.
+    sessionId: payload.sessionId as string | undefined,
   }
 }

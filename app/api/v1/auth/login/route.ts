@@ -63,22 +63,24 @@ export async function POST(request: NextRequest) {
       return apiError('UNAUTHORIZED', 'Invalid credentials', 401)
     }
 
-    const accessToken = await signAccessToken({
-      userId: user.id,
-      orgId: user.organizationId,
-    })
-
     const rawRefreshToken = randomBytes(32).toString('hex')
     const hashedRefreshToken = createHash('sha256')
       .update(rawRefreshToken)
       .digest('hex')
 
-    await prisma.deviceSession.create({
+    // Create the session first so the access token can be bound to its id (#64).
+    const session = await prisma.deviceSession.create({
       data: {
         userId: user.id,
         refreshToken: hashedRefreshToken,
         deviceName,
       },
+    })
+
+    const accessToken = await signAccessToken({
+      userId: user.id,
+      orgId: user.organizationId,
+      sessionId: session.id,
     })
 
     return apiSuccess({
