@@ -197,11 +197,16 @@ model TaskAssignment {
   user        User      @relation("TaskAssignments", fields: [userId], references: [id], onDelete: Cascade)
   completedAt DateTime?
   notes       String?
+  acknowledgedAt      DateTime?
+  acknowledgedById    String?
+  acknowledgementNote String?
+  userNotifiedAt      DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   @@unique([taskId, userId])
   @@index([userId, completedAt])
+  @@index([acknowledgedAt])
 }
 
 model JournalEntry {
