@@ -44,4 +44,17 @@ describe('TimezonePicker preview + confirm (N3.8)', () => {
     expect(screen.queryByText(/roll over at midnight/i)).not.toBeInTheDocument()
     expect(setTzMock).not.toHaveBeenCalled()
   })
+
+  it('picking the current timezone clears a pending selection', () => {
+    render(<TimezonePicker currentTimezone="America/New_York" />)
+    // Stage a change to LA
+    fireEvent.click(screen.getByText(/New.York/))
+    fireEvent.click(screen.getByRole('button', { name: /Los.Angeles/ }))
+    expect(screen.getByText(/roll over at midnight/i)).toBeInTheDocument()
+    // Reopen and pick the current tz (New York) — should clear the pending bar, no save
+    fireEvent.click(screen.getByText(/New.York/))
+    fireEvent.click(screen.getByRole('button', { name: /New.York/ }))
+    expect(screen.queryByText(/roll over at midnight/i)).not.toBeInTheDocument()
+    expect(setTzMock).not.toHaveBeenCalled()
+  })
 })
