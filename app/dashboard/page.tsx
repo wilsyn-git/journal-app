@@ -111,7 +111,11 @@ export default async function DashboardPage({ searchParams }: Props) {
                 userId: targetUserId,
                 task: { archivedAt: null, organizationId: session.user.organizationId }
             },
-            include: { task: true }
+            include: {
+                task: {
+                    select: { id: true, title: true, description: true, priority: true, dueDate: true }
+                }
+            }
         }),
         getInventory(targetUserId),
         getFrozenDates(targetUserId),
