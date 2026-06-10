@@ -166,7 +166,7 @@ export async function getDailyJournalDetails(targetUserId: string, dateStr: stri
 
     let effectiveTargetId = currentUserId
     if (targetUserId && targetUserId !== currentUserId) {
-        // Throws / redirects unless the session is an admin in the target user's org.
+        // Throws unless the session is an admin in the target user's org.
         await requireAdminForUser(targetUserId)
         effectiveTargetId = targetUserId
     }
