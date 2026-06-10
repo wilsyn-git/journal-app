@@ -131,27 +131,29 @@ export default async function DashboardPage({ searchParams }: Props) {
           )
         : null
 
-    // Achievement evaluation — runs on dashboard load
     let unnotifiedAchievements: { name: string; icon: string; label: string }[] = []
-    if (isViewingSelf) {
-        await evaluateAchievements(targetUserId, userStats.achievementMetrics)
-        const unnotified = await getAndMarkUnnotifiedAchievements(targetUserId)
-        unnotifiedAchievements = unnotified.map((a) => ({
-            name: a.name,
-            icon: a.icon,
-            label: a.label,
-        }))
-    }
 
     const today = getTodayForUser(timezone);
     const dateParam = typeof params.date === 'string' ? params.date : null;
     const isPast = dateParam && dateParam !== today;
     const targetDate = isPast ? dateParam! : today;
 
-    const [ruleGroups, ruleCalendar] = await Promise.all([
+    const [achievementToasts, ruleGroups, ruleCalendar] = await Promise.all([
+        isViewingSelf
+            ? (async () => {
+                await evaluateAchievements(prisma, targetUserId, userStats.achievementMetrics)
+                return getAndMarkUnnotifiedAchievements(prisma, targetUserId)
+              })()
+            : Promise.resolve([] as Awaited<ReturnType<typeof getAndMarkUnnotifiedAchievements>>),
         getUserRulesWithStatus(targetUserId, timezone, targetDate),
         getRuleCalendarData(targetUserId, timezone),
     ])
+
+    unnotifiedAchievements = achievementToasts.map((a) => ({
+        name: a.name,
+        icon: a.icon,
+        label: a.label,
+    }))
 
     // Derive sidebar badge progress from rule groups
     let ruleProgressTotal = 0
