@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { EntryCard } from '@/components/journal/EntryCard'
 import type { DayDetails } from '@/lib/dayDetails'
 
@@ -12,10 +12,31 @@ type Props = {
 }
 
 export function DayDetailModal({ date, details, loading, onClose }: Props) {
+    const dialogRef = useRef<HTMLDivElement>(null)
+
     useEffect(() => {
-        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-        window.addEventListener('keydown', onKey)
-        return () => window.removeEventListener('keydown', onKey)
+        const previouslyFocused = document.activeElement as HTMLElement | null
+        dialogRef.current?.focus()
+
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') { onClose(); return }
+            if (e.key === 'Tab') {
+                const focusables = dialogRef.current?.querySelectorAll<HTMLElement>(
+                    'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+                )
+                if (!focusables || focusables.length === 0) { e.preventDefault(); return }
+                const first = focusables[0]
+                const last = focusables[focusables.length - 1]
+                const active = document.activeElement
+                if (e.shiftKey && active === first) { e.preventDefault(); last.focus() }
+                else if (!e.shiftKey && active === last) { e.preventDefault(); first.focus() }
+            }
+        }
+        window.addEventListener('keydown', onKeyDown)
+        return () => {
+            window.removeEventListener('keydown', onKeyDown)
+            previouslyFocused?.focus?.()
+        }
     }, [onClose])
 
     const displayDate = new Date(`${date}T00:00:00`).toLocaleDateString('default', {
@@ -28,10 +49,12 @@ export function DayDetailModal({ date, details, loading, onClose }: Props) {
             onClick={onClose}
         >
             <div
+                ref={dialogRef}
                 role="dialog"
                 aria-modal="true"
                 aria-label={displayDate}
-                className="relative w-full max-w-2xl max-h-[80vh] flex flex-col bg-[rgba(16,16,20,0.98)] border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+                tabIndex={-1}
+                className="relative w-full max-w-2xl max-h-[80vh] flex flex-col bg-[rgba(16,16,20,0.98)] border border-white/10 rounded-2xl shadow-2xl overflow-hidden focus:outline-none"
                 onClick={(e) => e.stopPropagation()}
             >
                 <button

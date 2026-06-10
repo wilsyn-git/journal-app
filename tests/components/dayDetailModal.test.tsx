@@ -41,4 +41,25 @@ describe('DayDetailModal', () => {
     fireEvent.keyDown(window, { key: 'Escape' })
     expect(onClose).toHaveBeenCalledTimes(1)
   })
+
+  it('moves focus into the modal on open', () => {
+    render(<DayDetailModal date="2026-04-14" details={details} loading={false} onClose={() => {}} />)
+    const dialog = screen.getByRole('dialog')
+    expect(dialog).toHaveFocus()
+  })
+
+  it('restores focus to the previously focused element on close', () => {
+    const trigger = document.createElement('button')
+    trigger.textContent = 'trigger'
+    document.body.appendChild(trigger)
+    trigger.focus()
+    expect(trigger).toHaveFocus()
+
+    const { unmount } = render(<DayDetailModal date="2026-04-14" details={details} loading={false} onClose={() => {}} />)
+    expect(screen.getByRole('dialog')).toHaveFocus()
+
+    unmount()
+    expect(trigger).toHaveFocus()
+    trigger.remove()
+  })
 })
