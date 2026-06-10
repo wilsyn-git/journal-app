@@ -143,7 +143,8 @@ Toggling a rule disables the control until the server round-trip completes; the 
 The inventory shows earning progress (`counter/interval`) and the banner offers to spend items, but nothing in the UI explains what a freeze does vs. a shield, or how the earning counter increments.
 **Fix:** Add a "How it works" expandable/info tooltip in the inventory page covering both item types and the earning rule.
 
-### N3.7 [MED] Like-button visibility on past entries is inconsistent
+### N3.7 [MED] Like-button visibility on past entries is inconsistent — ✅ Fixed 2026-06-09 (fix/journalDayLike)
+**Resolution:** Reframed "like" from per-prompt-answer to **one per journal-day**, rendered once at the bottom of `PastJournalView` (per-entry hearts removed). Admin gets an optimistic toggle (`useOptimistic` + error toast); a regular user sees a read-only "Liked by your admin" heart **only when the day is liked** (consistent with the calendar sidebar, which already shows a rose-red liked day). **No schema change** — kept `JournalEntry.isLiked`; a day is liked when any entry is, and the toggle sets `isLiked` on all of that day's entries via a new org-scoped `setDayLike` helper (`lib/dayLike.ts`, the action also gained an org-ownership check the old `toggleEntryLike` lacked). iOS `GET /api/v1/entries`, calendar, and backup/restore are unchanged. Covered by `tests/lib/dayLike.test.ts` (incl. cross-org isolation) + `tests/components/pastJournalView.test.tsx`. Legacy mixed-state days read as liked and normalize on first admin re-toggle (documented, no migration).
 **Where:** `components/PastJournalView.tsx`
 The like control renders only when `isAdmin || optimisticLiked` — a non-admin user can see a like they can't interact with, and the feature's intent (admin feedback? bookmark?) isn't legible from the UI.
 **Fix:** Decide the intent; render the control consistently for whichever role owns it (e.g., always for admins, read-only heart indicator for users).
