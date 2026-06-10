@@ -5,6 +5,7 @@ import { resolveApiTimezone } from '@/lib/timezone'
 import { getInventory } from '@/app/lib/inventoryData'
 import { getAchievementState } from '@/lib/achievementEvaluator'
 import { getUserStats } from '@/app/lib/analytics'
+import { getDailyHabitStats } from '@/lib/rules'
 
 export async function GET(request: NextRequest) {
   const auth = await authenticateRequest(request)
@@ -14,9 +15,10 @@ export async function GET(request: NextRequest) {
     const { userId } = auth.payload
     const timezone = await resolveApiTimezone(request, userId)
 
-    const [stats, inventory] = await Promise.all([
+    const [stats, inventory, taskStats] = await Promise.all([
       getUserStats(userId, timezone),
       getInventory(userId),
+      getDailyHabitStats(userId, timezone),
     ])
 
     const achievements = await getAchievementState(userId, stats.achievementMetrics)
@@ -29,7 +31,13 @@ export async function GET(request: NextRequest) {
       avgWords: stats.avgWords,
       heatmap: stats.heatmap,
       achievements,
-      taskStats: stats.taskStats,
+      taskStats: taskStats.map(t => ({
+        id: t.id,
+        content: t.content,
+        currentStreak: t.currentStreak,
+        maxStreak: t.maxStreak,
+        count: t.count,
+      })),
       freezes: {
         count: inventory.freezeCount,
         earningProgress: inventory.earningCounter,

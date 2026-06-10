@@ -12,13 +12,14 @@ import Link from "next/link"
 import Image from "next/image"
 import { SidebarHeader } from "@/components/SidebarHeader"
 import { ContributionHeatmap } from "@/components/ContributionHeatmap"
-import { getRuleCalendarData } from "@/lib/rules"
+import { getRuleCalendarData, getDailyHabitStats } from "@/lib/rules"
 import { getUserTimezone } from "@/lib/timezone"
 import { TimeOfDayChart } from "@/components/stats/TimeOfDayChart"
 import { WordCloud } from "@/components/stats/WordCloud"
 import { AchievementGrid } from "@/components/stats/AchievementGrid"
 import { getAchievementState } from '@/lib/achievementEvaluator'
 import { TrendChart } from "@/components/stats/TrendChart"
+import { DailyHabitConsistency } from "@/components/stats/DailyHabitConsistency"
 
 type Props = {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -55,10 +56,12 @@ export default async function StatsPage({ searchParams }: Props) {
     ]);
 
     const timezone = await getUserTimezone(targetUserId)
-    const [achievementState, ruleCalendar] = await Promise.all([
+    const [achievementState, ruleCalendar, dailyHabits] = await Promise.all([
         getAchievementState(targetUserId, stats.achievementMetrics),
         getRuleCalendarData(targetUserId, timezone),
+        getDailyHabitStats(targetUserId, timezone),
     ])
+    const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: timezone })
 
     const targetUserEmail = !isViewingSelf ? (targetUserInfo?.email || 'Unknown') : session.user.email;
     const targetUserName = !isViewingSelf ? targetUserInfo?.name : session.user.name;
@@ -227,34 +230,9 @@ export default async function StatsPage({ searchParams }: Props) {
                         )}
                     </div>
 
-                    {/* Task Streaks */}
+                    {/* Habit Consistency (daily rules) */}
                     <h2 className="text-2xl font-bold text-white mb-6">Habit Consistency</h2>
-                    {stats.taskStats.length > 0 ? (
-                        <div className="grid grid-cols-1 gap-4">
-                            {stats.taskStats.map((task: any) => (
-                                <div key={task.id} className="glass-card p-4 rounded-xl border border-white/10 flex justify-between items-center group hover:bg-white/5 transition-colors">
-                                    <div className="flex-1">
-                                        <h3 className="text-white font-medium">{task.content}</h3>
-                                        <p className="text-xs text-gray-400 mt-1">Answered {task.count} times total</p>
-                                    </div>
-                                    <div className="flex gap-8 text-right">
-                                        <div>
-                                            <span className="block text-xl font-bold text-green-400">{task.currentStreak}</span>
-                                            <span className="text-xs text-gray-400 uppercase">Streak</span>
-                                        </div>
-                                        <div>
-                                            <span className="block text-xl font-bold text-gray-300">{task.maxStreak}</span>
-                                            <span className="text-xs text-gray-400 uppercase">Best</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-muted-foreground italic p-8 glass-card rounded-xl border border-white/10">
-                            No daily habits tracked yet. Complete journal entries with checkbox or radio prompts to see habit tracking here.
-                        </div>
-                    )}
+                    <DailyHabitConsistency habits={dailyHabits} todayStr={todayStr} />
 
                 </div>
             </main>

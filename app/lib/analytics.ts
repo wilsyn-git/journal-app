@@ -75,7 +75,6 @@ export const getUserStats = cache(async function getUserStats(userId: string, ov
     const heatmap: Record<string, number> = {};
     const wordCounts: Record<string, number> = {};
     const filteredWords: { text: string, value: number }[] = [];
-    const taskMap = new Map<string, { prompt: string, type: string, days: Set<string> }>();
     const rangeMap = new Map<string, { prompt: string, dateValues: Map<string, number[]> }>();
 
     recentEntries.forEach(e => {
@@ -96,13 +95,6 @@ export const getUserStats = cache(async function getUserStats(userId: string, ov
                     wordCounts[w] = (wordCounts[w] || 0) + 1;
                 }
             });
-        }
-
-        if (([PROMPT_TYPES.CHECKBOX, PROMPT_TYPES.RADIO] as string[]).includes(e.prompt.type)) {
-            if (!taskMap.has(e.prompt.id)) {
-                taskMap.set(e.prompt.id, { prompt: e.prompt.content, type: e.prompt.type, days: new Set() });
-            }
-            taskMap.get(e.prompt.id)!.days.add(dayStr);
         }
 
         if (e.prompt.type === PROMPT_TYPES.RANGE) {
@@ -162,20 +154,6 @@ export const getUserStats = cache(async function getUserStats(userId: string, ov
         lateNightEntries,
     }
 
-    // Task Stats (Daily Habits)
-    const taskStats = [];
-    for (const [id, data] of taskMap.entries()) {
-        const days = Array.from(data.days).sort().reverse();
-        const streaks = calculateStreaks(days, todayStr);
-        taskStats.push({
-            id,
-            content: data.prompt,
-            currentStreak: streaks.current,
-            maxStreak: streaks.max,
-            count: days.length
-        });
-    }
-
     // Process Range Stats
     const trendStats: { id: string, name: string, data: { date: string, value: number }[] }[] = [];
 
@@ -202,7 +180,6 @@ export const getUserStats = cache(async function getUserStats(userId: string, ov
         totalEntries: allEntries.length,
         daysCompleted: allTimeDays.size,
         avgWords,
-        taskStats,
         trendStats,
         heatmap,
         hourCounts,

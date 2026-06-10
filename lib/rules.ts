@@ -401,3 +401,74 @@ export function computeRuleCalendarStatus(assignments: AssignmentWithCompletions
 
   return { dailyStatus, weeklyStatus }
 }
+
+type AssignmentForHabitStats = {
+  createdAt: Date
+  rule: {
+    id: string
+    title: string
+    sortOrder: number
+    ruleType: RuleTypeForPeriod
+  }
+  completions: { periodKey: string }[]
+}
+
+export type DailyHabitStat = {
+  id: string
+  content: string
+  currentStreak: number
+  maxStreak: number
+  count: number
+  completedDays: string[]
+}
+
+/**
+ * Pure transform: given active rule assignments (each with its rule, ruleType,
+ * and completion period keys), produce per-habit stats for DAILY rules only.
+ *
+ * Mirrors the journal `taskStats` shape, plus `completedDays` (the raw period
+ * keys) which drives the stats-page consistency strip.
+ *
+ * @internal exported for unit testing and reuse by getDailyHabitStats
+ */
+export function computeDailyHabitStats(
+  assignments: AssignmentForHabitStats[],
+  timezone: string
+): DailyHabitStat[] {
+  const daily = assignments
+    .filter(a => a.rule.ruleType.resetMode === RESET_MODES.DAILY)
+    .sort((a, b) => a.rule.sortOrder - b.rule.sortOrder)
+
+  return daily.map(a => {
+    const allPeriodKeys = generatePeriodKeys(a.rule.ruleType, timezone, a.createdAt)
+    const completedKeys = a.completions.map(c => c.periodKey)
+    const { current, max } = calculateRuleStreak(completedKeys, allPeriodKeys)
+    return {
+      id: a.rule.id,
+      content: a.rule.title,
+      currentStreak: current,
+      maxStreak: max,
+      count: completedKeys.length,
+      completedDays: completedKeys,
+    }
+  })
+}
+
+/**
+ * Fetch active, assigned daily-rule habit stats for a user.
+ * Thin DB wrapper around computeDailyHabitStats (same query shape as
+ * getRuleCalendarData).
+ */
+export async function getDailyHabitStats(
+  userId: string,
+  timezone: string
+): Promise<DailyHabitStat[]> {
+  const assignments = await prisma.ruleAssignment.findMany({
+    where: { userId, rule: { isActive: true } },
+    include: {
+      rule: { include: { ruleType: true } },
+      completions: { select: { periodKey: true } },
+    },
+  })
+  return computeDailyHabitStats(assignments, timezone)
+}
