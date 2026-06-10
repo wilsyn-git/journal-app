@@ -163,6 +163,7 @@ Avatar validation failures are thrown rather than returned as `{ error }` like e
 **Where:** `components/ContributionHeatmap.tsx:30-60`
 `showLegend` is accepted but no legend content is rendered, so users have no key for the green/blue/purple color encoding.
 **Fix:** Render the legend (or remove the dead prop); enrich the cell `title` to include rule status alongside word count.
+**Resolved (2026-06-09, feat/heatmapDateExplorer):** current ContributionHeatmap renders a Journal/Rules legend when showLegend is true (the stats page uses the default true); verified by code inspection. Ticket predates that code.
 
 ### N3.11 [LOW] Journal history sidebar renders nothing when empty
 **Where:** `components/JournalHistoryList.tsx:15-25`
