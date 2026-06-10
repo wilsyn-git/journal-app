@@ -83,7 +83,7 @@ export function RulesByUser({ userGroups, typeId, deleteAction }: RulesByUserPro
                       key={`${group.userId}-${rule.ruleId}`}
                       className="group px-4 py-3 pl-9 hover:bg-white/[0.03] transition-colors"
                     >
-                      <div className="flex items-start justify-between gap-4">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className={`font-medium ${rule.isActive ? 'text-white' : 'text-gray-500'}`}>
@@ -103,7 +103,7 @@ export function RulesByUser({ userGroups, typeId, deleteAction }: RulesByUserPro
                           )}
                         </div>
 
-                        <div className="shrink-0 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="shrink-0 flex items-center gap-2 sm:opacity-0 sm:group-hover:opacity-100 sm:transition-opacity">
                           <Link
                             href={`/admin/rules/types/${typeId}/rules/${rule.ruleId}`}
                             className="px-2.5 py-1 text-xs text-gray-300 border border-white/10 rounded hover:bg-white/5 hover:text-white transition-colors"
