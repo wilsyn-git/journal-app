@@ -31,7 +31,13 @@ export async function GET(request: NextRequest) {
       avgWords: stats.avgWords,
       heatmap: stats.heatmap,
       achievements,
-      taskStats,
+      taskStats: taskStats.map(t => ({
+        id: t.id,
+        content: t.content,
+        currentStreak: t.currentStreak,
+        maxStreak: t.maxStreak,
+        count: t.count,
+      })),
       freezes: {
         count: inventory.freezeCount,
         earningProgress: inventory.earningCounter,
