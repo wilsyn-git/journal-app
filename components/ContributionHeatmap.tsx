@@ -1,8 +1,11 @@
 'use client'
 
-import { useMemo, useRef, useEffect } from 'react'
+import { useMemo, useRef, useEffect, useState } from 'react'
 
 import type { RuleCompletionStatus } from '@/lib/rules'
+import { getDailyJournalDetails } from '@/app/actions/journal'
+import { DayDetailModal } from '@/components/stats/DayDetailModal'
+import type { DayDetails } from '@/lib/dayDetails'
 
 type HeatmapStats = {
     currentStreak: number
@@ -16,6 +19,7 @@ type Props = {
     showLegend?: boolean
     scrollable?: boolean // Horizontal scroll for long histories (stats page). Off = fits container.
     stats?: HeatmapStats // When provided, renders a motivational stat strip
+    userId?: string // When set, activity cells are clickable and open the day-detail modal for this user
 }
 
 // Journal color scale
@@ -40,7 +44,7 @@ function getColor(value: number) {
     return getJournalColor(value)
 }
 
-export function ContributionHeatmap({ data, ruleData, weeksHistory = 52, showLegend = true, scrollable = true, stats }: Props) {
+export function ContributionHeatmap({ data, ruleData, weeksHistory = 52, showLegend = true, scrollable = true, stats, userId }: Props) {
     // Generate last N weeks (Current + N-1 past)
     const { weeks, months, activeDays } = useMemo(() => {
         const weeksArray = []
@@ -107,6 +111,37 @@ export function ContributionHeatmap({ data, ruleData, weeksHistory = 52, showLeg
         }
     }, [weeks, scrollable])
 
+    const [selectedDate, setSelectedDate] = useState<string | null>(null)
+    const [details, setDetails] = useState<DayDetails | null>(null)
+    const [loading, setLoading] = useState(false)
+
+    const openDay = async (dateStr: string) => {
+        setSelectedDate(dateStr)
+        setDetails(null)
+        setLoading(true)
+        try {
+            setDetails(await getDailyJournalDetails(userId ?? '', dateStr))
+        } catch (err) {
+            console.error('Failed to load day details:', err)
+            setSelectedDate(null) // close on hard failure rather than hang on a spinner
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const closeDay = () => { setSelectedDate(null); setDetails(null) }
+
+    const interactiveProps = (clickable: boolean, date: string, label: string) =>
+        clickable ? {
+            role: 'button',
+            tabIndex: 0,
+            'aria-label': label,
+            onClick: () => openDay(date),
+            onKeyDown: (e: React.KeyboardEvent) => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDay(date) }
+            },
+        } : {}
+
     return (
         <div className="flex flex-col gap-3">
             <div className="flex">
@@ -146,7 +181,12 @@ export function ContributionHeatmap({ data, ruleData, weeksHistory = 52, showLeg
                         </div>
 
                         {/* The Grid */}
-                        <div className="flex gap-[3px]" role="img" aria-label="Journal contribution heatmap">
+                        <div
+                            className="flex gap-[3px]"
+                            {...(userId
+                                ? { role: 'group', 'aria-label': 'Journal contribution heatmap — activity days are buttons' }
+                                : { role: 'img', 'aria-label': 'Journal contribution heatmap' })}
+                        >
                             {weeks.map((week, wIdx) => (
                                 <div key={wIdx} className="flex flex-col gap-[3px]">
                                     {week.map((day, dIdx) => {
@@ -158,13 +198,17 @@ export function ContributionHeatmap({ data, ruleData, weeksHistory = 52, showLeg
                                         const ruleStatus = ruleData?.[day.date]
                                         const hasRuleData = ruleData && ruleStatus
 
+                                        const clickable = !!userId && (day.value > 0 || !!hasRuleData)
+                                        const cellLabel = `${day.date}, ${day.value} average words. Open day details.`
+
                                         // Split cell: upper-left = rules, lower-right = journal
                                         if (hasRuleData) {
                                             return (
                                                 <div
                                                     key={dIdx}
-                                                    className={`w-3.5 h-3.5 rounded-[2px] relative overflow-hidden${todayRing}`}
+                                                    className={`w-3.5 h-3.5 rounded-[2px] relative overflow-hidden transition-all${todayRing}${clickable ? ' cursor-pointer hover:ring-2 hover:ring-white/60' : ''}`}
                                                     title={`${day.date}: ${day.value} avg words | Rules: ${ruleStatus}`}
+                                                    {...interactiveProps(clickable, day.date, cellLabel)}
                                                 >
                                                     {/* Upper-left triangle: rules */}
                                                     <div
@@ -183,8 +227,9 @@ export function ContributionHeatmap({ data, ruleData, weeksHistory = 52, showLeg
                                         return (
                                             <div
                                                 key={dIdx}
-                                                className={`w-3.5 h-3.5 rounded-[2px] transition-colors ${getColor(day.value)}${todayRing}`}
+                                                className={`w-3.5 h-3.5 rounded-[2px] transition-all ${getColor(day.value)}${todayRing}${clickable ? ' cursor-pointer hover:ring-2 hover:ring-white/60' : ''}`}
                                                 title={`${day.date}: ${day.value} avg words`}
+                                                {...interactiveProps(clickable, day.date, cellLabel)}
                                             />
                                         )
                                     })}
@@ -243,6 +288,10 @@ export function ContributionHeatmap({ data, ruleData, weeksHistory = 52, showLeg
                         </div>
                     )}
                 </div>
+            )}
+
+            {selectedDate && (
+                <DayDetailModal date={selectedDate} details={details} loading={loading} onClose={closeDay} />
             )}
         </div>
     )

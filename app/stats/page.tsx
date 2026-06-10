@@ -135,7 +135,7 @@ export default async function StatsPage({ searchParams }: Props) {
                     <div className="mb-12">
                         <h2 className="text-xl font-bold text-white mb-4">Consistency Map</h2>
                         <div className="glass-card p-6 rounded-xl border border-white/10 overflow-x-auto custom-scrollbar min-h-[160px] flex flex-col justify-center">
-                            <ContributionHeatmap data={stats.heatmap} ruleData={ruleCalendar.dailyStatus} weeksHistory={46} />
+                            <ContributionHeatmap data={stats.heatmap} ruleData={ruleCalendar.dailyStatus} weeksHistory={46} userId={targetUserId} />
                         </div>
                     </div>
 
