@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
+import { getPendingAcknowledgements } from "@/lib/taskAcknowledgements"
+import { getUserTimezone } from "@/lib/timezone"
+import { AcknowledgeCompletionItem } from "@/components/admin/AcknowledgeCompletionItem"
 
 export const metadata: Metadata = {
     title: 'Admin Dashboard | myJournal',
@@ -188,8 +191,32 @@ export default async function AdminPage() {
         ? Math.round((totalWeightedAnswers / totalWeightedOpportunity) * 100)
         : 0;
 
+    const pendingAcks = await getPendingAcknowledgements(prisma, organizationId)
+    const adminTimezone = await getUserTimezone(session?.user?.id)
+    const fmtCompleted = (d: Date) =>
+        d.toLocaleDateString('en-US', { timeZone: adminTimezone, month: 'short', day: 'numeric' }) +
+        ' · ' +
+        d.toLocaleTimeString('en-US', { timeZone: adminTimezone, hour: 'numeric', minute: '2-digit' })
+
     return (
         <div>
+            {pendingAcks.length > 0 && (
+                <div className="mb-8 glass-card border border-amber-500/20 rounded-xl p-6">
+                    <h2 className="text-lg font-bold text-white mb-1">Completions awaiting acknowledgement</h2>
+                    <p className="text-sm text-gray-400 mb-4">{pendingAcks.length} completed {pendingAcks.length === 1 ? 'task' : 'tasks'} need your sign-off.</p>
+                    <div className="space-y-2">
+                        {pendingAcks.map((p) => (
+                            <AcknowledgeCompletionItem
+                                key={p.assignmentId}
+                                assignmentId={p.assignmentId}
+                                taskTitle={p.taskTitle}
+                                userName={p.userName}
+                                completedLabel={`Completed ${fmtCompleted(p.completedAt)}`}
+                            />
+                        ))}
+                    </div>
+                </div>
+            )}
             <h1 className="text-3xl font-bold text-white mb-8">Overview</h1>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
