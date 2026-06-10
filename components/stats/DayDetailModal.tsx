@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { EntryCard } from '@/components/journal/EntryCard'
 import type { DayDetails } from '@/lib/dayDetails'
 
@@ -45,7 +46,9 @@ export function DayDetailModal({ date, details, loading, onClose }: Props) {
         weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
     })
 
-    return (
+    if (typeof document === 'undefined') return null
+
+    return createPortal((
         <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm"
             onClick={onClose}
@@ -109,5 +112,5 @@ export function DayDetailModal({ date, details, loading, onClose }: Props) {
                 </div>
             </div>
         </div>
-    )
+    ), document.body)
 }
