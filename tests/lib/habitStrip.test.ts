@@ -37,4 +37,21 @@ describe('computeStripCells', () => {
       ['empty', 'empty', 'empty', 'empty', 'empty']
     )
   })
+
+  it('marks all completed cells as streak (except today) when streak exceeds the window', () => {
+    const cells = computeStripCells(
+      ['2026-06-06', '2026-06-07', '2026-06-08', '2026-06-09'],
+      50,
+      '2026-06-10',
+      5
+    )
+    expect(cells).toEqual(['streak', 'streak', 'streak', 'streak', 'empty'])
+  })
+
+  it('renders completed-but-lapsed days as done when currentStreak is 0', () => {
+    // user completed 06-09 but missed today → streak broken (0), so the
+    // completed day shows as done, not streak.
+    const cells = computeStripCells(['2026-06-09'], 0, '2026-06-10', 3)
+    expect(cells).toEqual(['empty', 'done', 'empty'])
+  })
 })
