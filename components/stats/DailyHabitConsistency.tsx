@@ -33,7 +33,7 @@ export function DailyHabitConsistency({
           >
             <div className="flex justify-between items-start mb-3 gap-4">
               <h3 className="text-white font-medium">{habit.content}</h3>
-              <div className="flex gap-6 text-right shrink-0">
+              <div className="flex gap-8 text-right shrink-0">
                 <div>
                   <span className="block text-xl font-bold text-green-400">{habit.currentStreak}</span>
                   <span className="text-xs text-gray-400 uppercase">Streak</span>
