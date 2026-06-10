@@ -13,13 +13,15 @@ type Props = {
 
 export function DayDetailModal({ date, details, loading, onClose }: Props) {
     const dialogRef = useRef<HTMLDivElement>(null)
+    const onCloseRef = useRef(onClose)
+    useEffect(() => { onCloseRef.current = onClose }, [onClose])
 
     useEffect(() => {
         const previouslyFocused = document.activeElement as HTMLElement | null
         dialogRef.current?.focus()
 
         const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') { onClose(); return }
+            if (e.key === 'Escape') { onCloseRef.current(); return }
             if (e.key === 'Tab') {
                 const focusables = dialogRef.current?.querySelectorAll<HTMLElement>(
                     'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
@@ -37,7 +39,7 @@ export function DayDetailModal({ date, details, loading, onClose }: Props) {
             window.removeEventListener('keydown', onKeyDown)
             previouslyFocused?.focus?.()
         }
-    }, [onClose])
+    }, [])
 
     const displayDate = new Date(`${date}T00:00:00`).toLocaleDateString('default', {
         weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
