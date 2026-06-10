@@ -13,7 +13,7 @@ Close out the entire N2.x performance cluster (two MED dashboard/cron wins + thr
 
 - All 5 fixes in one branch (`fix/perf-n2x`), one deploy.
 - N2.6: **enable in code + document** (not document-only).
-- N2.3: full batch-fetch rework (not the minimal `Promise.all`-chunk-only variant).
+- N2.3: **parallel-chunk** the existing per-user logic (revised from the original "single grouped query" plan — see N2.3 section for why exact equivalence forced this).
 
 ---
 
@@ -46,16 +46,17 @@ Close out the entire N2.x performance cluster (two MED dashboard/cron wins + thr
 
 Then in-memory `calculateStreaks`, then per-user `sendPushNotification` if `streak > 1`.
 
-**Fix — batch-fetch upfront, index in memory:**
-1. One query for today's entry counts across all candidate users (grouped/`IN` on userId, `createdAt >= todayStart`). NOTE: `todayStart` is per-user-timezone — so either fetch a recent window once and bucket per user in memory, or group appropriately. Implementation must preserve the per-timezone "today" semantics exactly.
-2. One `findMany` for recent entries across all users (`userId IN (...)`, `select: { userId, createdAt }`, ordered), bucketed per user in memory (cap per user to the same 30 the old path used).
-3. Batch frozen-dates fetch across all users (or one query) instead of per-user `getFrozenDates`.
-4. Run `calculateStreaks` per user from the in-memory buckets — zero per-user DB round-trips.
-5. Push sends fan out in `Promise.all` chunks of ~20 (keep per-user send, just parallelized).
+**Fix — parallel-chunk the per-user logic (REVISED approach):**
 
-**Equivalence requirement:** the set of users who get a push, and the streak value computed, must be identical to the old per-user path on a fixture set. This is the primary test.
+The original plan was a single grouped query, but the streak calc uses **the 30 most-recent _entries_ per user** (`take: 30`). A single `IN (...)` query cannot reproduce a per-user "top 30" limit without a raw SQL window function (`ROW_NUMBER() OVER (PARTITION BY userId ...)`) or a wider time-window — and a wider window can capture _more_ distinct days than the 30-entry cap, changing the streak number for heavy journalers. To guarantee **exact equivalence**, we instead:
 
-**Risk:** Medium (most logic change). Mitigated by an equivalence unit test against the old path.
+1. Extract the per-user body (today-count → recent-entries → frozen-dates → `calculateStreaks` → conditional push) into a single async `processUser(user)` function — identical logic to today.
+2. Replace the sequential `for` loop with chunked parallelism: split `usersWithDevices` into chunks of `CHUNK_SIZE = 20` and `await Promise.all(chunk.map(processUser))` per chunk.
+3. No query rewrite, no `getFrozenDates` change — each user runs the same 3 queries, now concurrently. Pairs with N2.6 WAL mode (concurrent readers).
+
+**Equivalence:** behavior is byte-identical (same queries, same calc) — only scheduling changes. The test asserts `processUser`'s decision (push-or-not + streak value) matches the old inline logic on a fixture, and that chunking covers every user exactly once.
+
+**Risk:** Low. No logic change, only concurrency. (The "single grouped query" variant was rejected for the equivalence pitfall above.)
 
 ---
 
