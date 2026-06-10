@@ -9,8 +9,14 @@
 
 ## ✅ FIXED — close these (verified in code)
 
+The **four critical security issues** were fixed on `fix/critical-security-hardening` (merged to `main` 2026-06-10, pending EC2 deploy). Resolution map: `docs/criticalSecurityResolutions.md`.
+
 | # | Title | Evidence |
 |---|-------|----------|
+| 58 | CSP allows `'unsafe-inline'` / `'unsafe-eval'` | nonce-based CSP in `proxy.ts` + `lib/csp.ts`; static pages opted dynamic |
+| 59 | Seed hardcodes `password123`, no prod guard | `ADMIN_PASSWORD` env + prod guard in `prisma/seed.ts` |
+| 61 | Login timing user-enumeration | constant-time bcrypt both paths via `lib/api/constantTimeAuth.ts` |
+| 64 | Revoked devices keep live tokens | `sessionId` in JWT + per-request `revokedAt` check in `lib/api/apiAuth.ts`; DELETE route sets `revokedAt` |
 | 56 | Admin profile mutations missing org ownership (IDOR) | `lib/adminGuards.ts` `requireAdminForProfiles` on all profile-connect paths |
 | 57 | resolveCategory trusts categoryId without org scope | `lib/categoryUtils.ts` org-scopes via `findFirst({ id, organizationId })` |
 | 39 | No shared journal-entry upsert function | consolidated in `app/api/v1/entries/route.ts` + `entries/batch/route.ts` |
@@ -20,16 +26,13 @@
 | N1.7 | `frozenDate` string unvalidated | `lib/streakSpend.ts` validates `/^\d{4}-\d{2}-\d{2}$/` before write |
 | N3.13 | Achievement toasts can't be dismissed | `ToastProvider.tsx:70-75` close button + auto-dismiss |
 
+> **Accepted residuals from the critical fixes** (sound, not blockers): ≤1h legacy-token window after the #64 deploy; `style-src 'unsafe-inline'` kept for Tailwind v4 runtime styles (#58); `_global-error` framework scripts un-nonced, recovery via plain link (#58).
+
 ---
 
-## 🔴 OPEN — Critical security (verified still true)
+## 🔴 OPEN — Critical security
 
-| # | Sev | Title | Evidence | Note |
-|---|-----|-------|----------|------|
-| 58 | critical | CSP allows `'unsafe-inline'` / `'unsafe-eval'` | `next.config.ts:31` | unchanged |
-| 59 | critical | Seed hardcodes `password123`, no prod guard | `prisma/seed.ts:9` | runs unconditionally |
-| 61 | **critical** ⬆ | Login leaks user existence via timing side-channel | `app/api/v1/auth/login/route.ts:56-64` | early-returns when user not found → no constant-time path. *Was filed "important."* |
-| 64 | **critical** ⬆ | Device-session revocation doesn't invalidate live tokens | `lib/api/apiAuth.ts` + `lib/api/jwt.ts:24-29` | `verifyAccessToken` never checks `revokedAt`. *Was filed "important."* |
+_None._ All four (#58, #59, #61, #64) closed 2026-06-10 — see the FIXED table above.
 
 ---
 
@@ -111,13 +114,12 @@
 
 ## Tally
 
-- **FIXED (close):** 8 — #56, #57, #39, #72, #75, #81, N1.7, N3.13
+- **FIXED (close):** 12 — #56, #57, #39, #72, #75, #81, N1.7, N3.13, **+ #58, #59, #61, #64** (criticals, merged 2026-06-10)
 - **By-design / resolved:** 2 — #73, N4.5
-- **OPEN:** 23 — incl. **4 critical** (#58, #59, #61, #64)
+- **OPEN:** 19 — **0 critical remaining**; highest now is the important security/infra row (#60, #62, #63, #65, #66, #67, #68, #69)
 - **PARTIAL:** 7 — #70, #76, #79, #80, #50, N3.11, N3.15
 
-### Severity corrections to apply
-- **#61 → critical** (was important) — user-enumeration timing leak
-- **#64 → critical** (was important) — revoked tokens stay live
-- **#65 → medium** (was important) — app-level stack-trace leak
-- **N1.9 → medium** (was low) — unreachable `'all'` is a UX defect
+### Severity corrections (applied during validation)
+- **#61 → critical**, **#64 → critical** — both now FIXED.
+- **#65 → medium** (was important) — app-level stack-trace leak.
+- **N1.9 → medium** (was low) — unreachable `'all'` is a UX defect.

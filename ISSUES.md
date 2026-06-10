@@ -5,8 +5,14 @@
 
 ## Recently Closed — verified fixed 2026-06-10
 
+**All four critical security issues fixed** on `fix/critical-security-hardening` (merged to `main` 2026-06-10; pending EC2 deploy). See `docs/criticalSecurityResolutions.md`.
+
 | # | Title | Evidence |
 |---|-------|----------|
+| 64 | Device-session revocation does not invalidate live API access tokens | `sessionId` in JWT + per-request `revokedAt` check in `lib/api/apiAuth.ts`; DELETE devices route sets `revokedAt` |
+| 61 | Login endpoints leak user existence via timing side-channel | constant-time bcrypt (both paths) via `lib/api/constantTimeAuth.ts` |
+| 59 | Seed script creates admin@example.com with hardcoded password123 and no prod guard | `ADMIN_PASSWORD` env + production guard in `prisma/seed.ts` |
+| 58 | CSP allows 'unsafe-inline' and 'unsafe-eval' for scripts | nonce-based CSP in `proxy.ts` + `lib/csp.ts` |
 | 57 | resolveCategory trusts caller-provided categoryId without org scope | `lib/categoryUtils.ts` org-scoped |
 | 56 | Admin profile mutations missing organization ownership check (IDOR) | `lib/adminGuards.ts` `requireAdminForProfiles` |
 | 81 | Enable SQLite WAL mode and document safe backup-during-write | `lib/sqlitePragmas.ts` |
@@ -16,12 +22,9 @@
 
 ## Open Issues — Security (Critical)
 
-| # | Title | Labels | Created |
-|---|-------|--------|---------|
-| 64 | Device-session revocation does not invalidate live API access tokens | bug, **critical** (was important) | 2026-04-16 |
-| 61 | Login endpoints leak user existence via timing side-channel | **critical** (was important) | 2026-04-16 |
-| 59 | Seed script creates admin@example.com with hardcoded password123 and no prod guard | critical | 2026-04-16 |
-| 58 | CSP allows 'unsafe-inline' and 'unsafe-eval' for scripts | critical | 2026-04-16 |
+_None._ All four prior criticals (#58, #59, #61, #64) closed 2026-06-10 — see above.
+
+**Deploy note (#59):** set a strong `ADMIN_PASSWORD` on the EC2 box before the next `npx prisma db seed`, or seeding aborts.
 
 ## Open Issues — Security & Infra (Important)
 
