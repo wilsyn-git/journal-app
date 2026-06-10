@@ -13,7 +13,7 @@ describe('buildDayDetails', () => {
     expect(result.entries).toEqual([e])
   })
 
-  it('maps rule titles into rules and counts habits', () => {
+  it('maps rule titles into rules', () => {
     const result = buildDayDetails([], ['Morning workout', 'No phone before noon'], '2026-04-14')
     expect(result.rules).toEqual(['Morning workout', 'No phone before noon'])
   })
