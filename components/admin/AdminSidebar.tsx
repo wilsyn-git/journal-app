@@ -61,7 +61,7 @@ function Breadcrumbs() {
     )
 }
 
-export function AdminSidebar() {
+export function AdminSidebar({ pendingAcknowledgements = 0 }: { pendingAcknowledgements?: number }) {
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
     const { siteName, logoUrl } = useBranding();
@@ -115,7 +115,17 @@ export function AdminSidebar() {
                     Users
                 </Link>
                 <Link href="/admin/tasks" className={linkClass('/admin/tasks')} onClick={() => setIsOpen(false)}>
-                    Tasks
+                    <span className="inline-flex items-center justify-between w-full">
+                        <span>Tasks</span>
+                        {pendingAcknowledgements > 0 && (
+                            <span
+                                data-testid="tasks-ack-badge"
+                                className="ml-2 text-xs bg-amber-500/30 text-amber-300 px-2 py-0.5 rounded-full"
+                            >
+                                {pendingAcknowledgements}
+                            </span>
+                        )}
+                    </span>
                 </Link>
                 <Link href="/admin/rules/types" className={linkClass('/admin/rules')} onClick={() => setIsOpen(false)}>
                     Rules
