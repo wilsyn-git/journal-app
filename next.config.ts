@@ -26,8 +26,8 @@ const nextConfig: NextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=()",
           },
-          // Content-Security-Policy is set per-request in middleware.ts so it
-          // can carry a per-request nonce for Next.js's inline scripts (#58).
+          // Content-Security-Policy is set per-request in proxy.ts so it can
+          // carry a per-request nonce for Next.js's inline scripts (#58).
         ],
       },
     ];

@@ -31,6 +31,10 @@ export const proxy = auth((req) => {
 
     const requestHeaders = new Headers(req.headers)
     requestHeaders.set("x-nonce", nonce)
+    // Set the CSP on the *request* headers too: Next.js's renderer reads this
+    // server-side to extract the nonce and stamp it onto the inline hydration
+    // scripts it streams. This copy is consumed during SSR and is NOT sent to
+    // the browser (the response-header copy below is). Do not "clean this up".
     requestHeaders.set("Content-Security-Policy", csp)
 
     const response = NextResponse.next({

@@ -41,22 +41,47 @@ describe('buildCsp', () => {
       expect(csp).toContain("frame-ancestors 'none'")
       expect(csp).toContain("object-src 'none'")
     })
+
+    it("includes base-uri 'self' and form-action 'self' hardening", () => {
+      expect(csp).toContain("base-uri 'self'")
+      expect(csp).toContain("form-action 'self'")
+    })
   })
 
   describe('development', () => {
     const csp = buildCsp(NONCE, true)
 
-    it('still includes the nonce', () => {
-      expect(csp).toContain(`'nonce-${NONCE}'`)
+    it('still includes the nonce in script-src', () => {
+      const scriptSrc = csp
+        .split(';')
+        .map((d) => d.trim())
+        .find((d) => d.startsWith('script-src'))!
+      expect(scriptSrc).toContain(`'nonce-${NONCE}'`)
     })
 
-    it("relaxes script-src with 'unsafe-eval' and 'unsafe-inline' for HMR", () => {
+    it("relaxes script-src with 'unsafe-eval' (React Refresh / HMR) but NOT 'unsafe-inline'", () => {
+      // 'strict-dynamic' makes browsers ignore 'unsafe-inline', so it must not
+      // be present in script-src; dev inline scripts rely on the nonce instead.
       const scriptSrc = csp
         .split(';')
         .map((d) => d.trim())
         .find((d) => d.startsWith('script-src'))!
       expect(scriptSrc).toContain("'unsafe-eval'")
-      expect(scriptSrc).toContain("'unsafe-inline'")
+      expect(scriptSrc).toContain("'strict-dynamic'")
+      expect(scriptSrc).not.toContain("'unsafe-inline'")
+    })
+
+    it("keeps 'unsafe-inline' only in style-src, not script-src", () => {
+      const styleSrc = csp
+        .split(';')
+        .map((d) => d.trim())
+        .find((d) => d.startsWith('style-src'))!
+      expect(styleSrc).toContain("'unsafe-inline'")
+    })
+
+    it("includes base-uri 'self' and form-action 'self' hardening", () => {
+      expect(csp).toContain("base-uri 'self'")
+      expect(csp).toContain("form-action 'self'")
     })
   })
 })
