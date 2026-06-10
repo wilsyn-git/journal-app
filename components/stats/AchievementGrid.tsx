@@ -24,15 +24,28 @@ export function AchievementGrid({ achievements }: { achievements: AchievementSta
                     <div
                         key={a.id}
                         className={`
-                            p-4 rounded-xl border transition-all
+                            achievement-card group relative overflow-hidden p-4 rounded-xl border transition-all duration-300
                             ${earned
-                                ? 'bg-purple-900/20 border-purple-500/30 text-white'
-                                : 'bg-white/5 border-white/5 text-gray-500'
+                                ? 'bg-purple-900/20 border-purple-500/30 text-white hover:-translate-y-1.5 hover:scale-[1.02] hover:bg-purple-900/40 hover:border-purple-400/80 hover:shadow-[0_14px_36px_rgba(139,92,246,0.35),0_0_18px_rgba(139,92,246,0.25)]'
+                                : 'bg-white/5 border-white/5 text-gray-500 hover:-translate-y-1 hover:scale-[1.01] hover:bg-white/10 hover:border-white/15'
                             }
                         `}
                     >
-                        <div className="flex items-start gap-3">
-                            <span className={`text-3xl ${earned ? '' : 'grayscale opacity-50'}`}>{a.icon}</span>
+                        {earned && (
+                            <div
+                                className="achievement-shine absolute inset-0 z-0 pointer-events-none -translate-x-[120%] group-hover:animate-shine"
+                                style={{
+                                    background:
+                                        'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.14) 50%, transparent 60%)',
+                                }}
+                            />
+                        )}
+                        <div className="flex items-start gap-3 relative z-10">
+                            <span
+                                className={`achievement-icon text-3xl transition-transform duration-300 ${earned ? 'group-hover:scale-[1.22] group-hover:rotate-6' : 'grayscale opacity-50'}`}
+                            >
+                                {a.icon}
+                            </span>
                             <div className="flex-1 min-w-0">
                                 <div className="font-bold text-sm">{a.name}</div>
                                 {a.isMaxed ? (
