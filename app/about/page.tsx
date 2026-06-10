@@ -1,5 +1,6 @@
 
 import type { Metadata } from "next"
+import { connection } from "next/server"
 import Link from "next/link"
 
 export const metadata: Metadata = {
@@ -7,7 +8,12 @@ export const metadata: Metadata = {
     description: 'Learn about myJournal - a daily journaling platform for personal growth and reflection.',
 }
 
-export default function AboutPage() {
+export default async function AboutPage() {
+    // Opt into dynamic rendering so the per-request nonce-based CSP (#58) is
+    // stamped onto Next.js's inline hydration scripts. Statically prerendered
+    // pages have no request nonce, so their scripts would be blocked by the
+    // strict CSP. See proxy.ts.
+    await connection();
     return (
         <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
             {/* Background Gradients */}
