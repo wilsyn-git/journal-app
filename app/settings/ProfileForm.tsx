@@ -16,7 +16,6 @@ export function ProfileForm({ userId, activeAvatar, initialName, initialEmail, i
     const [preview, setPreview] = useState<string | null>(activeAvatar || null)
     const [isPending, setIsPending] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
-    const formRef = useRef<HTMLFormElement>(null)
     const currentResizedBlob = useRef<Blob | null>(null)
     const { addToast } = useToast()
 
