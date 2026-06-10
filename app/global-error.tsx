@@ -1,12 +1,12 @@
 "use client";
 
-export default function GlobalError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+import Link from "next/link";
+
+// Rendered only if the root layout itself throws. Next prerenders /_global-error
+// statically, so its framework scripts are un-nonced and blocked by our strict CSP
+// (#58). Recovery therefore must NOT depend on JS hydration — a plain anchor does a
+// full-page navigation that always works without scripts, instead of a reset() button.
+export default function GlobalError() {
   return (
     <html lang="en">
       <body className="min-h-screen flex items-center justify-center bg-[#0a0a0a] text-white px-4">
@@ -15,12 +15,12 @@ export default function GlobalError({
           <p className="text-neutral-400 mb-8">
             A critical error occurred. Please try again.
           </p>
-          <button
-            onClick={() => reset()}
-            className="px-6 py-3 rounded-full bg-[#7c3aed] font-semibold text-white hover:opacity-90 transition-opacity duration-300"
+          <Link
+            href="/"
+            className="inline-block px-6 py-3 rounded-full bg-[#7c3aed] font-semibold text-white hover:opacity-90 transition-opacity duration-300"
           >
             Try again
-          </button>
+          </Link>
         </div>
       </body>
     </html>
