@@ -5,6 +5,7 @@ import { join } from "path"
 import { promisify } from "util"
 import { gzip } from "zlib"
 import fs from "fs/promises"
+import { collectOrgBackup } from "@/lib/export/collectOrgBackup"
 
 const gzipAsync = promisify(gzip)
 
@@ -21,58 +22,12 @@ export async function GET() {
         // 2. Data Fetching
         const organizationId = user.organizationId
 
-        const organizations = await prisma.organization.findMany({
-            where: { id: organizationId }
-        })
-
-        const users = await prisma.user.findMany({
-            where: { organizationId },
-            omit: {
-                password: true,
-                resetToken: true,
-                resetTokenExpiry: true
-            },
-            include: {
-                profiles: { select: { id: true } },
-                groups: { select: { id: true } }
-            }
-        })
-
-        const profiles = await prisma.profile.findMany({
-            where: { organizationId },
-            include: {
-                groups: { select: { id: true } }
-            }
-        })
-
-        const groups = await prisma.userGroup.findMany({
-            where: { organizationId }
-        })
-
-        const prompts = await prisma.prompt.findMany({
-            where: { organizationId }
-        })
-
-        const categories = await prisma.promptCategory.findMany({
-            where: { organizationId }
-        })
-
-        const rules = await prisma.profileRule.findMany({
-            where: { profile: { organizationId } }
-        })
-
-        const entries = await prisma.journalEntry.findMany({
-            where: { user: { organizationId } }
-        })
-
-        const avatars = await prisma.userAvatar.findMany({
-            where: { user: { organizationId } }
-        })
+        const data = await collectOrgBackup(prisma, organizationId)
 
         // 3. Process Binary Data
         const publicDir = join(process.cwd(), 'public')
 
-        const organizationsWithLogos = await Promise.all(organizations.map(async (org) => {
+        const organizationsWithLogos = await Promise.all(data.organizations.map(async (org) => {
             if (org.logoUrl) {
                 try {
                     const filePath = join(publicDir, org.logoUrl)
@@ -85,7 +40,7 @@ export async function GET() {
             return org
         }))
 
-        const avatarsWithImages = await Promise.all(avatars.map(async (av) => {
+        const avatarsWithImages = await Promise.all(data.avatars.map(async (av) => {
             if (av.url) {
                 try {
                     const filePath = join(publicDir, av.url)
@@ -102,20 +57,14 @@ export async function GET() {
         // 4. Construct Backup Object
         const backupData = {
             meta: {
-                version: "1.0",
+                version: "1.1",
                 date: new Date().toISOString(),
                 exportedBy: user.email,
                 compression: "gzip"
             },
             data: {
+                ...data,
                 organizations: organizationsWithLogos,
-                users,
-                profiles,
-                groups,
-                prompts,
-                categories,
-                rules,
-                entries,
                 avatars: avatarsWithImages
             }
         }
@@ -127,7 +76,7 @@ export async function GET() {
         // 6. Return Response
         // Determine Site Identity from the current user's organization
         // We look for the org that matches the admin's organizationId, fallback to the first one
-        const primaryOrg = organizations.find(o => o.id === user.organizationId) || organizations[0]
+        const primaryOrg = data.organizations.find(o => o.id === user.organizationId) || data.organizations[0]
         const orgName = primaryOrg?.siteName || 'JournalSystem'
         const safeIdentity = orgName.toLowerCase().replace(/[^a-z0-9]/g, '') // Remove spaces and special chars, lowercase
 
