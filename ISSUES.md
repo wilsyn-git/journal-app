@@ -20,6 +20,15 @@
 | 72 | Admin tables overflow awkwardly on mobile | `overflow-x-auto` on table container |
 | 39 | Extract shared journal entry upsert function | consolidated in `app/api/v1/entries` routes |
 
+## Recently Closed — Batch B ops/infra (fixed in code 2026-06-11)
+
+Fixed on `fix/ops-batch-b-67-68` (pending merge to `main` + EC2 deploy). Design/plan: `docs/superpowers/specs/2026-06-11-ops-batch-b-design.md`.
+
+| # | Title | Evidence |
+|---|-------|----------|
+| 67 | No /health readiness endpoint | `GET /api/health` (`app/api/health/route.ts`) runs `checkDatabaseHealth` (`lib/health.ts`, `SELECT 1`) → 200 `{status:'ok'}` / 503 `{status:'error'}`, `no-store`; whitelisted public in `auth.config.ts` |
+| 68 | PM2 log rotation not configured | pm2-logrotate runbook documented in `DEPLOYMENT.md` (max_size 10M, retain 7, compress, daily); applied live on EC2 (covers journal-app + scoringapp) |
+
 ## Recently Closed — Batch A important security (fixed in code 2026-06-11)
 
 Fixed on `fix/security-batch-a-62-63-60` (pending merge to `main` + EC2 deploy). Design/plan: `docs/superpowers/specs/2026-06-11-security-batch-a-design.md`. No EC2 env changes needed (`API_JWT_SECRET`, `CRON_SECRET` already set in prod).
@@ -41,8 +50,6 @@ _None._ All four prior criticals (#58, #59, #61, #64) closed 2026-06-10 — see 
 | # | Title | Labels | Created |
 |---|-------|--------|---------|
 | 69 | APNs key file handling and rotation undocumented | documentation, important | 2026-04-16 |
-| 68 | PM2 log rotation not configured | documentation, important | 2026-04-16 |
-| 67 | No /health readiness endpoint | enhancement, important | 2026-04-16 |
 | 66 | No automated encrypted database backup | important, observation | 2026-04-16 |
 | 65 | Admin export endpoint logs full stack trace on error | **minor** (was important) | 2026-04-16 |
 

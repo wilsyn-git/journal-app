@@ -28,6 +28,8 @@ The **four critical security issues** were fixed on `fix/critical-security-harde
 | 62 | Avatar upload validates only client MIME type | server-side JPEG magic-byte check (`validateAvatarBytes` in `lib/avatarValidation.ts`) before disk write in `app/actions/settings.ts` — *fixed on `fix/security-batch-a-62-63-60` 2026-06-11* |
 | 63 | Cron auth is a plain shared header secret | constant-time `safeSecretCompare` (`lib/api/timingSafe.ts`) in cron streak route; rotation documented — *fixed 2026-06-11* |
 | 60 | API JWT falls back to `AUTH_SECRET` | `resolveJwtSecret` in `lib/api/jwt.ts` requires `API_JWT_SECRET` in prod, no AUTH_SECRET fallback — *fixed 2026-06-11* |
+| 67 | No `/health` readiness endpoint | `GET /api/health` (`app/api/health/route.ts` + `lib/health.ts` `SELECT 1`) → 200/503, `no-store`, whitelisted public in `auth.config.ts` — *fixed on `fix/ops-batch-b-67-68` 2026-06-11* |
+| 68 | PM2 log rotation not configured | pm2-logrotate runbook in `DEPLOYMENT.md` + applied live on EC2 (global module, covers journal-app + scoringapp) — *fixed 2026-06-11* |
 
 > **Accepted residuals from the critical fixes** (sound, not blockers): ≤1h legacy-token window after the #64 deploy; `style-src 'unsafe-inline'` kept for Tailwind v4 runtime styles (#58); `_global-error` framework scripts un-nonced, recovery via plain link (#58).
 
@@ -44,9 +46,7 @@ _None._ All four (#58, #59, #61, #64) closed 2026-06-10 — see the FIXED table 
 | # | Sev | Title | Evidence |
 |---|-----|-------|----------|
 | 65 | **minor/med** ⬇ | Admin export logs full stack trace | `app/api/admin/export/route.ts:154`, `export-user/route.ts:89` — *app-level leak, not core auth* |
-| 66 | important | No automated encrypted DB backup | `DEPLOYMENT.md:158-162` (manual only) |
-| 67 | important | No `/health` readiness endpoint | none exists under `app/` |
-| 68 | important | PM2 log rotation not configured | `DEPLOYMENT.md:95-102` (no pm2-logrotate / ecosystem config) |
+| 66 | important | No automated encrypted DB backup | `DEPLOYMENT.md:158-162` (manual only) — **deferred pending possible GCP migration** |
 | 69 | important | APNs key handling & rotation undocumented | absent from `DEPLOYMENT.md` |
 
 ---
@@ -114,9 +114,9 @@ _None._ All four (#58, #59, #61, #64) closed 2026-06-10 — see the FIXED table 
 
 ## Tally
 
-- **FIXED (close):** 15 — #56, #57, #39, #72, #75, #81, N1.7, N3.13, **+ #58, #59, #61, #64** (criticals, merged 2026-06-10), **+ #60, #62, #63** (batch A important security, fixed in code 2026-06-11 on `fix/security-batch-a-62-63-60`)
+- **FIXED (close):** 17 — #56, #57, #39, #72, #75, #81, N1.7, N3.13, **+ #58, #59, #61, #64** (criticals, merged 2026-06-10), **+ #60, #62, #63** (batch A important security, 2026-06-11), **+ #67, #68** (batch B ops/infra, fixed in code 2026-06-11 on `fix/ops-batch-b-67-68`)
 - **By-design / resolved:** 2 — #73, N4.5
-- **OPEN:** 16 — **0 critical remaining**; highest now is the remaining important security/infra row (#65, #66, #67, #68, #69)
+- **OPEN:** 14 — **0 critical remaining**; remaining important security/infra row = #65 (minor/med), #66 (backup — deferred pending GCP), #69 (APNs docs)
 - **PARTIAL:** 7 — #70, #76, #79, #80, #50, N3.11, N3.15
 
 ### Severity corrections (applied during validation)
