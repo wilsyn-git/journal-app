@@ -72,6 +72,7 @@ describe('resolveAssignmentUserIds', () => {
     await resolveAssignmentUserIds(db, ASSIGNMENT_MODES.ALL, null, 'org1')
     expect(info).toHaveBeenCalledTimes(1)
     expect(info.mock.calls[0][0]).toContain('3')
+    expect(info.mock.calls[0][0]).toContain('org1')
     expect(warn).not.toHaveBeenCalled()
   })
 
@@ -84,6 +85,17 @@ describe('resolveAssignmentUserIds', () => {
     expect(ids).toHaveLength(LARGE_ASSIGNMENT_WARN_THRESHOLD + 1)
     expect(warn).toHaveBeenCalledTimes(1)
     expect(info).not.toHaveBeenCalled()
+  })
+
+  it('ALL mode at exactly the threshold logs info, not warn', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {})
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const orgUsers = Array.from({ length: LARGE_ASSIGNMENT_WARN_THRESHOLD }, (_, i) => `u${i}`)
+    const db = makeDb({ orgUsers })
+    const ids = await resolveAssignmentUserIds(db, ASSIGNMENT_MODES.ALL, null, 'org1')
+    expect(ids).toHaveLength(LARGE_ASSIGNMENT_WARN_THRESHOLD)
+    expect(info).toHaveBeenCalledTimes(1)
+    expect(warn).not.toHaveBeenCalled()
   })
 
   it('unknown mode returns []', async () => {
