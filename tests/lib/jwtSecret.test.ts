@@ -21,4 +21,14 @@ describe('resolveJwtSecret', () => {
   it('falls back to dev-only-secret when nothing is set in development', () => {
     expect(resolveJwtSecret({ NODE_ENV: 'development' })).toBe('dev-only-secret')
   })
+
+  it('throws in production when API_JWT_SECRET is an empty string', () => {
+    expect(() =>
+      resolveJwtSecret({ API_JWT_SECRET: '', NODE_ENV: 'production' }),
+    ).toThrow('API_JWT_SECRET must be set in production')
+  })
+
+  it('falls back to dev-only-secret when NODE_ENV is test', () => {
+    expect(resolveJwtSecret({ NODE_ENV: 'test' })).toBe('dev-only-secret')
+  })
 })
