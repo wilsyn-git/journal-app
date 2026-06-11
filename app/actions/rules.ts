@@ -9,36 +9,8 @@ import { ASSIGNMENT_MODES } from '@/lib/taskConstants'
 import { RESET_MODES } from '@/lib/ruleConstants'
 import { getPeriodKey } from '@/lib/rules'
 import { getUserTimezoneById } from '@/lib/timezone'
-
-// ---------------------------------------------------------------------------
-// Shared private helper
-// ---------------------------------------------------------------------------
-
-async function resolveAssignmentUserIds(
-    assignmentMode: string,
-    targetId: string | null,
-    organizationId: string
-): Promise<string[]> {
-    if (assignmentMode === ASSIGNMENT_MODES.USER) {
-        return targetId ? [targetId] : []
-    }
-    if (assignmentMode === ASSIGNMENT_MODES.GROUP) {
-        if (!targetId) return []
-        const group = await prisma.userGroup.findUnique({
-            where: { id: targetId },
-            include: { users: { select: { id: true } } },
-        })
-        return group ? group.users.map((u) => u.id) : []
-    }
-    if (assignmentMode === ASSIGNMENT_MODES.ALL) {
-        const users = await prisma.user.findMany({
-            where: { organizationId },
-            select: { id: true },
-        })
-        return users.map((u) => u.id)
-    }
-    return []
-}
+import { resolveAssignmentUserIds, ASSIGNMENT_INSERT_CHUNK_SIZE } from '@/lib/assignmentTargets'
+import { chunk } from '@/lib/chunk'
 
 // ---------------------------------------------------------------------------
 // Rule Type CRUD (Admin)
@@ -219,7 +191,7 @@ export async function createRule(ruleTypeId: string, formData: FormData) {
             return { error: 'Rule type not found' }
         }
 
-        const userIds = await resolveAssignmentUserIds(assignmentMode, targetId, organizationId)
+        const userIds = await resolveAssignmentUserIds(prisma, assignmentMode, targetId, organizationId)
 
         // Auto-increment sortOrder within type
         const maxOrder = await prisma.rule.aggregate({
@@ -243,12 +215,14 @@ export async function createRule(ruleTypeId: string, formData: FormData) {
             })
 
             if (userIds.length > 0) {
-                await tx.ruleAssignment.createMany({
-                    data: userIds.map((userId) => ({
-                        ruleId: rule.id,
-                        userId,
-                    })),
-                })
+                for (const batch of chunk(userIds, ASSIGNMENT_INSERT_CHUNK_SIZE)) {
+                    await tx.ruleAssignment.createMany({
+                        data: batch.map((userId) => ({
+                            ruleId: rule.id,
+                            userId,
+                        })),
+                    })
+                }
             }
         })
 
@@ -282,7 +256,7 @@ export async function updateRule(ruleId: string, ruleTypeId: string, formData: F
         }
 
         const newUserIds = assignmentMode
-            ? await resolveAssignmentUserIds(assignmentMode, targetId, organizationId)
+            ? await resolveAssignmentUserIds(prisma, assignmentMode, targetId, organizationId)
             : []
 
         await prisma.$transaction(async (tx) => {
@@ -309,12 +283,14 @@ export async function updateRule(ruleId: string, ruleTypeId: string, formData: F
                 const toCreate = newUserIds.filter((id) => !existingUserIds.has(id))
 
                 if (toCreate.length > 0) {
-                    await tx.ruleAssignment.createMany({
-                        data: toCreate.map((userId) => ({
-                            ruleId,
-                            userId,
-                        })),
-                    })
+                    for (const batch of chunk(toCreate, ASSIGNMENT_INSERT_CHUNK_SIZE)) {
+                        await tx.ruleAssignment.createMany({
+                            data: batch.map((userId) => ({
+                                ruleId,
+                                userId,
+                            })),
+                        })
+                    }
                 }
             }
         })
