@@ -23,9 +23,13 @@ import { computeRuleCalendarStatus } from '@/lib/rules'
 // In-memory fixture builder helpers
 // ---------------------------------------------------------------------------
 
-function makeAssignment(resetMode: 'DAILY' | 'WEEKLY', periodKeys: string[]) {
+function makeAssignment(
+  resetMode: 'DAILY' | 'WEEKLY',
+  periodKeys: string[],
+  resetDay: number | null = null,
+) {
   return {
-    rule: { ruleType: { resetMode } },
+    rule: { ruleType: { resetMode, resetDay } },
     completions: periodKeys.map(periodKey => ({ periodKey })),
   }
 }
