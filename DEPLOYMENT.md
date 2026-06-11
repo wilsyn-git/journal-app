@@ -74,6 +74,58 @@ environment variable. To rotate the secret:
    run is rejected.
 4. Restart the app: `pm2 restart journal-app`.
 
+### APNs push notifications (iOS)
+
+iOS push (used by the streak reminder cron and other notifications) is driven by
+a token-based APNs auth key (`.p8`). Push is **optional**: if the variables below
+are unset the app logs `APNs not configured — push notifications disabled` and
+runs normally with push suppressed. The four variables are:
+
+| Variable | What it is | Where to find it |
+|----------|-----------|------------------|
+| `APNS_KEY_PATH` | Absolute path to the `.p8` auth key file on the server | You place it (see below) |
+| `APNS_KEY_ID` | The key's 10-character Key ID | Apple Developer → Certificates, IDs & Profiles → **Keys** |
+| `APNS_TEAM_ID` | Your 10-character Apple Developer Team ID | Apple Developer → Membership |
+| `APNS_BUNDLE_ID` | The iOS app bundle id (APNs `topic`) | Your app's bundle identifier |
+
+The `production: true` vs sandbox APNs environment is selected automatically from
+`NODE_ENV` (production uses the production APNs gateway).
+
+**Installing the auth key (first-time setup):**
+
+1. In Apple Developer → **Keys**, create a key with **Apple Push Notifications
+   service (APNs)** enabled and download the `AuthKey_XXXXXXXXXX.p8` (Apple lets
+   you download it **once**). Note its Key ID.
+2. Copy it to the server **outside** the repo and web root so it is never served
+   or committed — e.g. `/home/ubuntu/secrets/`:
+   ```bash
+   mkdir -p /home/ubuntu/secrets
+   # scp the file up, then:
+   chmod 600 /home/ubuntu/secrets/AuthKey_XXXXXXXXXX.p8
+   chown ubuntu:ubuntu /home/ubuntu/secrets/AuthKey_XXXXXXXXXX.p8
+   ```
+3. Set the variables in the server `.env` (`/home/ubuntu/journal-app/.env`):
+   ```ini
+   APNS_KEY_PATH="/home/ubuntu/secrets/AuthKey_XXXXXXXXXX.p8"
+   APNS_KEY_ID="XXXXXXXXXX"
+   APNS_TEAM_ID="YYYYYYYYYY"
+   APNS_BUNDLE_ID="com.your.bundleid"
+   ```
+4. Restart: `pm2 restart journal-app`.
+
+> The repo `.gitignore` excludes `*.p8`, but keeping the key outside the repo
+> directory entirely is the safer default. Never commit the `.p8` or paste its
+> contents into `.env.example`.
+
+**Rotating the APNs key** (on expiry or suspected compromise):
+
+1. Create a **new** APNs key in Apple Developer → Keys and download the new `.p8`.
+2. Install it on the server (steps 2–3 above) with the new path and `APNS_KEY_ID`.
+3. Restart: `pm2 restart journal-app`. Verify push works.
+4. Revoke the **old** key in Apple Developer → Keys and delete the old `.p8` from
+   the server. (A team may hold at most two APNs keys at once, so revoke before
+   creating a third.)
+
 ## 3. Database Setup
 Since we use SQLite, the database file will be created locally on the server.
 ```bash
