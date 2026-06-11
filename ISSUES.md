@@ -20,6 +20,14 @@
 | 72 | Admin tables overflow awkwardly on mobile | `overflow-x-auto` on table container |
 | 39 | Extract shared journal entry upsert function | consolidated in `app/api/v1/entries` routes |
 
+## Recently Closed — #71 (fixed in code 2026-06-11)
+
+Fixed on `fix/newuser-password-71`. Design/plan: `docs/superpowers/specs/2026-06-11-newuser-password-71-design.md`.
+
+| # | Title | Evidence |
+|---|-------|----------|
+| 71 | NewUserForm password field used `type="text"` (plaintext) | Field now masked by default (`type="password"`) with Show/Hide toggle + Generate (`lib/generatePassword.ts`, unambiguous charset); controlled input, clears on success; `components/admin/NewUserForm.tsx` |
+
 ## Recently Closed — Batch B ops/infra (fixed in code 2026-06-11)
 
 Fixed on `fix/ops-batch-b-67-68` (merged + deployed to EC2). Design/plan: `docs/superpowers/specs/2026-06-11-ops-batch-b-design.md`.
@@ -60,8 +68,9 @@ _#60, #62, #63 closed 2026-06-11 — see "Recently Closed — Batch A" above._
 | # | Title | Labels | Created | Status |
 |---|-------|--------|---------|--------|
 | 74 | Journal textarea locked to h-32 with resize-none | enhancement, minor | 2026-04-16 | open |
-| 71 | NewUserForm password field uses type="text" | bug, important | 2026-04-16 | open |
 | 70 | Form submit buttons do not render isPending state | bug, important | 2026-04-16 | **partial** — only `ProfileForm` outstanding |
+
+_#71 closed 2026-06-11 — NewUserForm password field now masked by default with Show/Hide + Generate (`generatePassword` util); see "Recently Closed" below._
 
 ### Reclassified (not a defect)
 
