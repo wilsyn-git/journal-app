@@ -8,7 +8,7 @@ import { writeFile, unlink } from "fs/promises"
 import { existsSync, mkdirSync } from "fs"
 import { join } from "path"
 import { randomUUID } from 'crypto'
-import { validateAvatarFile } from "@/lib/avatarValidation"
+import { validateAvatarFile, validateAvatarBytes } from "@/lib/avatarValidation"
 
 export async function updateProfile(userId: string, formData: FormData) {
     if (!userId) throw new Error("Unauthorized")
@@ -35,6 +35,9 @@ export async function updateProfile(userId: string, formData: FormData) {
         if (avatarError) return { error: avatarError }
 
         const buffer = Buffer.from(await file.arrayBuffer())
+        const bytesError = validateAvatarBytes(buffer)
+        if (bytesError) return { error: bytesError }
+
         const filename = `${userId}-${randomUUID()}.jpg`
         const uploadDir = join(process.cwd(), "public/uploads/avatars")
         const filepath = join(uploadDir, filename)
