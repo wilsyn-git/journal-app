@@ -83,7 +83,7 @@ _#71 closed 2026-06-11 — NewUserForm password field now masked by default with
 | # | Title | Labels | Created | Status |
 |---|-------|--------|---------|--------|
 | 80 | Screen-reader and focus-management audit | important, observation | 2026-04-16 | **partial** — aria-live added; dialogs unaudited |
-| 79 | Export/restore coverage incomplete (rules, tasks, achievements, inventory) | enhancement, important | 2026-04-16 | **partial** — rules now covered; tasks/achievements/inventory missing |
+| 79 | Export/restore coverage incomplete (rules, tasks, achievements, inventory) | enhancement, important | 2026-04-16 | **partial** — #79a done 2026-06-11: admin export now complete (tasks, achievements, inventory, full rule engine; backup v1.1). Residual: #79b user-facing restore/import still open |
 | 78 | User-initiated account deletion (GDPR right to be forgotten) | enhancement, important | 2026-04-16 | open |
 | 77 | No error tracking or structured logging in production | important, observation | 2026-04-16 | open |
 | 76 | No automated test harness | important, observation | 2026-04-16 | **partial** — Vitest configured; coverage thin |

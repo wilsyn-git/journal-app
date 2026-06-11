@@ -81,7 +81,7 @@ _None._ All four (#58, #59, #61, #64) closed 2026-06-10 — see the FIXED table 
 |---|-------|------|----------|
 | 70 | Form buttons render isPending | Most forms use `useActionState`/`useTransition` | `ProfileForm.tsx:182` still manual `useState` |
 | 76 | Automated test harness | Vitest configured, `tests/` exists | coverage thin (a handful of tests) |
-| 79 | Export/restore coverage | export now includes **rules** | still missing tasks, achievements, inventory; no user-facing restore |
+| 79 | Export/restore coverage | **#79a done 2026-06-11** (`fix/export-coverage-79a`) — admin export now complete: tasks, taskAssignments, achievements, inventory, streakFreezeUsage + full rule engine (`ruleEngine.{ruleTypes,rules,ruleAssignments,ruleCompletions}`) via testable `lib/export/collectOrgBackup.ts`; backup `meta.version` 1.1 | residual: **#79b user-facing restore/import** still open (separate design) |
 | 80 | SR & focus-management audit | several `aria-live` regions added | dialogs (delete/reorder) not audited for focus trap / `aria-modal` |
 | 50 | Dashboard data fetching | `Promise.all` parallelized | `archiveAcknowledgedTasks()` runs sync every load, incl. viewing others |
 | N3.11 | Journal history empty state | no crash on empty | still renders nothing (no "No entries yet" placeholder) |
