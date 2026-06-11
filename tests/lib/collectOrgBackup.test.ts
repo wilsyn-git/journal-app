@@ -59,6 +59,22 @@ describe('collectOrgBackup', () => {
     expect(db.ruleCompletion.findMany).toHaveBeenCalledWith({ where: { rule: { organizationId: 'org1' } } })
   })
 
+  it('scopes the pre-existing collections to the organization', async () => {
+    const db = makeDb()
+    await collectOrgBackup(db as unknown as PrismaClient, 'org1')
+
+    expect(db.organization.findMany).toHaveBeenCalledWith({ where: { id: 'org1' } })
+    expect(db.profile.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { organizationId: 'org1' } }),
+    )
+    expect(db.userGroup.findMany).toHaveBeenCalledWith({ where: { organizationId: 'org1' } })
+    expect(db.prompt.findMany).toHaveBeenCalledWith({ where: { organizationId: 'org1' } })
+    expect(db.promptCategory.findMany).toHaveBeenCalledWith({ where: { organizationId: 'org1' } })
+    expect(db.profileRule.findMany).toHaveBeenCalledWith({ where: { profile: { organizationId: 'org1' } } })
+    expect(db.journalEntry.findMany).toHaveBeenCalledWith({ where: { user: { organizationId: 'org1' } } })
+    expect(db.userAvatar.findMany).toHaveBeenCalledWith({ where: { user: { organizationId: 'org1' } } })
+  })
+
   it('omits sensitive fields from the users query', async () => {
     const db = makeDb()
     await collectOrgBackup(db as unknown as PrismaClient, 'org1')
