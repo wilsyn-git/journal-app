@@ -20,6 +20,16 @@
 | 72 | Admin tables overflow awkwardly on mobile | `overflow-x-auto` on table container |
 | 39 | Extract shared journal entry upsert function | consolidated in `app/api/v1/entries` routes |
 
+## Recently Closed — Batch A important security (fixed in code 2026-06-11)
+
+Fixed on `fix/security-batch-a-62-63-60` (pending merge to `main` + EC2 deploy). Design/plan: `docs/superpowers/specs/2026-06-11-security-batch-a-design.md`. No EC2 env changes needed (`API_JWT_SECRET`, `CRON_SECRET` already set in prod).
+
+| # | Title | Evidence |
+|---|-------|----------|
+| 62 | Avatar upload validates only client-provided MIME type | server-side JPEG magic-byte check (`validateAvatarBytes` in `lib/avatarValidation.ts`) before disk write in `app/actions/settings.ts` |
+| 63 | Cron endpoint auth is a plain shared header secret | constant-time compare via `safeSecretCompare` (`lib/api/timingSafe.ts`) in `app/api/v1/cron/streak/route.ts`; rotation documented in `DEPLOYMENT.md` |
+| 60 | API JWT secret falls back to AUTH_SECRET (key-separation) | `resolveJwtSecret` in `lib/api/jwt.ts` requires `API_JWT_SECRET` in production (no AUTH_SECRET fallback) |
+
 ## Open Issues — Security (Critical)
 
 _None._ All four prior criticals (#58, #59, #61, #64) closed 2026-06-10 — see above.
@@ -35,9 +45,8 @@ _None._ All four prior criticals (#58, #59, #61, #64) closed 2026-06-10 — see 
 | 67 | No /health readiness endpoint | enhancement, important | 2026-04-16 |
 | 66 | No automated encrypted database backup | important, observation | 2026-04-16 |
 | 65 | Admin export endpoint logs full stack trace on error | **minor** (was important) | 2026-04-16 |
-| 63 | Cron endpoint auth is a plain shared header secret | important | 2026-04-16 |
-| 62 | Avatar upload validates only client-provided MIME type | bug, important | 2026-04-16 |
-| 60 | API JWT secret falls back to AUTH_SECRET (key-separation) | important | 2026-04-16 |
+
+_#60, #62, #63 closed 2026-06-11 — see "Recently Closed — Batch A" above._
 
 ## Open Issues — UX
 

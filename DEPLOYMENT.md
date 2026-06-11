@@ -61,6 +61,19 @@ AWS_REGION="us-east-1"
 EMAIL_FROM="no-reply@your-domain.com"
 ```
 
+### Rotating `CRON_SECRET`
+
+The cron endpoint (`POST /api/v1/cron/streak`) authenticates by a constant-time
+comparison of the `x-cron-secret` request header against the `CRON_SECRET`
+environment variable. To rotate the secret:
+
+1. Generate a new value: `openssl rand -base64 32`.
+2. Update `CRON_SECRET` in the server `.env` (`/home/ubuntu/journal-app/.env`).
+3. Update the external caller that issues the scheduled `POST` so it sends the
+   new value in the `x-cron-secret` header — do this in lockstep so no scheduled
+   run is rejected.
+4. Restart the app: `pm2 restart journal-app`.
+
 ## 3. Database Setup
 Since we use SQLite, the database file will be created locally on the server.
 ```bash

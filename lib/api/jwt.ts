@@ -1,10 +1,26 @@
 import { SignJWT, jwtVerify } from 'jose'
 
-const secret = process.env.API_JWT_SECRET || process.env.AUTH_SECRET
-if (!secret && process.env.NODE_ENV === 'production') {
-  throw new Error('API_JWT_SECRET or AUTH_SECRET must be set in production')
+/**
+ * Resolve the API JWT signing secret (#60). Production REQUIRES a dedicated
+ * API_JWT_SECRET so the mobile-API signing key is separated from the NextAuth
+ * session secret (AUTH_SECRET) — no silent fallback in prod. Non-production
+ * keeps a convenient fallback chain so local dev needs no extra config.
+ */
+export function resolveJwtSecret(env: {
+  API_JWT_SECRET?: string
+  AUTH_SECRET?: string
+  NODE_ENV?: string
+}): string {
+  if (env.NODE_ENV === 'production') {
+    if (!env.API_JWT_SECRET) {
+      throw new Error('API_JWT_SECRET must be set in production')
+    }
+    return env.API_JWT_SECRET
+  }
+  return env.API_JWT_SECRET || env.AUTH_SECRET || 'dev-only-secret'
 }
-const JWT_SECRET = new TextEncoder().encode(secret || 'dev-only-secret')
+
+const JWT_SECRET = new TextEncoder().encode(resolveJwtSecret(process.env))
 
 const ACCESS_TOKEN_EXPIRY = '1h'
 

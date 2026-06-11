@@ -25,6 +25,9 @@ The **four critical security issues** were fixed on `fix/critical-security-harde
 | 81 | Enable SQLite WAL mode | `lib/sqlitePragmas.ts:11-12` WAL + busy_timeout; tested |
 | N1.7 | `frozenDate` string unvalidated | `lib/streakSpend.ts` validates `/^\d{4}-\d{2}-\d{2}$/` before write |
 | N3.13 | Achievement toasts can't be dismissed | `ToastProvider.tsx:70-75` close button + auto-dismiss |
+| 62 | Avatar upload validates only client MIME type | server-side JPEG magic-byte check (`validateAvatarBytes` in `lib/avatarValidation.ts`) before disk write in `app/actions/settings.ts` — *fixed on `fix/security-batch-a-62-63-60` 2026-06-11* |
+| 63 | Cron auth is a plain shared header secret | constant-time `safeSecretCompare` (`lib/api/timingSafe.ts`) in cron streak route; rotation documented — *fixed 2026-06-11* |
+| 60 | API JWT falls back to `AUTH_SECRET` | `resolveJwtSecret` in `lib/api/jwt.ts` requires `API_JWT_SECRET` in prod, no AUTH_SECRET fallback — *fixed 2026-06-11* |
 
 > **Accepted residuals from the critical fixes** (sound, not blockers): ≤1h legacy-token window after the #64 deploy; `style-src 'unsafe-inline'` kept for Tailwind v4 runtime styles (#58); `_global-error` framework scripts un-nonced, recovery via plain link (#58).
 
@@ -40,9 +43,6 @@ _None._ All four (#58, #59, #61, #64) closed 2026-06-10 — see the FIXED table 
 
 | # | Sev | Title | Evidence |
 |---|-----|-------|----------|
-| 60 | important | API JWT falls back to `AUTH_SECRET` | `lib/api/jwt.ts:3` |
-| 62 | important | Avatar upload validates only client MIME type | `lib/avatarValidation.ts:4-8` (no server magic-byte check) |
-| 63 | important | Cron auth is a plain shared header secret | `app/api/v1/cron/streak/route.ts:12-14` |
 | 65 | **minor/med** ⬇ | Admin export logs full stack trace | `app/api/admin/export/route.ts:154`, `export-user/route.ts:89` — *app-level leak, not core auth* |
 | 66 | important | No automated encrypted DB backup | `DEPLOYMENT.md:158-162` (manual only) |
 | 67 | important | No `/health` readiness endpoint | none exists under `app/` |
@@ -114,9 +114,9 @@ _None._ All four (#58, #59, #61, #64) closed 2026-06-10 — see the FIXED table 
 
 ## Tally
 
-- **FIXED (close):** 12 — #56, #57, #39, #72, #75, #81, N1.7, N3.13, **+ #58, #59, #61, #64** (criticals, merged 2026-06-10)
+- **FIXED (close):** 15 — #56, #57, #39, #72, #75, #81, N1.7, N3.13, **+ #58, #59, #61, #64** (criticals, merged 2026-06-10), **+ #60, #62, #63** (batch A important security, fixed in code 2026-06-11 on `fix/security-batch-a-62-63-60`)
 - **By-design / resolved:** 2 — #73, N4.5
-- **OPEN:** 19 — **0 critical remaining**; highest now is the important security/infra row (#60, #62, #63, #65, #66, #67, #68, #69)
+- **OPEN:** 16 — **0 critical remaining**; highest now is the remaining important security/infra row (#65, #66, #67, #68, #69)
 - **PARTIAL:** 7 — #70, #76, #79, #80, #50, N3.11, N3.15
 
 ### Severity corrections (applied during validation)

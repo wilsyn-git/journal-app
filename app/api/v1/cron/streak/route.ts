@@ -6,11 +6,12 @@ import { startOfDayInTimezone, getTodayForUser, DEFAULT_TIMEZONE } from '@/lib/t
 import { calculateStreaks } from '@/lib/streaks'
 import { getFrozenDates } from '@/app/lib/inventoryData'
 import { chunk } from '@/lib/chunk'
+import { safeSecretCompare } from '@/lib/api/timingSafe'
 
 export async function POST(request: NextRequest) {
-    // Simple shared secret auth for cron endpoints
+    // Constant-time shared-secret auth for cron endpoints (#63)
     const cronSecret = request.headers.get('x-cron-secret')
-    if (!cronSecret || cronSecret !== process.env.CRON_SECRET) {
+    if (!safeSecretCompare(cronSecret, process.env.CRON_SECRET)) {
         return apiError('UNAUTHORIZED', 'Invalid cron secret', 401)
     }
 
