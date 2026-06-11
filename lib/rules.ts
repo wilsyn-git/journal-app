@@ -316,7 +316,7 @@ export async function getRuleProgress(userId: string, timezone: string) {
 export type RuleCompletionStatus = 'none' | 'partial' | 'all'
 
 type AssignmentWithCompletions = {
-  rule: { ruleType: { resetMode: string } }
+  rule: { ruleType: { resetMode: string; resetDay: number | null } }
   completions: { periodKey: string }[]
 }
 
@@ -348,7 +348,7 @@ export async function getRuleCalendarData(userId: string, timezone: string) {
   return computeRuleCalendarStatus(assignments)
 }
 
-const WEEKLY_KEY_RE = /^week-(\d{4}-\d{2}-\d{2})-R\d+$/
+const WEEKLY_KEY_RE = /^week-(\d{4}-\d{2}-\d{2})-R(\d+)$/
 
 /**
  * Pure transform: given an array of rule assignments (each with its completions),
@@ -381,9 +381,18 @@ export function computeRuleCalendarStatus(assignments: AssignmentWithCompletions
     }
   }
 
-  // --- Weekly: single pass over all completions to count assignments per period ---
+  // --- Weekly: count assignments per period; threshold is per reset-day group ---
+  // A weekly periodKey (week-<date>-R<resetDay>) encodes its weekday in the date,
+  // so date buckets are implicitly partitioned by reset day. 'all' must therefore
+  // compare against the number of weekly assignments sharing that reset day, not the
+  // global weekly count — otherwise 'all' is unreachable when reset days are mixed (N1.9).
   const weeklyStatus: Record<string, 'partial' | 'all'> = {}
   if (weeklyAssignments.length > 0) {
+    const weeklyGroupSizes = new Map<number, number>()
+    for (const a of weeklyAssignments) {
+      const resetDay = a.rule.ruleType.resetDay ?? 0
+      weeklyGroupSizes.set(resetDay, (weeklyGroupSizes.get(resetDay) ?? 0) + 1)
+    }
     const weeklyCounts = new Map<string, number>()
     for (const a of weeklyAssignments) {
       for (const c of a.completions) {
@@ -394,8 +403,10 @@ export function computeRuleCalendarStatus(assignments: AssignmentWithCompletions
     }
     for (const [periodKey, count] of weeklyCounts) {
       const match = WEEKLY_KEY_RE.exec(periodKey)!
-      const sundayDate = match[1]
-      weeklyStatus[sundayDate] = count >= weeklyAssignments.length ? 'all' : 'partial'
+      const resetDate = match[1]
+      const resetDay = Number(match[2])
+      const groupSize = weeklyGroupSizes.get(resetDay) ?? count
+      weeklyStatus[resetDate] = count >= groupSize ? 'all' : 'partial'
     }
   }
 
