@@ -405,6 +405,8 @@ export function computeRuleCalendarStatus(assignments: AssignmentWithCompletions
       const match = WEEKLY_KEY_RE.exec(periodKey)!
       const resetDate = match[1]
       const resetDay = Number(match[2])
+      // Fallback only for an orphaned completion whose resetDay matches no live
+      // assignment (e.g. a deleted rule's leftover row); treat it as its own group.
       const groupSize = weeklyGroupSizes.get(resetDay) ?? count
       weeklyStatus[resetDate] = count >= groupSize ? 'all' : 'partial'
     }
