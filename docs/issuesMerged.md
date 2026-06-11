@@ -31,6 +31,7 @@ The **four critical security issues** were fixed on `fix/critical-security-harde
 | 67 | No `/health` readiness endpoint | `GET /api/health` (`app/api/health/route.ts` + `lib/health.ts` `SELECT 1`) → 200/503, `no-store`, whitelisted public in `auth.config.ts` — *fixed on `fix/ops-batch-b-67-68` 2026-06-11* |
 | 68 | PM2 log rotation not configured | pm2-logrotate runbook in `DEPLOYMENT.md` + applied live on EC2 (global module, covers journal-app + scoringapp) — *fixed 2026-06-11* |
 | 69 | APNs key handling & rotation undocumented | `DEPLOYMENT.md` "APNs push notifications (iOS)" runbook (setup/perms/rotation); `*.p8` gitignored; `.env.example` annotated — *fixed 2026-06-11*. NB: APNs currently unset in prod → push disabled |
+| 71 | NewUserForm password field uses `type="text"` | masked by default + Show/Hide toggle + Generate (`lib/generatePassword.ts`, unambiguous charset) in `components/admin/NewUserForm.tsx` — *fixed on `fix/newuser-password-71` 2026-06-11* |
 
 > **Accepted residuals from the critical fixes** (sound, not blockers): ≤1h legacy-token window after the #64 deploy; `style-src 'unsafe-inline'` kept for Tailwind v4 runtime styles (#58); `_global-error` framework scripts un-nonced, recovery via plain link (#58).
 
@@ -67,7 +68,6 @@ _None._ All four (#58, #59, #61, #64) closed 2026-06-10 — see the FIXED table 
 
 | # | Sev | Title | Evidence |
 |---|-----|-------|----------|
-| 71 | important/bug | NewUserForm password field uses `type="text"` | `NewUserForm.tsx:69` |
 | 74 | minor | Journal textarea locked `h-32` + `resize-none` | `PromptCard.tsx:64` |
 | N3.4r | low | `DailyRulesCard` aggregate header lags optimistic row flips | `components/DailyRulesCard.tsx:19-29` |
 | N3.12 | low | Login form doesn't state password minimum | `app/login/page.tsx:43-54` |
@@ -114,9 +114,9 @@ _None._ All four (#58, #59, #61, #64) closed 2026-06-10 — see the FIXED table 
 
 ## Tally
 
-- **FIXED (close):** 18 — #56, #57, #39, #72, #75, #81, N1.7, N3.13, **+ #58, #59, #61, #64** (criticals, merged 2026-06-10), **+ #60, #62, #63** (batch A important security, 2026-06-11), **+ #67, #68** (batch B ops/infra, 2026-06-11), **+ #69** (APNs docs, 2026-06-11)
+- **FIXED (close):** 19 — #56, #57, #39, #72, #75, #81, N1.7, N3.13, **+ #58, #59, #61, #64** (criticals, merged 2026-06-10), **+ #60, #62, #63** (batch A important security, 2026-06-11), **+ #67, #68** (batch B ops/infra, 2026-06-11), **+ #69** (APNs docs, 2026-06-11), **+ #71** (NewUserForm masked password, 2026-06-11)
 - **By-design / resolved:** 2 — #73, N4.5
-- **OPEN:** 13 — **0 critical remaining**; remaining important security/infra row = #65 (minor/med), #66 (backup — deferred pending GCP). Note: APNs is documented (#69) but **unconfigured in prod** → iOS push currently disabled (operational follow-up, not a tracked defect)
+- **OPEN:** 12 — **0 critical remaining**; remaining important security/infra row = #65 (minor/med), #66 (backup — deferred pending GCP). Note: APNs is documented (#69) but **unconfigured in prod** → iOS push currently disabled (operational follow-up, not a tracked defect)
 - **PARTIAL:** 7 — #70, #76, #79, #80, #50, N3.11, N3.15
 
 ### Severity corrections (applied during validation)

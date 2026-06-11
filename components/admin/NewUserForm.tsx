@@ -3,9 +3,12 @@
 import { useActionState, useEffect, useState } from "react"
 import { createUser } from "@/app/actions/users"
 import { useToast } from "@/components/providers/ToastProvider"
+import { generatePassword } from "@/lib/generatePassword"
 
 export function NewUserForm() {
     const [isOpen, setIsOpen] = useState(false);
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [state, action, isPending] = useActionState(createUser, undefined);
     const { addToast } = useToast();
 
@@ -13,6 +16,8 @@ export function NewUserForm() {
         if (state?.success) {
             addToast('success', 'User created successfully');
             setIsOpen(false);
+            setPassword('');
+            setShowPassword(false);
         }
     }, [state]);
 
@@ -63,15 +68,34 @@ export function NewUserForm() {
 
                 <div>
                     <label htmlFor="new-user-password" className="block text-sm font-medium text-gray-300 mb-2">Password</label>
-                    <input
-                        id="new-user-password"
-                        name="password"
-                        type="text"
-                        required
-                        placeholder="Initial Password"
-                        className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary outline-none font-mono"
-                    />
-                    <p className="text-xs text-gray-400 mt-1">Make sure to copy this password to share with the user.</p>
+                    <div className="flex gap-2">
+                        <input
+                            id="new-user-password"
+                            name="password"
+                            type={showPassword ? 'text' : 'password'}
+                            required
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Initial Password"
+                            className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-primary outline-none font-mono"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword((s) => !s)}
+                            aria-label={showPassword ? 'Hide password' : 'Show password'}
+                            className="px-3 rounded-lg bg-white/5 text-white text-sm hover:bg-white/10 transition-colors"
+                        >
+                            {showPassword ? 'Hide' : 'Show'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => { setPassword(generatePassword()); setShowPassword(true); }}
+                            className="px-3 rounded-lg bg-white/5 text-white text-sm hover:bg-white/10 transition-colors"
+                        >
+                            Generate
+                        </button>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">Use Generate or type a password, then copy it to share with the new user.</p>
                 </div>
 
                 {state?.error && (
