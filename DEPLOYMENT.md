@@ -178,3 +178,31 @@ pm2 restart journal-app
 Your data lives in `prisma/database.db` and binary uploads in `public/uploads`.
 -   **Periodic Backup**: Copy `database.db` and `public/uploads` to an S3 bucket or download via SCP.
 -   **Admin Tool**: Use the in-app "System Tools" to download a full JSON backup.
+
+### Health endpoint
+
+`GET /api/health` is a public, unauthenticated readiness probe. It runs a
+lightweight `SELECT 1` against the database and returns:
+
+- `200 {"status":"ok"}` when the database is reachable.
+- `503 {"status":"error"}` when it is not.
+
+Use it for uptime monitoring or a load-balancer health check, e.g.
+`curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/health`.
+
+### PM2 log rotation
+
+PM2 does not rotate logs by default, so `~/.pm2/logs/journal-app-out.log` grows
+unbounded. Configure the `pm2-logrotate` module once per host (it is global and
+covers every PM2-managed app on the box, including scoringapp):
+
+```bash
+pm2 install pm2-logrotate
+pm2 set pm2-logrotate:max_size 10M
+pm2 set pm2-logrotate:retain 7
+pm2 set pm2-logrotate:compress true
+pm2 set pm2-logrotate:rotateInterval '0 0 * * *'
+pm2 flush journal-app
+```
+
+Verify with `pm2 conf pm2-logrotate`. No app restart is required.
