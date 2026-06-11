@@ -23,9 +23,13 @@ import { computeRuleCalendarStatus } from '@/lib/rules'
 // In-memory fixture builder helpers
 // ---------------------------------------------------------------------------
 
-function makeAssignment(resetMode: 'DAILY' | 'WEEKLY', periodKeys: string[]) {
+function makeAssignment(
+  resetMode: 'DAILY' | 'WEEKLY',
+  periodKeys: string[],
+  resetDay: number | null = null,
+) {
   return {
-    rule: { ruleType: { resetMode } },
+    rule: { ruleType: { resetMode, resetDay } },
     completions: periodKeys.map(periodKey => ({ periodKey })),
   }
 }
@@ -141,5 +145,38 @@ describe('computeRuleCalendarStatus', () => {
     expect(result.dailyStatus['2026-06-11']).toBe('all')
     expect(result.dailyStatus['2026-06-12']).toBe('all')
     expect(Object.keys(result.dailyStatus)).toHaveLength(3)
+  })
+
+  // 11. N1.9 regression: mixed reset days, each group fully completed → each 'all'.
+  it('weekly: mixed reset days, each group complete → each bucket "all"', () => {
+    const assignments = [
+      makeAssignment('WEEKLY', ['week-2026-06-07-R0'], 0), // Sunday-reset, done
+      makeAssignment('WEEKLY', ['week-2026-06-03-R3'], 3), // Wednesday-reset, done
+    ]
+    const result = computeRuleCalendarStatus(assignments)
+    expect(result.weeklyStatus['2026-06-07']).toBe('all')
+    expect(result.weeklyStatus['2026-06-03']).toBe('all')
+  })
+
+  // 12. N1.9: per-group independence — one group complete, another partial.
+  it('weekly: mixed reset days, one group complete one partial → independent status', () => {
+    const assignments = [
+      makeAssignment('WEEKLY', ['week-2026-06-07-R0'], 0), // R0 group (size 1), done → 'all'
+      makeAssignment('WEEKLY', ['week-2026-06-03-R3'], 3), // R3 group (size 2), 1 done
+      makeAssignment('WEEKLY', [], 3),                     // R3 group, not done
+    ]
+    const result = computeRuleCalendarStatus(assignments)
+    expect(result.weeklyStatus['2026-06-07']).toBe('all')
+    expect(result.weeklyStatus['2026-06-03']).toBe('partial')
+  })
+
+  // 13. N1.9: null resetDay normalizes to R0 and groups with explicit R0 rules.
+  it('weekly: null resetDay groups with R0 → "all" when both complete', () => {
+    const assignments = [
+      makeAssignment('WEEKLY', ['week-2026-06-07-R0']),    // resetDay omitted → null → 0
+      makeAssignment('WEEKLY', ['week-2026-06-07-R0'], 0), // explicit 0
+    ]
+    const result = computeRuleCalendarStatus(assignments)
+    expect(result.weeklyStatus['2026-06-07']).toBe('all')
   })
 })
