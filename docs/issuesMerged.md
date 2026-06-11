@@ -33,6 +33,7 @@ The **four critical security issues** were fixed on `fix/critical-security-harde
 | 69 | APNs key handling & rotation undocumented | `DEPLOYMENT.md` "APNs push notifications (iOS)" runbook (setup/perms/rotation); `*.p8` gitignored; `.env.example` annotated — *fixed 2026-06-11*. NB: APNs currently unset in prod → push disabled |
 | 71 | NewUserForm password field uses `type="text"` | masked by default + Show/Hide toggle + Generate (`lib/generatePassword.ts`, unambiguous charset) in `components/admin/NewUserForm.tsx` — *fixed on `fix/newuser-password-71` 2026-06-11* |
 | N1.9 | Weekly calendar `'all'` unreachable with mixed reset days | `computeRuleCalendarStatus` now sizes the `'all'` threshold per reset-day group (`lib/rules.ts`); uniform-reset behavior byte-identical. Tests in `tests/lib/ruleCalendarData.test.ts` — *fixed on `fix/n1.9-weekly-calendar-threshold` 2026-06-11, deployed* |
+| N1.6 | All-users assignment unbounded | consolidated resolver in `lib/assignmentTargets.ts` (db-injected, count logging, warn>1000); all four `createMany` sites + the `createTask` push lookup chunked at `ASSIGNMENT_INSERT_CHUNK_SIZE=200`, statement-safe at any org size, atomic (chunks stay inside `$transaction`). Tests `tests/lib/assignmentTargets.test.ts` — *fixed on `fix/n1.6-chunked-assignments` 2026-06-11, deployed* |
 
 > **Accepted residuals from the critical fixes** (sound, not blockers): ≤1h legacy-token window after the #64 deploy; `style-src 'unsafe-inline'` kept for Tailwind v4 runtime styles (#58); `_global-error` framework scripts un-nonced, recovery via plain link (#58).
 
@@ -59,7 +60,6 @@ _None._ All four (#58, #59, #61, #64) closed 2026-06-10 — see the FIXED table 
 |---|-----|-------|----------|
 | N1.4r | low | `removeUserFromGroup` no org-check on `userId`; `createGroup` connects users by email unchecked | `app/actions/groups.ts` |
 | N1.5 | med | JournalEntry uniqueness not timezone-aware (`@@unique([userId, promptId, date])`, `date` is DateTime) | `prisma/schema.prisma` |
-| N1.6 | med | All-users assignment unbounded (`resolveAssignmentUserIds(ALL)` → unbounded findMany + N sync inserts) | `app/actions/rules.ts`, `tasks.ts` |
 | N1.8 | low | No data archival/retention strategy | `DEPLOYMENT.md` |
 
 ---
@@ -114,9 +114,9 @@ _None._ All four (#58, #59, #61, #64) closed 2026-06-10 — see the FIXED table 
 
 ## Tally
 
-- **FIXED (close):** 20 — #56, #57, #39, #72, #75, #81, N1.7, N3.13, **+ #58, #59, #61, #64** (criticals, merged 2026-06-10), **+ #60, #62, #63** (batch A important security, 2026-06-11), **+ #67, #68** (batch B ops/infra, 2026-06-11), **+ #69** (APNs docs, 2026-06-11), **+ #71** (NewUserForm masked password, 2026-06-11), **+ N1.9** (weekly calendar per-reset-day threshold, deployed 2026-06-11)
+- **FIXED (close):** 21 — #56, #57, #39, #72, #75, #81, N1.7, N3.13, **+ #58, #59, #61, #64** (criticals, merged 2026-06-10), **+ #60, #62, #63** (batch A important security, 2026-06-11), **+ #67, #68** (batch B ops/infra, 2026-06-11), **+ #69** (APNs docs, 2026-06-11), **+ #71** (NewUserForm masked password, 2026-06-11), **+ N1.9** (weekly calendar per-reset-day threshold, deployed 2026-06-11), **+ N1.6** (chunked assignment writes, deployed 2026-06-11)
 - **By-design / resolved:** 2 — #73, N4.5
-- **OPEN:** 11 — **0 critical remaining**; remaining important security/infra row = #65 (minor/med), #66 (backup — deferred pending GCP). Note: APNs is documented (#69) but **unconfigured in prod** → iOS push currently disabled (operational follow-up, not a tracked defect)
+- **OPEN:** 10 — **0 critical remaining**; remaining important security/infra row = #65 (minor/med), #66 (backup — deferred pending GCP). Note: APNs is documented (#69) but **unconfigured in prod** → iOS push currently disabled (operational follow-up, not a tracked defect)
 - **PARTIAL:** 7 — #70, #76, #79, #80, #50, N3.11, N3.15
 
 ### Severity corrections (applied during validation)
