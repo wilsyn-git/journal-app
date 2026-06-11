@@ -49,3 +49,5 @@ next-env.d.ts
 .superpowers/
 .backups/
 .worktrees/
+# APNs auth key — never commit (see DEPLOYMENT.md "APNs push notifications")
+*.p8
