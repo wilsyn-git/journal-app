@@ -1,7 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { generatePassword } from '@/lib/generatePassword'
-
-const CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*'
+import { generatePassword, CHARSET } from '@/lib/generatePassword'
 
 describe('generatePassword', () => {
   it('returns a string of the requested length', () => {

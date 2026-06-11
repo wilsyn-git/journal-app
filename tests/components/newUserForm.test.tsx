@@ -39,6 +39,6 @@ describe('NewUserForm password field', () => {
     const field = screen.getByLabelText('Password') as HTMLInputElement
     fireEvent.click(screen.getByRole('button', { name: /generate/i }))
     expect(field).toHaveAttribute('type', 'text')
-    expect(field.value.length).toBeGreaterThan(0)
+    expect(field.value.length).toBe(16)
   })
 })

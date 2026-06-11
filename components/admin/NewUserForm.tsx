@@ -82,6 +82,7 @@ export function NewUserForm() {
                         <button
                             type="button"
                             onClick={() => setShowPassword((s) => !s)}
+                            aria-label={showPassword ? 'Hide password' : 'Show password'}
                             className="px-3 rounded-lg bg-white/5 text-white text-sm hover:bg-white/10 transition-colors"
                         >
                             {showPassword ? 'Hide' : 'Show'}

@@ -1,4 +1,6 @@
-const CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*'
+// Mixed charset for generated passwords, omitting visually ambiguous characters
+// (0/O, 1/l/I) so an admin can reliably read/copy the password to share (#71).
+export const CHARSET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*'
 
 /**
  * Returns `count` non-negative 32-bit integers from the platform CSPRNG.
