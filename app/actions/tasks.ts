@@ -7,32 +7,8 @@ import { auth } from '@/auth'
 import { resolveUserId } from '@/lib/auth-helpers'
 import { ASSIGNMENT_MODES } from '@/lib/taskConstants'
 import { acknowledgeCompletion as ackCompletion, canUncomplete } from '@/lib/taskAcknowledgements'
-
-async function resolveAssignmentUserIds(
-    assignmentMode: string,
-    targetId: string | null,
-    organizationId: string
-): Promise<string[]> {
-    if (assignmentMode === ASSIGNMENT_MODES.USER) {
-        return targetId ? [targetId] : []
-    }
-    if (assignmentMode === ASSIGNMENT_MODES.GROUP) {
-        if (!targetId) return []
-        const group = await prisma.userGroup.findUnique({
-            where: { id: targetId },
-            include: { users: { select: { id: true } } },
-        })
-        return group ? group.users.map((u) => u.id) : []
-    }
-    if (assignmentMode === ASSIGNMENT_MODES.ALL) {
-        const users = await prisma.user.findMany({
-            where: { organizationId },
-            select: { id: true },
-        })
-        return users.map((u) => u.id)
-    }
-    return []
-}
+import { resolveAssignmentUserIds, ASSIGNMENT_INSERT_CHUNK_SIZE } from '@/lib/assignmentTargets'
+import { chunk } from '@/lib/chunk'
 
 async function verifyAssignmentOwnership(assignmentId: string, userId: string, orgId: string) {
     const assignment = await prisma.taskAssignment.findUnique({
@@ -65,7 +41,7 @@ export async function createTask(formData: FormData) {
     if (!createdById) return { error: 'Could not resolve user' }
 
     try {
-        const userIds = await resolveAssignmentUserIds(assignmentMode, targetId, organizationId)
+        const userIds = await resolveAssignmentUserIds(prisma, assignmentMode, targetId, organizationId)
 
         await prisma.$transaction(async (tx) => {
             const task = await tx.task.create({
@@ -82,26 +58,32 @@ export async function createTask(formData: FormData) {
             })
 
             if (userIds.length > 0) {
-                await tx.taskAssignment.createMany({
-                    data: userIds.map((userId) => ({
-                        taskId: task.id,
-                        userId,
-                    })),
-                })
+                for (const batch of chunk(userIds, ASSIGNMENT_INSERT_CHUNK_SIZE)) {
+                    await tx.taskAssignment.createMany({
+                        data: batch.map((userId) => ({
+                            taskId: task.id,
+                            userId,
+                        })),
+                    })
+                }
             }
         })
 
         // Send push notifications to assigned users
         if (userIds.length > 0) {
             import('@/lib/api/pushNotifications').then(async ({ sendPushNotification }) => {
-                const sessions = await prisma.deviceSession.findMany({
-                    where: {
-                        userId: { in: userIds },
-                        deviceToken: { not: null },
-                        revokedAt: null,
-                    },
-                    select: { deviceToken: true },
-                })
+                const sessions: { deviceToken: string | null }[] = []
+                for (const batch of chunk(userIds, ASSIGNMENT_INSERT_CHUNK_SIZE)) {
+                    const rows = await prisma.deviceSession.findMany({
+                        where: {
+                            userId: { in: batch },
+                            deviceToken: { not: null },
+                            revokedAt: null,
+                        },
+                        select: { deviceToken: true },
+                    })
+                    sessions.push(...rows)
+                }
                 const tokens = sessions
                     .map((s) => s.deviceToken)
                     .filter((t): t is string => t !== null)
@@ -144,7 +126,7 @@ export async function updateTask(taskId: string, formData: FormData) {
         }
 
         const newUserIds = assignmentMode
-            ? await resolveAssignmentUserIds(assignmentMode, targetId, organizationId)
+            ? await resolveAssignmentUserIds(prisma, assignmentMode, targetId, organizationId)
             : []
 
         await prisma.$transaction(async (tx) => {
@@ -168,12 +150,14 @@ export async function updateTask(taskId: string, formData: FormData) {
                 const toCreate = newUserIds.filter((id) => !existingUserIds.has(id))
 
                 if (toCreate.length > 0) {
-                    await tx.taskAssignment.createMany({
-                        data: toCreate.map((userId) => ({
-                            taskId,
-                            userId,
-                        })),
-                    })
+                    for (const batch of chunk(toCreate, ASSIGNMENT_INSERT_CHUNK_SIZE)) {
+                        await tx.taskAssignment.createMany({
+                            data: batch.map((userId) => ({
+                                taskId,
+                                userId,
+                            })),
+                        })
+                    }
                 }
             }
         })
