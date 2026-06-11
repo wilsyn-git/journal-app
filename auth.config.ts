@@ -17,10 +17,11 @@ export const authConfig = {
             ];
             const isPublicPath = publicPaths.some(p => pathname === p || pathname.startsWith(p + '/'));
             const isPublicApi = pathname.startsWith('/api/v1/');
+            const isHealthCheck = pathname === '/api/health';
             const isStaticAsset = ['/icon.png', '/manifest.webmanifest', '/robots.txt', '/sitemap.xml'].includes(pathname);
 
             // Allow public routes
-            if (isPublicPath || isPublicApi || isStaticAsset) {
+            if (isPublicPath || isPublicApi || isHealthCheck || isStaticAsset) {
                 // Redirect logged-in users away from login page
                 if (isLoggedIn && pathname === '/login') {
                     return Response.redirect(new URL('/dashboard', nextUrl));
