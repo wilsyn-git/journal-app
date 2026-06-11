@@ -9,7 +9,13 @@ export async function GET() {
     const healthy = await checkDatabaseHealth(prisma)
     if (!healthy) {
         // Intentionally no error detail in the body (avoids info leak, cf. #65).
-        return NextResponse.json({ status: 'error' }, { status: 503 })
+        return NextResponse.json(
+            { status: 'error' },
+            { status: 503, headers: { 'Cache-Control': 'no-store' } },
+        )
     }
-    return NextResponse.json({ status: 'ok' }, { status: 200 })
+    return NextResponse.json(
+        { status: 'ok' },
+        { status: 200, headers: { 'Cache-Control': 'no-store' } },
+    )
 }
