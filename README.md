@@ -1,5 +1,7 @@
 # Journaling App
 
+> **Retired 2026-10-01.** This web app is no longer running; journaling moved to the Glade iOS app. The production data was archived before shutdown. This repository is archived (read-only).
+
 A daily journaling platform with admin-managed prompts, task assignment, analytics, and multi-user support. Built with Next.js 16, designed for organizations where one admin guides many users through structured reflection.
 
 ## Key Features
