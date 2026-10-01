@@ -160,7 +160,7 @@ pm2 restart journal-app
 
 ## Roadmap
 
-See [docs/roadmap.md](docs/roadmap.md) for planned improvements including rate limiting, route protection whitelist, Prisma 7 upgrade, and structured logging.
+Planned work and open issues live in [GitHub Issues](https://github.com/wilsyn-git/journal-app/issues) — label `roadmap` for planned improvements, `needs-triage` for review reports not yet checked against the code.
 
 ## License
 
